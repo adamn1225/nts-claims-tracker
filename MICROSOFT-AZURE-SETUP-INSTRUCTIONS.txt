@@ -1,0 +1,192 @@
+================================================================================
+MICROSOFT ENTRA ID (AZURE AD) - APP REGISTRATION INSTRUCTIONS
+NTS Claims Tracker - Microsoft SSO & Calendar/Teams Integration
+================================================================================
+
+OVERVIEW:
+This application needs TWO separate Microsoft integrations:
+1. Supabase Authentication (Microsoft SSO for login)
+2. Microsoft Graph API (Calendar and Teams integration)
+
+Both require creating an App Registration in Microsoft Entra ID.
+
+================================================================================
+PART 1: CREATE APP REGISTRATION
+================================================================================
+
+1. Sign in to Azure Portal
+   - Go to: https://portal.azure.com
+   - Use Entra ID admin account
+
+2. Navigate to App Registrations
+   - Search for "App registrations" in the top search bar
+   - Click "App registrations" from the results
+
+3. Create New Registration
+   - Click "+ New registration" button
+   - Fill in the following:
+     * Name: NTS Claims Tracker
+     * Supported account types: Select one of the following:
+       - "Accounts in this organizational directory only" (single tenant)
+         OR
+       - "Accounts in any organizational directory" (multi-tenant)
+       [Choose based on whether only your organization will use this]
+     * Redirect URI: Leave blank for now (we'll add them in the next step)
+   - Click "Register"
+
+4. Note the Application (client) ID
+   - On the Overview page, copy the "Application (client) ID"
+   - Save this - you'll provide it as: MICROSOFT_CLIENT_ID
+   - Also copy the "Directory (tenant) ID" for reference
+
+
+PART 2: Create client secret
+
+1. Go to Certificates & secrets
+   - In the left sidebar, click "Certificates & secrets"
+   - Click the "Client secrets" tab
+
+2. Create New Client Secret
+   - Click "+ New client secret"
+   - Description: NTS Claims Tracker Secret
+   - Expires: Choose expiration period (recommended: 24 months)
+   - Click "Add"
+
+3. Copy the Secret Value IMMEDIATELY
+   - Copy the VALUE (not the Secret ID)
+   - IMPORTANT: This value is only shown ONCE - you cannot retrieve it later
+   - Save this - you'll provide it as: MICROSOFT_CLIENT_SECRET
+   - If you miss it, you'll need to delete and create a new secret
+
+================================================================================
+PART 3: CONFIGURE REDIRECT URIs
+================================================================================
+
+You need to add FOUR redirect URIs:
+
+1. Go to Authentication
+   - In the left sidebar, click "Authentication"
+   - Under "Platform configurations", click "+ Add a platform"
+   - Select "Web"
+
+2. Add All Redirect URIs
+   Add all four of these URIs (copy/paste each exactly):
+   
+   URI 1 (Temporary Production Domain):
+   https://nts-pipeline.netlify.app/api/microsoft/callback
+   
+   URI 2 (Permanent Production Domain):
+   https://sales.ntsconnect.com/api/microsoft/callback
+   
+   URI 3 (Supabase Auth SSO):
+   [PENDING - Need Supabase project URL]
+   Format: https://[your-project-ref].supabase.co/auth/v1/callback
+   
+   URI 4 (Local Testing - Optional):
+   http://localhost:3000/api/microsoft/callback
+   
+   - Check "ID tokens" under Implicit grant and hybrid flows
+   - Click "Configure" or "Save"
+
+3. Important Notes
+   - All URIs are case-sensitive and must match exactly
+   - Both production domains will work simultaneously during transition
+   - The Supabase URI format will be provided separately
+
+================================================================================
+PART 4: CONFIGURE API PERMISSIONS
+================================================================================
+
+1. Go to API Permissions
+   - In the left sidebar, click "API permissions"
+   - You'll see "User.Read" already added by default
+
+2. Add Required Permissions
+   Click "+ Add a permission", then add each of these:
+
+   Microsoft Graph (Delegated permissions):
+   - OpenID permissions: openid, profile, email, offline_access
+   - Calendars.ReadWrite
+   - OnlineMeetings.ReadWrite
+
+   Step-by-step for each permission:
+   a. Click "+ Add a permission"
+   b. Click "Microsoft Graph"
+   c. Click "Delegated permissions"
+   d. Search for the permission name
+   e. Check the box
+   f. Click "Add permissions"
+   
+   Repeat for all permissions listed above.
+
+3. Grant Admin Consent (IMPORTANT)
+   - After adding all permissions, click "Grant admin consent for [Your Organization]"
+   - Click "Yes" to confirm
+   - All permissions should now show a green checkmark under "Status"
+
+================================================================================
+PART 5: CONFIGURE TOKEN SETTINGS (OPTIONAL BUT RECOMMENDED)
+================================================================================
+
+1. Go to Token Configuration
+   - In the left sidebar, click "Token configuration"
+
+2. Add Optional Claims
+   - Click "+ Add optional claim"
+   - Select "ID" token type
+   - Check: email, upn
+   - Click "Add"
+   - If prompted about Microsoft Graph permissions, click "Add"
+
+3. Go to Manifest (Advanced)
+   - In the left sidebar, click "Manifest"
+   - Find "accessTokenAcceptedVersion" and ensure it's set to: 2
+   - Click "Save" if you made changes
+
+================================================================================
+FINAL STEP: PROVIDE CREDENTIALS
+================================================================================
+
+Send the following information securely:
+
+1. Application (client) ID: [Copy from Overview page]
+2. Client Secret Value: [Copy from Certificates & secrets - the VALUE, not ID]
+3. Directory (tenant) ID: [Copy from Overview page - for reference]
+4. Supabase Project URL: [Need this to complete Redirect URI #2]
+
+IMPORTANT SECURITY NOTES:
+- Send the Client Secret via secure method (encrypted email, password manager)
+- Do NOT send via plain text Slack/Teams/email
+- The secret is equivalent to a password - treat it as sensitive
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Common Issues:
+
+1. "AADSTS50011: The reply URL specified in the request does not match"
+   - Solution: Double-check redirect URIs match exactly (case-sensitive)
+   - Ensure you clicked "Save" after adding URIs
+
+2. "AADSTS65001: The user or administrator has not consented"
+   - Solution: Grant admin consent (Part 4, Step 3)
+
+3. Client Secret expired
+   - Solution: Create new secret in Certificates & secrets
+   - Update the application with the new secret value
+
+4. Permissions not working after granting consent
+   - Solution: Wait 5-10 minutes for changes to propagate
+   - Try signing out and signing back in
+
+================================================================================
+QUESTIONS OR ISSUES?
+================================================================================
+
+If you encounter any issues during setup:
+1. Screenshot the error message
+2. Note which step you were on
+3. Send both along with your question
+
+================================================================================

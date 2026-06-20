@@ -1,0 +1,119 @@
+Sales Coach Dashboard - Fresh Start Plan (April 28, 2026)
+
+Goal
+- Launch a dedicated Sales Coach dashboard with coach-specific access and no destructive user-management abilities.
+- Keep the existing Performance dashboard work usable, then merge later through shared services/components.
+
+Guiding Decisions
+- Sales Coach is a distinct role from office manager and from admin.
+- Sales Coach gets analytics/coaching power, not admin console power.
+- Prefer capability-based gates (broker_permissions) over role-name checks where possible.
+- Sales Coach inherits regular broker baseline experience by default (Dashboard, SalesTrack/Kanban, Customers, Tasks, etc.).
+- Sales Coach access is additive: baseline broker tools + approved coach tools.
+- Sales Coach can invite users (without handling permission setup).
+- Sales Coach can create sales template emails.
+- Sales Coach has access to Power Dialer, Carrier Coverage, Route Planner, and Manage Imports.
+- Sales Coach has company-wide visibility.
+- Sales Coach can access all recordings for coaching workflows.
+- Sales Coach is admin-like for non-destructive operations.
+
+Phase 0 - Scope Lock (Planning)
+- Define final list of coach capabilities and explicit non-capabilities.
+- Define MVP tabs/widgets for coach dashboard v1.
+- Define merge strategy for existing performance work (which endpoints/components to reuse).
+
+Phase 1 - Role and Permission Model
+- Add new broker role flag in schema: brokers.is_sales_coach (boolean, default false).
+- Add/update role assignment flow to support Sales Coach.
+- Add permission profile preset for Sales Coach in lib/permissions.ts:
+	- Allow analytics/coaching features.
+	- Deny user deactivation/deletion and admin-console actions.
+- Ensure broker_permissions API can return/use coach preset cleanly.
+
+Phase 2 - Auth and Route Guards
+- Create central role helper (shared utility) that returns: isAdmin, isManager, isSalesCoach.
+- Replace hardcoded is_admin checks for coaching analytics routes with guard:
+	- allow is_admin OR is_sales_coach OR explicit analytics permission.
+- Keep true admin-only routes admin-only (user management, destructive actions, admin console internals).
+- Add regression checks to ensure Sales Coach role never loses regular broker routes/features due to role-gating.
+- Add explicit allow rules for Sales Coach routes/tools:
+	- invite broker endpoint/page access (without permissions editing)
+	- email template creation flows for sales templates
+	- power dialer access
+	- carrier coverage access
+	- route planner access
+	- manage imports access
+
+Phase 3 - New Coach Dashboard Surface
+- Create new route: /dashboard/sales-monitor.
+- Build Coach dashboard shell with tabs:
+	- Overview
+	- Call Quality Coaching
+	- Follow-up Compliance
+	- Queue/Agent Trends
+- Add role-gated nav item for Sales Coach dashboard.
+- Do not expose /dashboard/admin entry to Sales Coach users.
+
+Phase 4 - Reuse Existing Performance Work Safely
+- Extract shared fetch/transform logic from current Performance dashboard into reusable modules.
+- Reuse existing GoTo analytics endpoints where policy allows.
+- Split admin-only controls from coaching views (admin token management remains admin-only).
+- Keep call-quality analysis view available to coaches for company-wide coaching.
+
+Phase 5 - Permissions Hardening (No Destructive Actions)
+- Audit all delete/deactivate endpoints and protect with strict admin-only guard.
+- Add explicit deny checks for coach role on:
+	- deactivate user
+	- delete user
+	- admin console broker management mutations
+- Add explicit deny checks for coach role on:
+	- editing broker permission sets
+	- assigning admin/manager/coach roles
+- Ensure UI hides destructive buttons when role is Sales Coach.
+
+Phase 6 - Data Visibility Rules
+- Enforce company-wide visibility for Sales Coach role.
+- Ensure no office scoping is applied to coach dashboards/APIs.
+- Add explicit telemetry/audit entries for coach actions in analytics pages.
+
+Phase 7 - QA and Rollout
+- Add role matrix test checklist:
+	- Admin
+	- Office Manager
+	- Sales Coach
+	- Broker
+- Verify nav visibility and route guard behavior for each role.
+- Verify Sales Coach cannot access admin console pages or destructive APIs.
+- Verify Sales Coach can access coaching/analytics pages and read needed data.
+
+Immediate Execution Backlog (Next Build Steps)
+- Task 1: Schema migration for brokers.is_sales_coach.
+- Task 2: Update type generation and role interfaces.
+- Task 3: Add Sales Coach preset in permission helpers.
+- Task 4: Build shared access helper and replace is_admin checks in performance-related APIs/pages.
+- Task 5: Scaffold /dashboard/sales-monitor with placeholder tabs and role guard.
+- Task 6: Add Sales Coach nav item and role visibility logic.
+- Task 7: Add explicit admin-only lock for destructive user endpoints.
+- Task 8: Add sales-monitor invite flow access (without permissions editor access).
+- Task 9: Add sales template email creation access for sales coaches.
+- Task 10: Enable sales-monitor access gates for Power Dialer, Carrier Coverage, Route Planner, and Manage Imports.
+
+Merge Strategy for Existing Performance Dashboard
+- Keep current /dashboard/performance alive during transition.
+- Build new monitor page against shared modules.
+- Once monitor page reaches parity, redirect coach users to /dashboard/sales-monitor.
+- Leave /dashboard/performance as admin analytics workspace or deprecate later.
+
+Open Questions to Resolve Before Phase 2
+- None (role direction confirmed for v1).
+
+Resolved Decisions (From Product Direction)
+- Sales Coach can invite users but cannot manage permission sets during invite.
+- Sales Coach can create sales template emails.
+- Sales Coach can access Power Dialer.
+- Sales Coach can access Carrier Coverage.
+- Sales Coach can access Route Planner.
+- Sales Coach can access Manage Imports.
+- Sales Coach has company-wide visibility.
+- Sales Coach can access all call recordings.
+- Sales Coach does not have access to Admin Console and uses a dedicated Sales Coach dashboard.

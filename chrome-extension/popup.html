@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NTS Claims Tracker</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <img src="icons/icon-192.png" alt="" class="brand-logo" />
+        <span class="brand-name">Claims Tracker</span>
+      </div>
+      <div class="header-actions">
+        <button id="anchorBtn" class="icon-btn" title="Anchor on top (always-on-top)" hidden>
+          &#128204;
+        </button>
+        <button id="popoutBtn" class="icon-btn" title="Open a sticky window" hidden>
+          &#x2197;
+        </button>
+        <button id="settingsBtn" class="icon-btn" title="Settings">&#9881;</button>
+        <button id="logoutBtn" class="icon-btn" title="Sign out" hidden>&#x23FB;</button>
+      </div>
+    </header>
+
+    <!-- Toast / message bar -->
+    <div id="toast" class="toast" hidden></div>
+
+    <!-- ================= SETTINGS VIEW ================= -->
+    <section id="view-settings" class="view" hidden>
+      <h2 class="view-title">Connection settings</h2>
+      <p class="hint">
+        Paste your Supabase project URL and the public anon key (the same
+        <code>NEXT_PUBLIC_</code> values the web app uses).
+      </p>
+      <form id="settingsForm" class="form">
+        <label class="field">
+          <span>Supabase URL</span>
+          <input id="cfgUrl" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off" required />
+        </label>
+        <label class="field">
+          <span>Anon key</span>
+          <input id="cfgAnon" type="text" placeholder="eyJhbGci..." autocomplete="off" required />
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="button" id="settingsCancel" class="btn btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ================= LOGIN VIEW ================= -->
+    <section id="view-login" class="view" hidden>
+      <h2 class="view-title">Sign in</h2>
+      <form id="loginForm" class="form">
+        <label class="field">
+          <span>Email</span>
+          <input id="loginEmail" type="email" autocomplete="username" required />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="loginPassword" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit" class="btn btn-primary btn-block" id="loginSubmit">
+          Sign in
+        </button>
+      </form>
+    </section>
+
+    <!-- ================= MAIN VIEW ================= -->
+    <section id="view-main" class="view" hidden>
+      <nav class="tabs">
+        <button class="tab" data-tab="add-task">+ Task</button>
+        <button class="tab" data-tab="tasks">Tasks</button>
+        <button class="tab" data-tab="add-customer">+ Customer</button>
+        <button class="tab" data-tab="notes">Notes</button>
+      </nav>
+
+      <!-- Tasks tab -->
+      <div id="tab-tasks" class="tab-panel">
+        <div id="taskList" class="task-list">
+          <div class="empty">Loading…</div>
+        </div>
+        <button id="refreshTasks" class="btn btn-ghost btn-block btn-sm">Refresh</button>
+      </div>
+
+      <!-- Notes (scratchpad) tab -->
+      <div id="tab-notes" class="tab-panel" hidden>
+        <textarea
+          id="notesPad"
+          class="notes-pad"
+          placeholder="Jot anything here — it saves automatically and stays on this device."
+        ></textarea>
+        <div class="notes-footer">
+          <span id="notesStatus" class="notes-status">Saved</span>
+          <button id="notesClear" class="btn btn-ghost btn-sm">Clear</button>
+        </div>
+      </div>
+
+      <!-- Add Task tab -->
+      <div id="tab-add-task" class="tab-panel" hidden>
+        <form id="taskForm" class="form">
+          <label class="field">
+            <span>Title</span>
+            <input id="taskTitle" type="text" maxlength="200" required />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Type</span>
+              <select id="taskType">
+                <option value="call">Call</option>
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+                <option value="meeting">Meeting</option>
+                <option value="follow_up">Follow-up</option>
+                <option value="internal_reminder">Reminder</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Priority</span>
+              <select id="taskPriority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+                <option value="critical">Critical</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>Due date</span>
+              <input id="taskDueDate" type="date" required />
+            </label>
+            <label class="field">
+              <span>Time</span>
+              <input id="taskDueTime" type="time" />
+            </label>
+          </div>
+          <label class="field">
+            <span>Customer (optional)</span>
+            <select id="taskCustomer">
+              <option value="">— None —</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Notes (optional)</span>
+            <textarea id="taskDescription" rows="2"></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary btn-block" id="taskSubmit">
+            Add task
+          </button>
+        </form>
+      </div>
+
+      <!-- Add Customer tab -->
+      <div id="tab-add-customer" class="tab-panel" hidden>
+        <form id="customerForm" class="form">
+          <label class="field">
+            <span>Business name</span>
+            <input id="custBusiness" type="text" required />
+          </label>
+          <label class="field">
+            <span>Contact name</span>
+            <input id="custContact" type="text" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Email</span>
+              <input id="custEmail" type="email" />
+            </label>
+            <label class="field">
+              <span>Phone</span>
+              <input id="custPhone" type="tel" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>Status</span>
+              <select id="custStatus">
+                <option value="Prospect" selected>Prospect</option>
+                <option value="Active">Active</option>
+                <option value="Won">Won</option>
+                <option value="Lost">Lost</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Industry</span>
+              <input id="custIndustry" type="text" />
+            </label>
+          </div>
+          <label class="field">
+            <span>Notes (optional)</span>
+            <textarea id="custNotes" rows="2"></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary btn-block" id="custSubmit">
+            Add customer
+          </button>
+        </form>
+      </div>
+    </section>
+    </div>
+
+    <script src="supabase-api.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

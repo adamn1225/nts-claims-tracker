@@ -1,0 +1,308 @@
+/**
+ * Dashboard Layout - Persistent Shell for Application Suite
+ *
+ * DESIGN PATTERN: Application Shell
+ * Reference: Google Material Design, Microsoft Fluent, Modern SaaS patterns
+ *
+ * LAYOUT STRUCTURE:
+ * ┌─────────────┬──────────────────────────┐
+ * │             │                          │
+ * │   Sidebar   │    Main Content          │
+ * │   (260px)   │    (flex-1)              │
+ * │             │                          │
+ * │  - Logo     │  - Page Header           │
+ * │  - Nav      │  - Breadcrumbs           │
+ * │  - Modules  │  - Content Area          │
+ * │             │                          │
+ * └─────────────┴──────────────────────────┘
+ *
+ * RESPONSIVE BEHAVIOR:
+ * - Desktop (1280px+): Persistent sidebar + full content
+ * - Tablet (768-1279px): Collapsible sidebar, hamburger menu
+ * - Mobile (<768px): Full-screen content, drawer navigation
+ */
+
+"use client";
+
+import DashboardNav from "@/components/DashboardNav";
+import TopNav from "@/components/TopNav";
+import TourGuide from "@/components/TourGuide";
+import InactivityTimer from "@/components/InactivityTimer";
+import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
+import FloatingAiCoachButton from "@/components/FloatingAiCoachButton";
+import PwaInstallBanner from "@/components/PwaInstallBanner";
+import ClockSkewWarning from "@/components/ClockSkewWarning";
+import MaintenanceGate from "@/components/MaintenanceGate";
+import MaintenanceWarningBanner from "@/components/MaintenanceWarningBanner";
+import { AiCoachProvider, useAiCoach } from "@/contexts/AiCoachContext";
+import { AiCoachPanel } from "@/components/ai-coach/AiCoachPanel";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import { redirect, useRouter, usePathname } from "next/navigation";
+import { BrokerViewProvider } from "@/contexts/BrokerViewContext";
+import { SidebarProvider } from "@/contexts/SidebarContext";
+import { ClickToCallProvider } from "@/contexts/ClickToCallContext";
+import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
+import { dashboardTour } from "@/lib/tour-config";
+import { startNotificationPolling } from "@/lib/notifications/notification-checker";
+
+// Message listener component for dock-back functionality from pop-out window
+function DockBackListener() {
+  const { openCoach, setCurrentCustomer } = useAiCoach();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      // Verify message is from same origin (security)
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'DOCK_AI_COACH') {
+        console.log('🔗 Dock-back message received from pop-out window');
+        const customerId = event.data.customerId;
+        
+        if (customerId) {
+          // Load customer and open coach
+          const { data: customer } = await supabase
+            .from('customers')
+            .select('*')
+            .eq('id', customerId)
+            .single();
+          
+          if (customer) {
+            console.log('✅ Opening AI Coach with customer:', customer.customer_id);
+            setCurrentCustomer(customer);
+            openCoach(customer);
+          } else {
+            openCoach(null);
+          }
+        } else {
+          openCoach(null);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [openCoach, setCurrentCustomer, supabase]);
+
+  return null;
+}
+
+function DashboardContent({ children, brokerId }: { children: React.ReactNode; brokerId: string }) {
+  const pathname = usePathname();
+  const { setCurrentPage } = useAiCoach();
+
+
+
+  // Update AI Coach page context when pathname changes
+  useEffect(() => {
+    if (pathname) {
+      setCurrentPage(pathname);
+    }
+  }, [pathname, setCurrentPage]);
+
+  return (
+    <>
+      {children}
+
+      {/* AI Sales Coach Panel - Opened from Help Modal */}
+      {brokerId && <AiCoachPanel />}
+    </>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const supabase = createClient();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
+  const [brokerId, setBrokerId] = useState<string>("");
+  const [showTour, setShowTour] = useState(false);
+
+  // Listen for count updates from NotificationsPanel (fresher data)
+  useEffect(() => {
+    const handleCountUpdate = (e: CustomEvent<{ count: number }>) => {
+      setUnreadCount(e.detail.count);
+      console.log("🔄 Updated badge count from NotificationsPanel:", e.detail.count);
+    };
+    window.addEventListener('notifications-count-update', handleCountUpdate as EventListener);
+    return () => {
+      window.removeEventListener('notifications-count-update', handleCountUpdate as EventListener);
+    };
+  }, []);
+
+  // Fetch user ID and unread notification count
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        setBrokerId(user.id);
+        console.log("🔍 Authenticated user broker_id:", user.id);
+
+        // Check tour status - show on first 3 logins
+        const tourSkipped = localStorage.getItem("tour-skipped");
+        const loginCount = parseInt(
+          localStorage.getItem("login-count") || "0",
+          10,
+        );
+
+        // Increment login count
+        const newLoginCount = loginCount + 1;
+        localStorage.setItem("login-count", newLoginCount.toString());
+
+        // Show tour if not skipped and within first 3 logins
+        if (!tourSkipped && newLoginCount <= 3) {
+          // Show tour after a brief delay for UI to render
+          setTimeout(() => setShowTour(true), 1500);
+        }
+
+        const { count, error, data } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact" })
+          .eq("broker_id", user.id)
+          .eq("is_read", false)
+          .eq("is_archived", false)
+          .or(`scheduled_for.is.null,scheduled_for.lte.${new Date().toISOString()}`); // Only count notifications that are due
+
+        console.log("📊 Unread notifications query result:", {
+          count,
+          error,
+          data,
+        });
+
+        if (!error && count !== null) {
+          setUnreadCount(count);
+          console.log("✅ Setting unreadCount to:", count);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+
+    fetchUserData();
+
+    // Subscribe to real-time changes for this broker only
+    const channel = supabase
+      .channel("notifications-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `broker_id=eq.${brokerId}`,
+        },
+        () => {
+          console.log("🔔 Real-time notification change detected, refetching...");
+          fetchUserData();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
+  // Start browser notification polling
+  useEffect(() => {
+    if (!brokerId) return;
+
+    console.log("🔔 Starting notification polling for broker:", brokerId);
+    const stopPolling = startNotificationPolling(brokerId);
+
+    return () => {
+      console.log("🔕 Stopping notification polling");
+      stopPolling();
+    };
+  }, [brokerId]);
+
+  const handleTourComplete = () => {
+    setShowTour(false);
+  };
+
+  const handleTourSkip = () => {
+    localStorage.setItem("tour-skipped", "true");
+    setShowTour(false);
+  };
+
+  const handleTourStart = () => {
+    setShowTour(true);
+  };
+
+  return (
+    <SidebarProvider>
+      <BrokerViewProvider>
+        <ClickToCallProvider>
+          <AiCoachProvider>
+            <OnlinePresenceProvider>
+              <div
+                className="flex h-screen overflow-hidden bg-slate-50"
+                data-tour="welcome"
+              >
+                {/* PWA Install Banner - Mobile Only */}
+                <PwaInstallBanner />
+
+                {/* Sidebar Navigation - Fixed left on desktop, drawer on mobile */}
+                <DashboardNav />
+
+                {/* Top Navigation - Search and notifications */}
+                <TopNav
+                  unreadCount={unreadCount}
+                  brokerId={brokerId}
+                  notificationsPanelOpen={notificationsPanelOpen}
+                  setNotificationsPanelOpen={setNotificationsPanelOpen}
+                />
+
+                {/* Main Content Area - Scrollable with padding for mobile header */}
+                <main className="flex-1 overflow-y-auto pt-14 lg:pt-22">
+                  <DashboardContent brokerId={brokerId}>
+                    {children}
+                  </DashboardContent>
+                </main>
+
+                {/* Floating AI Coach Button - Quick access to AI Sales Assistant */}
+                <FloatingAiCoachButton />
+
+                {/* Listen for dock-back messages from pop-out window */}
+                <DockBackListener />
+
+                {/* Tour Guide */}
+                <TourGuide
+                  steps={dashboardTour}
+                  isOpen={showTour}
+                  onComplete={handleTourComplete}
+                  onSkip={handleTourSkip}
+                  router={router}
+                />
+
+                {/* Inactivity Timer - Auto-logout after 1 hour */}
+                <InactivityTimer />
+
+                {/* Browser Notification Permission Prompt */}
+                <NotificationPermissionPrompt />
+
+                {/* Warn if the device clock is skewed (prevents auth sign-outs) */}
+                <ClockSkewWarning />
+
+                {/* Advance warning of scheduled maintenance (dismissible) */}
+                <MaintenanceWarningBanner />
+
+                {/* Full-screen maintenance page for non-admins when enabled */}
+                <MaintenanceGate />
+              </div>
+              </OnlinePresenceProvider>
+          </AiCoachProvider>
+        </ClickToCallProvider>
+      </BrokerViewProvider>
+    </SidebarProvider>
+  );
+}

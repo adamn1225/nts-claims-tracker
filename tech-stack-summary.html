@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NTS Claims Tracker - Technology Stack</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        color: #1a1a1a;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 60px;
+        background: #ffffff;
+      }
+
+      h1 {
+        color: #e85d04;
+        font-size: 32px;
+        margin-bottom: 10px;
+        border-bottom: 3px solid #e85d04;
+        padding-bottom: 10px;
+      }
+
+      h2 {
+        color: #1a1a1a;
+        font-size: 22px;
+        margin-top: 32px;
+        margin-bottom: 12px;
+        border-left: 4px solid #e85d04;
+        padding-left: 12px;
+      }
+
+      h3 {
+        color: #e85d04;
+        font-size: 18px;
+        margin-top: 24px;
+        margin-bottom: 8px;
+      }
+
+      p {
+        margin-bottom: 12px;
+        font-size: 15px;
+        color: #333;
+      }
+
+      ul {
+        margin-left: 20px;
+        margin-bottom: 16px;
+      }
+
+      li {
+        margin-bottom: 8px;
+        font-size: 15px;
+      }
+
+      strong {
+        color: #1a1a1a;
+        font-weight: 600;
+      }
+
+      .subtitle {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 30px;
+      }
+
+      .section {
+        margin-bottom: 24px;
+      }
+
+      .tech-item {
+        background: #f8f9fa;
+        border-left: 3px solid #ffa726;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        border-radius: 4px;
+      }
+
+      .tech-name {
+        color: #e85d04;
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 6px;
+      }
+
+      .tech-desc {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .highlight-box {
+        background: #fff5e6;
+        border: 2px solid #ffa726;
+        border-radius: 6px;
+        padding: 20px;
+        margin-top: 32px;
+        margin-bottom: 32px;
+      }
+
+      .highlight-box h3 {
+        margin-top: 0;
+        color: #e85d04;
+      }
+
+      hr {
+        border: none;
+        border-top: 2px solid #e0e0e0;
+        margin: 32px 0;
+      }
+
+      @media print {
+        body {
+          padding: 20px 40px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NTS Claims Tracker</h1>
+    <p class="subtitle">Technology Stack Overview</p>
+
+    <div class="section">
+      <h2>Core Framework & Language</h2>
+
+      <div class="tech-item">
+        <div class="tech-name">Next.js 14</div>
+        <div class="tech-desc">
+          A modern React framework that handles both the user interface and
+          server-side logic. It provides fast page loads, built-in routing, and
+          automatic code optimization. Think of it as the foundation that
+          everything else builds on top of.
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-name">TypeScript</div>
+        <div class="tech-desc">
+          JavaScript with type safety. Catches errors during development instead
+          of in production, making the codebase more reliable and easier to
+          maintain.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Database & Backend</h2>
+
+      <div class="tech-item">
+        <div class="tech-name">Supabase</div>
+        <div class="tech-desc">
+          An open-source Firebase alternative that provides three key services
+          in one:
+        </div>
+        <ul>
+          <li>
+            <strong>PostgreSQL Database</strong> - Industry-standard relational
+            database storing all customer data, tasks, and user information
+          </li>
+          <li>
+            <strong>Authentication</strong> - Handles user login/signup with
+            email/password and Microsoft SSO integration
+          </li>
+          <li>
+            <strong>Realtime</strong> - Live updates across users (when one
+            broker updates a customer, others see it instantly)
+          </li>
+          <li>
+            <strong>Row Level Security (RLS)</strong> - Database-level
+            permissions ensuring brokers only see their assigned customers
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>User Interface</h2>
+
+      <div class="tech-item">
+        <div class="tech-name">Tailwind CSS v4</div>
+        <div class="tech-desc">
+          Utility-first CSS framework for building custom designs quickly.
+          Instead of writing custom CSS files, we use pre-built classes that
+          make the interface consistent and responsive across all devices.
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-name">Lucide Icons</div>
+        <div class="tech-desc">
+          Clean, modern icon set used throughout the UI (phone icons, mail
+          icons, calendar icons, etc.)
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-name">Custom Components</div>
+        <div class="tech-desc">
+          Built from scratch: KanbanBoard, CalendarView, CustomerMap, modals,
+          tooltips - all designed specifically for freight broker workflows.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Data Handling</h2>
+
+      <div class="tech-item">
+        <div class="tech-name">Papa Parse</div>
+        <div class="tech-desc">
+          CSV file parser for importing customer data from spreadsheets
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-name">XLSX Library</div>
+        <div class="tech-desc">
+          Handles Excel file imports (.xlsx, .xls formats)
+        </div>
+      </div>
+
+      <p style="margin-top: 12px">
+        Smart column mapping system auto-detects fields like "Business Name",
+        "Phone", "Email" to streamline imports.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>Deployment & Hosting</h2>
+
+      <div class="tech-item">
+        <div class="tech-name">Netlify</div>
+        <div class="tech-desc">
+          Cloud platform optimized for Next.js. Provides automatic deployments,
+          global CDN, serverless functions, and SSL certificates. Every
+          <code>git push</code> triggers a new deployment.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Future Additions</h2>
+
+      <div class="tech-item">
+        <div class="tech-name">React Native</div>
+        <div class="tech-desc">
+          Mobile app planned for iOS/Android. The codebase is being kept modular
+          to share components between web and mobile versions, ensuring brokers
+          can manage urgent follow-ups 24/7 from their phones.
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-name">SendGrid</div>
+        <div class="tech-desc">
+          Email service for task reminders and notifications (integration
+          planned)
+        </div>
+      </div>
+
+      <div class="tech-item">
+        <div class="tech-name">Calendar Export</div>
+        <div class="tech-desc">
+          iCal integration for syncing follow-ups with external calendars
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="highlight-box">
+      <h3>Why This Stack?</h3>
+
+      <ul style="margin-top: 12px">
+        <li>
+          <strong>Speed</strong> - Next.js + Netlify deliver fast page loads
+          critical for brokers working between calls
+        </li>
+        <li>
+          <strong>Real-time Collaboration</strong> - Supabase Realtime keeps
+          team members synced without manual refreshes
+        </li>
+        <li>
+          <strong>Mobile-First</strong> - Tailwind's responsive design + planned
+          React Native app = full mobile functionality
+        </li>
+        <li>
+          <strong>Scalability</strong> - PostgreSQL + Supabase can handle
+          growing customer databases and user bases
+        </li>
+        <li>
+          <strong>Developer Experience</strong> - TypeScript catches bugs early,
+          Tailwind speeds up UI development, Next.js simplifies routing and API
+          endpoints
+        </li>
+        <li>
+          <strong>Cost-Effective</strong> - Supabase and Netlify offer generous
+          free tiers, with predictable pricing as the app grows
+        </li>
+      </ul>
+    </div>
+
+    <p
+      style="text-align: center; color: #999; font-size: 13px; margin-top: 40px"
+    >
+      NTS Claims Tracker - January 2026
+    </p>
+  </body>
+</html>

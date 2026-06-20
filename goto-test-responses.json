@@ -1,0 +1,910 @@
+{
+  "success": true,
+  "totalLocations": 10,
+  "totalUsersWithLocation": 111,
+  "locationDistribution": [
+    {
+      "name": "Cleveland OHIO",
+      "count": 0
+    },
+    {
+      "name": "Doral",
+      "count": 0
+    },
+    {
+      "name": "Florence Kentucky",
+      "count": 0
+    },
+    {
+      "name": "Fort Myers",
+      "count": 0
+    },
+    {
+      "name": "Fort Pierce",
+      "count": 3
+    },
+    {
+      "name": "(HQ) Fort Lauderdale",
+      "count": 100
+    },
+    {
+      "name": "Jacksonville",
+      "count": 0
+    },
+    {
+      "name": "Orlando FL",
+      "count": 3
+    },
+    {
+      "name": "Tampa Bay FL",
+      "count": 5
+    },
+    {
+      "name": "West Palm beach",
+      "count": 0
+    }
+  ],
+  "userToLocationMap": [
+    [
+      "761314398722009642",
+      "Fort Pierce"
+    ],
+    [
+      "5445103090655469355",
+      "Fort Pierce"
+    ],
+    [
+      "9221514314717241131",
+      "Fort Pierce"
+    ],
+    [
+      "21045102814100499",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "66216342972765269",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "136938021319224552",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "139782457213023681",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "283631568447765527",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "337894662145460474",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "473321514737798429",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "474673910457338888",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "825566553010886145",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "860140700416705555",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "915983797938575147",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1194394437358011452",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1273524081143167443",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1278189313490497301",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1292592916563613717",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1348310663504979943",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1405851402468795060",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1477152545063852396",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1485264738850471440",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1592150464910540603",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1740615312161863105",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1802032935452061189",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1818525612011477009",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1938499921422815249",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1989593133134490986",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "2073466071357623048",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "2115933606614686166",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "2200193583241462792",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "2546875099467636243",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "2615592378708642322",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3055183724097065489",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3103008077526870271",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3165630767103733266",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3187238368906937363",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3207663991289435125",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3385805765021613009",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3404825119626179847",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3408973577272895752",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3468008555014562311",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3521995677306083605",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3625624643890804161",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3671433598854506751",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3686654140635306261",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3706405769681775890",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3713264517673756662",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3828254747477255191",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3908998479815674888",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3922689597987467520",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3964515019314200566",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "3964610682459266832",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4027449974259896678",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4075564597079205397",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4101794549543314194",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4360298528157662227",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4418003096291829013",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4444454052045150264",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4686303722472894208",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4800776076957396481",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4847535012415008274",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4853143614554659282",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4860839106183876966",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "4913158257886144720",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5003410578700622120",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5123091317878349085",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5374336323624887593",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5458925046995632662",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5465160378208128797",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5550900294165798672",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5643713369979767057",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5752766232444121363",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5829943150008492800",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5836306025609200917",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5854193982736952850",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5901708272628105989",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5917357621866529794",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "5969960461408712978",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6028499558612107025",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6212443453395826176",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6280570292227874537",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6311376417141998136",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6376629128917389329",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6445158393548088364",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6455293694185155948",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6579505517545973013",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6686524288109320301",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6716351835979577621",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6827941269337593623",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6891616185529621759",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "6970951444583972854",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "7046937593044111569",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "7084364970158213377",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "7208057836075940647",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "7536260954375117843",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "7581392612324552786",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "7737366021272544691",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "7766010506068658709",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "8041870280768125515",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "8069996883893813265",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "8218794891615893527",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "8446063947242357805",
+      "(HQ) Fort Lauderdale"
+    ],
+    [
+      "1967974532852772648",
+      "Orlando FL"
+    ],
+    [
+      "4391081558248978743",
+      "Orlando FL"
+    ],
+    [
+      "8196970689515101261",
+      "Orlando FL"
+    ],
+    [
+      "1099188823095799592",
+      "Tampa Bay FL"
+    ],
+    [
+      "1382083270092100906",
+      "Tampa Bay FL"
+    ],
+    [
+      "1971480875433750312",
+      "Tampa Bay FL"
+    ],
+    [
+      "6532256207733976108",
+      "Tampa Bay FL"
+    ],
+    [
+      "6538587194912960296",
+      "Tampa Bay FL"
+    ]
+  ],
+  "detailedResults": [
+    {
+      "locationId": "4459089239493594995",
+      "locationName": "Cleveland OHIO",
+      "userCount": 0,
+      "sampleUser": null,
+      "users": []
+    },
+    {
+      "locationId": "2767105830557798220",
+      "locationName": "Doral",
+      "userCount": 0,
+      "sampleUser": null,
+      "users": []
+    },
+    {
+      "locationId": "5144884689768367582",
+      "locationName": "Florence Kentucky",
+      "userCount": 0,
+      "sampleUser": null,
+      "users": []
+    },
+    {
+      "locationId": "4226394339117384806",
+      "locationName": "Fort Myers",
+      "userCount": 0,
+      "sampleUser": null,
+      "users": []
+    },
+    {
+      "locationId": "2120791174635144366",
+      "locationName": "Fort Pierce",
+      "userCount": 3,
+      "sampleUser": {
+        "userKey": "761314398722009642"
+      },
+      "users": [
+        {
+          "userKey": "761314398722009642"
+        },
+        {
+          "userKey": "5445103090655469355"
+        },
+        {
+          "userKey": "9221514314717241131"
+        }
+      ]
+    },
+    {
+      "locationId": "4087838012650833327",
+      "locationName": "(HQ) Fort Lauderdale",
+      "userCount": 100,
+      "sampleUser": {
+        "userKey": "21045102814100499"
+      },
+      "users": [
+        {
+          "userKey": "21045102814100499"
+        },
+        {
+          "userKey": "66216342972765269"
+        },
+        {
+          "userKey": "136938021319224552"
+        },
+        {
+          "userKey": "139782457213023681"
+        },
+        {
+          "userKey": "283631568447765527"
+        },
+        {
+          "userKey": "337894662145460474"
+        },
+        {
+          "userKey": "473321514737798429"
+        },
+        {
+          "userKey": "474673910457338888"
+        },
+        {
+          "userKey": "825566553010886145"
+        },
+        {
+          "userKey": "860140700416705555"
+        },
+        {
+          "userKey": "915983797938575147"
+        },
+        {
+          "userKey": "1194394437358011452"
+        },
+        {
+          "userKey": "1273524081143167443"
+        },
+        {
+          "userKey": "1278189313490497301"
+        },
+        {
+          "userKey": "1292592916563613717"
+        },
+        {
+          "userKey": "1348310663504979943"
+        },
+        {
+          "userKey": "1405851402468795060"
+        },
+        {
+          "userKey": "1477152545063852396"
+        },
+        {
+          "userKey": "1485264738850471440"
+        },
+        {
+          "userKey": "1592150464910540603"
+        },
+        {
+          "userKey": "1740615312161863105"
+        },
+        {
+          "userKey": "1802032935452061189"
+        },
+        {
+          "userKey": "1818525612011477009"
+        },
+        {
+          "userKey": "1938499921422815249"
+        },
+        {
+          "userKey": "1989593133134490986"
+        },
+        {
+          "userKey": "2073466071357623048"
+        },
+        {
+          "userKey": "2115933606614686166"
+        },
+        {
+          "userKey": "2200193583241462792"
+        },
+        {
+          "userKey": "2546875099467636243"
+        },
+        {
+          "userKey": "2615592378708642322"
+        },
+        {
+          "userKey": "3055183724097065489"
+        },
+        {
+          "userKey": "3103008077526870271"
+        },
+        {
+          "userKey": "3165630767103733266"
+        },
+        {
+          "userKey": "3187238368906937363"
+        },
+        {
+          "userKey": "3207663991289435125"
+        },
+        {
+          "userKey": "3385805765021613009"
+        },
+        {
+          "userKey": "3404825119626179847"
+        },
+        {
+          "userKey": "3408973577272895752"
+        },
+        {
+          "userKey": "3468008555014562311"
+        },
+        {
+          "userKey": "3521995677306083605"
+        },
+        {
+          "userKey": "3625624643890804161"
+        },
+        {
+          "userKey": "3671433598854506751"
+        },
+        {
+          "userKey": "3686654140635306261"
+        },
+        {
+          "userKey": "3706405769681775890"
+        },
+        {
+          "userKey": "3713264517673756662"
+        },
+        {
+          "userKey": "3828254747477255191"
+        },
+        {
+          "userKey": "3908998479815674888"
+        },
+        {
+          "userKey": "3922689597987467520"
+        },
+        {
+          "userKey": "3964515019314200566"
+        },
+        {
+          "userKey": "3964610682459266832"
+        },
+        {
+          "userKey": "4027449974259896678"
+        },
+        {
+          "userKey": "4075564597079205397"
+        },
+        {
+          "userKey": "4101794549543314194"
+        },
+        {
+          "userKey": "4360298528157662227"
+        },
+        {
+          "userKey": "4418003096291829013"
+        },
+        {
+          "userKey": "4444454052045150264"
+        },
+        {
+          "userKey": "4686303722472894208"
+        },
+        {
+          "userKey": "4800776076957396481"
+        },
+        {
+          "userKey": "4847535012415008274"
+        },
+        {
+          "userKey": "4853143614554659282"
+        },
+        {
+          "userKey": "4860839106183876966"
+        },
+        {
+          "userKey": "4913158257886144720"
+        },
+        {
+          "userKey": "5003410578700622120"
+        },
+        {
+          "userKey": "5123091317878349085"
+        },
+        {
+          "userKey": "5374336323624887593"
+        },
+        {
+          "userKey": "5458925046995632662"
+        },
+        {
+          "userKey": "5465160378208128797"
+        },
+        {
+          "userKey": "5550900294165798672"
+        },
+        {
+          "userKey": "5643713369979767057"
+        },
+        {
+          "userKey": "5752766232444121363"
+        },
+        {
+          "userKey": "5829943150008492800"
+        },
+        {
+          "userKey": "5836306025609200917"
+        },
+        {
+          "userKey": "5854193982736952850"
+        },
+        {
+          "userKey": "5901708272628105989"
+        },
+        {
+          "userKey": "5917357621866529794"
+        },
+        {
+          "userKey": "5969960461408712978"
+        },
+        {
+          "userKey": "6028499558612107025"
+        },
+        {
+          "userKey": "6212443453395826176"
+        },
+        {
+          "userKey": "6280570292227874537"
+        },
+        {
+          "userKey": "6311376417141998136"
+        },
+        {
+          "userKey": "6376629128917389329"
+        },
+        {
+          "userKey": "6445158393548088364"
+        },
+        {
+          "userKey": "6455293694185155948"
+        },
+        {
+          "userKey": "6579505517545973013"
+        },
+        {
+          "userKey": "6686524288109320301"
+        },
+        {
+          "userKey": "6716351835979577621"
+        },
+        {
+          "userKey": "6827941269337593623"
+        },
+        {
+          "userKey": "6891616185529621759"
+        },
+        {
+          "userKey": "6970951444583972854"
+        },
+        {
+          "userKey": "7046937593044111569"
+        },
+        {
+          "userKey": "7084364970158213377"
+        },
+        {
+          "userKey": "7208057836075940647"
+        },
+        {
+          "userKey": "7536260954375117843"
+        },
+        {
+          "userKey": "7581392612324552786"
+        },
+        {
+          "userKey": "7737366021272544691"
+        },
+        {
+          "userKey": "7766010506068658709"
+        },
+        {
+          "userKey": "8041870280768125515"
+        },
+        {
+          "userKey": "8069996883893813265"
+        },
+        {
+          "userKey": "8218794891615893527"
+        },
+        {
+          "userKey": "8446063947242357805"
+        }
+      ]
+    },
+    {
+      "locationId": "1307166020935369247",
+      "locationName": "Jacksonville",
+      "userCount": 0,
+      "sampleUser": null,
+      "users": []
+    },
+    {
+      "locationId": "8635524298240639128",
+      "locationName": "Orlando FL",
+      "userCount": 3,
+      "sampleUser": {
+        "userKey": "1967974532852772648"
+      },
+      "users": [
+        {
+          "userKey": "1967974532852772648"
+        },
+        {
+          "userKey": "4391081558248978743"
+        },
+        {
+          "userKey": "8196970689515101261"
+        }
+      ]
+    },
+    {
+      "locationId": "4483824012981846943",
+      "locationName": "Tampa Bay FL",
+      "userCount": 5,
+      "sampleUser": {
+        "userKey": "1099188823095799592"
+      },
+      "users": [
+        {
+          "userKey": "1099188823095799592"
+        },
+        {
+          "userKey": "1382083270092100906"
+        },
+        {
+          "userKey": "1971480875433750312"
+        },
+        {
+          "userKey": "6532256207733976108"
+        },
+        {
+          "userKey": "6538587194912960296"
+        }
+      ]
+    },
+    {
+      "locationId": "6191713196749180266",
+      "locationName": "West Palm beach",
+      "userCount": 0,
+      "sampleUser": null,
+      "users": []
+    }
+  ]
+}

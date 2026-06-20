@@ -1,0 +1,24 @@
+[build]
+  command = "npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# DISABLED - Using Supabase pg_cron instead
+# Scheduled Functions (Netlify's built-in cron)
+# [functions]
+#   directory = "netlify/functions"
+#   node_bundler = "esbuild"
+
+# Next.js redirects handled by plugin - remove manual redirect
+# The @netlify/plugin-nextjs handles routing automatically
+
+# Environment variables (set these in Netlify dashboard)
+# NEXT_PUBLIC_SUPABASE_URL
+# NEXT_PUBLIC_SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY
+# SENDGRID_API_KEY
+# SENDGRID_FROM_EMAIL

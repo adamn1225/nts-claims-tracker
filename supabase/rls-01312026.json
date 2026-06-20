@@ -1,0 +1,532 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "broker_permissions",
+    "policyname": "Admins can insert permissions",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "broker_permissions",
+    "policyname": "Admins can update permissions",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "broker_permissions",
+    "policyname": "Admins can view all permissions",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND ((brokers.is_admin = true) OR (brokers.is_manager = true)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "broker_permissions",
+    "policyname": "Brokers can view own permissions",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(broker_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brokers",
+    "policyname": "Admins can manage all brokers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM get_my_broker_role() r(is_manager_val, is_admin_val, office_val)\n  WHERE (r.is_admin_val = true)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brokers",
+    "policyname": "Admins can view all brokers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM get_my_broker_role() r(is_manager_val, is_admin_val, office_val)\n  WHERE (r.is_admin_val = true)))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brokers",
+    "policyname": "Authenticated users can view all brokers",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brokers",
+    "policyname": "Brokers can view their own data",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brokers",
+    "policyname": "Brokers can view their own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brokers",
+    "policyname": "Managers can view office brokers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM get_my_broker_role() r(is_manager_val, is_admin_val, office_val)\n  WHERE ((r.is_manager_val = true) AND (r.office_val IS NOT NULL) AND (r.office_val = brokers.office_location))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "brokers",
+    "policyname": "Users can update own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = id)",
+    "with_check": "(auth.uid() = id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contact_log",
+    "policyname": "Brokers can insert logs for their customers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((auth.uid() = broker_id) AND (EXISTS ( SELECT 1\n   FROM customers\n  WHERE ((customers.id = contact_log.customer_id) AND (customers.broker_id = auth.uid())))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contact_log",
+    "policyname": "Brokers can view logs for their customers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((auth.uid() = broker_id) OR (EXISTS ( SELECT 1\n   FROM customers\n  WHERE ((customers.id = contact_log.customer_id) AND (customers.broker_id = auth.uid())))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "contact_log",
+    "policyname": "Managers can view all contact logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_manager = true))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Authenticated users can delete statuses",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "DELETE",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Authenticated users can insert statuses",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Authenticated users can update statuses",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Authenticated users can view statuses",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Brokers can view their office statuses",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(office_location IN ( SELECT brokers.office_location\n   FROM brokers\n  WHERE (brokers.id = auth.uid())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Managers can create statuses for their office",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_manager = true) AND (brokers.office_location = customer_statuses.office_location))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Managers can delete empty statuses",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "((is_system = false) AND (EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_manager = true) AND (brokers.office_location = customer_statuses.office_location)))) AND (NOT (EXISTS ( SELECT 1\n   FROM customers\n  WHERE (customers.status = customer_statuses.name)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customer_statuses",
+    "policyname": "Managers can update non-system statuses",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((is_system = false) AND (EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_manager = true) AND (brokers.office_location = customer_statuses.office_location)))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customers",
+    "policyname": "Admins can view all customers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customers",
+    "policyname": "Brokers can delete their own customers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customers",
+    "policyname": "Brokers can insert their own customers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = broker_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customers",
+    "policyname": "Brokers can update their own customers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customers",
+    "policyname": "Brokers can view their own customers",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customers",
+    "policyname": "Managers can update customers in their office",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = broker_id) OR ((auth.uid() IN ( SELECT brokers.id\n   FROM brokers\n  WHERE ((brokers.is_manager = true) AND (brokers.office_location IS NOT NULL)))) AND (office_location = ( SELECT brokers.office_location\n   FROM brokers\n  WHERE (brokers.id = auth.uid())))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "customers",
+    "policyname": "Managers can view customers in their office",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((auth.uid() = broker_id) OR ((auth.uid() IN ( SELECT brokers.id\n   FROM brokers\n  WHERE ((brokers.is_manager = true) AND (brokers.office_location IS NOT NULL)))) AND (office_location = ( SELECT brokers.office_location\n   FROM brokers\n  WHERE (brokers.id = auth.uid())))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "email_config",
+    "policyname": "Admins can insert email config",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "email_config",
+    "policyname": "Admins can update email config",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "email_config",
+    "policyname": "Admins can view email config",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "feedback",
+    "policyname": "Admins can update feedback",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "feedback",
+    "policyname": "Admins can view all feedback",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "feedback",
+    "policyname": "Users can submit feedback",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = broker_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "feedback",
+    "policyname": "Users can view own feedback",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notifications",
+    "policyname": "Brokers can update their own notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notifications",
+    "policyname": "Brokers can view their own notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "notifications",
+    "policyname": "System can insert notifications",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tasks",
+    "policyname": "Admins can view all tasks",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM brokers\n  WHERE ((brokers.id = auth.uid()) AND (brokers.is_admin = true))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tasks",
+    "policyname": "Brokers can delete their own tasks",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tasks",
+    "policyname": "Brokers can insert their own tasks",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = broker_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tasks",
+    "policyname": "Brokers can update their own tasks",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tasks",
+    "policyname": "Brokers can view their own tasks",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tasks",
+    "policyname": "Managers can update tasks for their office",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = broker_id) OR ((auth.uid() IN ( SELECT brokers.id\n   FROM brokers\n  WHERE ((brokers.is_manager = true) AND (brokers.office_location IS NOT NULL)))) AND (broker_id IN ( SELECT brokers.id\n   FROM brokers\n  WHERE (brokers.office_location = ( SELECT brokers_1.office_location\n           FROM brokers brokers_1\n          WHERE (brokers_1.id = auth.uid())))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tasks",
+    "policyname": "Managers can view tasks for their office",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((auth.uid() = broker_id) OR ((auth.uid() IN ( SELECT brokers.id\n   FROM brokers\n  WHERE ((brokers.is_manager = true) AND (brokers.office_location IS NOT NULL)))) AND (broker_id IN ( SELECT brokers.id\n   FROM brokers\n  WHERE (brokers.office_location = ( SELECT brokers_1.office_location\n           FROM brokers brokers_1\n          WHERE (brokers_1.id = auth.uid())))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tms_references",
+    "policyname": "Brokers can delete their tms references",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(broker_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tms_references",
+    "policyname": "Brokers can insert their tms references",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(broker_id = auth.uid())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tms_references",
+    "policyname": "Brokers can update their tms references",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(broker_id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "tms_references",
+    "policyname": "Brokers can view their tms references",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "((broker_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM customers c\n  WHERE ((c.id = tms_references.customer_id) AND (c.broker_id = auth.uid())))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_preferences",
+    "policyname": "Brokers can insert their own preferences",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = broker_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_preferences",
+    "policyname": "Brokers can update their own preferences",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "user_preferences",
+    "policyname": "Brokers can view their own preferences",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = broker_id)",
+    "with_check": null
+  }
+]

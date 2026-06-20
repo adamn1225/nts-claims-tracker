@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "NTS Claims Tracker",
+  "version": "0.1.0",
+  "description": "Quick task management and customer capture for NTS Claims Tracker. Pop out a sticky-note window to keep your tasks in view.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "NTS Claims Tracker",
+    "default_icon": {
+      "16": "icons/icon-192.png",
+      "48": "icons/icon-192.png",
+      "128": "icons/icon-512.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "open-sticky": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Open a new NTS sticky window"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-192.png",
+    "48": "icons/icon-192.png",
+    "128": "icons/icon-512.png"
+  },
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["https://*.supabase.co/*"]
+}

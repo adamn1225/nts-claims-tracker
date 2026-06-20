@@ -1,0 +1,363 @@
+{
+  "success": true,
+  "status": 200,
+  "accountKey": "8778469392336402103",
+  "locations": [
+    {
+      "id": "4459089239493594995",
+      "name": "Cleveland OHIO",
+      "address": {
+        "line1": "850 Euclid Ave Ste 601",
+        "line2": "",
+        "city": "Cleveland",
+        "state": "OH",
+        "postalCode": "44114",
+        "country": "US"
+      },
+      "usedForEmergencyServices": false,
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "2767105830557798220",
+      "name": "Doral",
+      "address": {
+        "line1": "9850 NW 41ST ST",
+        "line2": "STE 370",
+        "city": "DORAL",
+        "state": "FL",
+        "postalCode": "33178",
+        "country": "US"
+      },
+      "usedForEmergencyServices": true,
+      "callbackPhoneNumber": {
+        "id": "6b32322c-ca5f-4057-a086-c51106fd64ea",
+        "phoneNumber": "+13054078283",
+        "callerId": "13054078283"
+      },
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "5144884689768367582",
+      "name": "Florence Kentucky",
+      "address": {
+        "line1": "7920 Dream St",
+        "line2": "",
+        "city": "Florence",
+        "state": "KY",
+        "postalCode": "41042",
+        "country": "US"
+      },
+      "usedForEmergencyServices": false,
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "4226394339117384806",
+      "name": "Fort Myers",
+      "address": {
+        "line1": "2180 W 1ST ST",
+        "line2": "STE 305",
+        "city": "FORT MYERS",
+        "state": "FL",
+        "postalCode": "33901-3220",
+        "country": "US"
+      },
+      "usedForEmergencyServices": true,
+      "callbackPhoneNumber": {
+        "id": "55e32ce9-b6a2-4329-86f1-3c5da1545fbb",
+        "phoneNumber": "+12392020536",
+        "callerId": "12392020536"
+      },
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "2120791174635144366",
+      "name": "Fort Pierce",
+      "address": {
+        "line1": "805 VIRGINIA AVE",
+        "line2": "STE 15",
+        "city": "FORT PIERCE",
+        "state": "FL",
+        "postalCode": "34982-5881",
+        "country": "US"
+      },
+      "usedForEmergencyServices": true,
+      "callbackPhoneNumber": {
+        "id": "4fa2afc2-127d-4985-b7e2-17cd034d3172",
+        "phoneNumber": "+17722470214",
+        "callerId": "17722470214"
+      },
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "4087838012650833327",
+      "name": "(HQ) Fort Lauderdale",
+      "address": {
+        "line1": "2765 NW 62ND ST",
+        "line2": "",
+        "city": "FORT LAUDERDALE",
+        "state": "FL",
+        "postalCode": "33309-1745",
+        "country": "US"
+      },
+      "usedForEmergencyServices": true,
+      "callbackPhoneNumber": {
+        "id": "147fa1a4-0e54-496b-a010-3ff082ea9b49",
+        "phoneNumber": "+19542566783",
+        "callerId": "TRANSPORT"
+      },
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "1307166020935369247",
+      "name": "Jacksonville",
+      "address": {
+        "line1": "233 E Bay St Ste 1120",
+        "line2": "",
+        "city": "Jacksonville",
+        "state": "FL",
+        "postalCode": "32202",
+        "country": "US"
+      },
+      "usedForEmergencyServices": false,
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "8635524298240639128",
+      "name": "Orlando FL",
+      "address": {
+        "line1": "121 S ORANGE AVE",
+        "line2": "STE 1400",
+        "city": "ORLANDO",
+        "state": "FL",
+        "postalCode": "32801",
+        "country": "US"
+      },
+      "usedForEmergencyServices": true,
+      "callbackPhoneNumber": {
+        "id": "3ba4d0b8-6002-4a39-bfb2-06299c624359",
+        "phoneNumber": "+14074035985",
+        "callerId": "14074035985"
+      },
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "4483824012981846943",
+      "name": "Tampa Bay FL",
+      "address": {
+        "line1": "5215 W LAUREL ST",
+        "line2": "STE 200",
+        "city": "TAMPA",
+        "state": "FL",
+        "postalCode": "33607-1728",
+        "country": "US"
+      },
+      "usedForEmergencyServices": true,
+      "callbackPhoneNumber": {
+        "id": "b9e9f105-9e29-409e-ae85-0fb7ad7acb2f",
+        "phoneNumber": "+19542814260",
+        "callerId": "TRANSPORT"
+      },
+      "accountKey": "8778469392336402103"
+    },
+    {
+      "id": "6191713196749180266",
+      "name": "West Palm beach",
+      "address": {
+        "line1": "9200 BELVEDERE RD",
+        "line2": "",
+        "city": "WEST PALM BEACH",
+        "state": "FL",
+        "postalCode": "33411-3615",
+        "country": "US"
+      },
+      "usedForEmergencyServices": true,
+      "callbackPhoneNumber": {
+        "id": "46090828-fca7-41ae-9c87-8018e966f8ea",
+        "phoneNumber": "+15612088432",
+        "callerId": "15612088432"
+      },
+      "accountKey": "8778469392336402103"
+    }
+  ],
+  "totalLocations": 10,
+  "nextPageMarker": null,
+  "rawResponse": {
+    "items": [
+      {
+        "id": "4459089239493594995",
+        "name": "Cleveland OHIO",
+        "address": {
+          "line1": "850 Euclid Ave Ste 601",
+          "line2": "",
+          "city": "Cleveland",
+          "state": "OH",
+          "postalCode": "44114",
+          "country": "US"
+        },
+        "usedForEmergencyServices": false,
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "2767105830557798220",
+        "name": "Doral",
+        "address": {
+          "line1": "9850 NW 41ST ST",
+          "line2": "STE 370",
+          "city": "DORAL",
+          "state": "FL",
+          "postalCode": "33178",
+          "country": "US"
+        },
+        "usedForEmergencyServices": true,
+        "callbackPhoneNumber": {
+          "id": "6b32322c-ca5f-4057-a086-c51106fd64ea",
+          "phoneNumber": "+13054078283",
+          "callerId": "13054078283"
+        },
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "5144884689768367582",
+        "name": "Florence Kentucky",
+        "address": {
+          "line1": "7920 Dream St",
+          "line2": "",
+          "city": "Florence",
+          "state": "KY",
+          "postalCode": "41042",
+          "country": "US"
+        },
+        "usedForEmergencyServices": false,
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "4226394339117384806",
+        "name": "Fort Myers",
+        "address": {
+          "line1": "2180 W 1ST ST",
+          "line2": "STE 305",
+          "city": "FORT MYERS",
+          "state": "FL",
+          "postalCode": "33901-3220",
+          "country": "US"
+        },
+        "usedForEmergencyServices": true,
+        "callbackPhoneNumber": {
+          "id": "55e32ce9-b6a2-4329-86f1-3c5da1545fbb",
+          "phoneNumber": "+12392020536",
+          "callerId": "12392020536"
+        },
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "2120791174635144366",
+        "name": "Fort Pierce",
+        "address": {
+          "line1": "805 VIRGINIA AVE",
+          "line2": "STE 15",
+          "city": "FORT PIERCE",
+          "state": "FL",
+          "postalCode": "34982-5881",
+          "country": "US"
+        },
+        "usedForEmergencyServices": true,
+        "callbackPhoneNumber": {
+          "id": "4fa2afc2-127d-4985-b7e2-17cd034d3172",
+          "phoneNumber": "+17722470214",
+          "callerId": "17722470214"
+        },
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "4087838012650833327",
+        "name": "(HQ) Fort Lauderdale",
+        "address": {
+          "line1": "2765 NW 62ND ST",
+          "line2": "",
+          "city": "FORT LAUDERDALE",
+          "state": "FL",
+          "postalCode": "33309-1745",
+          "country": "US"
+        },
+        "usedForEmergencyServices": true,
+        "callbackPhoneNumber": {
+          "id": "147fa1a4-0e54-496b-a010-3ff082ea9b49",
+          "phoneNumber": "+19542566783",
+          "callerId": "TRANSPORT"
+        },
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "1307166020935369247",
+        "name": "Jacksonville",
+        "address": {
+          "line1": "233 E Bay St Ste 1120",
+          "line2": "",
+          "city": "Jacksonville",
+          "state": "FL",
+          "postalCode": "32202",
+          "country": "US"
+        },
+        "usedForEmergencyServices": false,
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "8635524298240639128",
+        "name": "Orlando FL",
+        "address": {
+          "line1": "121 S ORANGE AVE",
+          "line2": "STE 1400",
+          "city": "ORLANDO",
+          "state": "FL",
+          "postalCode": "32801",
+          "country": "US"
+        },
+        "usedForEmergencyServices": true,
+        "callbackPhoneNumber": {
+          "id": "3ba4d0b8-6002-4a39-bfb2-06299c624359",
+          "phoneNumber": "+14074035985",
+          "callerId": "14074035985"
+        },
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "4483824012981846943",
+        "name": "Tampa Bay FL",
+        "address": {
+          "line1": "5215 W LAUREL ST",
+          "line2": "STE 200",
+          "city": "TAMPA",
+          "state": "FL",
+          "postalCode": "33607-1728",
+          "country": "US"
+        },
+        "usedForEmergencyServices": true,
+        "callbackPhoneNumber": {
+          "id": "b9e9f105-9e29-409e-ae85-0fb7ad7acb2f",
+          "phoneNumber": "+19542814260",
+          "callerId": "TRANSPORT"
+        },
+        "accountKey": "8778469392336402103"
+      },
+      {
+        "id": "6191713196749180266",
+        "name": "West Palm beach",
+        "address": {
+          "line1": "9200 BELVEDERE RD",
+          "line2": "",
+          "city": "WEST PALM BEACH",
+          "state": "FL",
+          "postalCode": "33411-3615",
+          "country": "US"
+        },
+        "usedForEmergencyServices": true,
+        "callbackPhoneNumber": {
+          "id": "46090828-fca7-41ae-9c87-8018e966f8ea",
+          "phoneNumber": "+15612088432",
+          "callerId": "15612088432"
+        },
+        "accountKey": "8778469392336402103"
+      }
+    ]
+  }
+}

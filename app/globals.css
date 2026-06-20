@@ -1,0 +1,69 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Prevent browser auto-darkening of form inputs in dark mode/incognito */
+input,
+select,
+textarea {
+  color-scheme: light !important;
+}
+
+/* Force dark text ONLY on white background inputs (modals, forms with bg-white) */
+input.bg-white,
+select.bg-white,
+textarea.bg-white,
+.bg-white input,
+.bg-white select,
+.bg-white textarea {
+  color: #171717 !important;
+  -webkit-text-fill-color: #171717 !important;
+  background-color: white !important;
+}
+
+/* Override browser autofill styling */
+input.bg-white:-webkit-autofill,
+.bg-white input:-webkit-autofill {
+  -webkit-text-fill-color: #171717 !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+}
+
+/* Ensure placeholders remain visible on white backgrounds */
+input.bg-white::placeholder,
+textarea.bg-white::placeholder,
+.bg-white input::placeholder,
+.bg-white textarea::placeholder,
+select.bg-white::placeholder,
+.bg-white select::placeholder {
+  color: #8da1b9 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #8da1b9 !important;
+}
+
+button {
+  cursor: pointer !important;
+}
