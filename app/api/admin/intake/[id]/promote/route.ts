@@ -169,6 +169,10 @@ export async function POST(
   const { data: claim, error: claimErr } = await admin
     .from("claims")
     .insert({
+      // The `claims_set_claim_number` BEFORE-INSERT trigger replaces this
+      // empty string with a generated value (CLM-YYYY-NNNN). We pass "" only
+      // to satisfy the generated TS types, which don't see the trigger.
+      claim_number: "",
       intake_source: "web_form",
       intake_submission_id: submissionId,
       status_id: inboxStatus.id,

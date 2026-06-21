@@ -170,19 +170,22 @@ export default function IntakeForm({
             name="submitter_first_name"
             required
             autoComplete="given-name"
+            placeholder="Jane"
           />
           <Field
             label="Last name"
             name="submitter_last_name"
             required
             autoComplete="family-name"
+            placeholder="Doe"
           />
         </Grid2>
         <Field
           label="Company / business name"
           name="submitter_company"
           autoComplete="organization"
-          placeholder="Leave blank for personal shipments (auto / RV / household goods, etc.)"
+          placeholder="e.g. Acme Logistics LLC"
+          hint="Leave blank for personal shipments — auto transport, RV / camper, household goods, container moves, etc."
         />
         <Grid2>
           <Field
@@ -191,12 +194,15 @@ export default function IntakeForm({
             type="email"
             required
             autoComplete="email"
+            placeholder="you@example.com"
+            hint="We'll send your claim acknowledgment and all updates here."
           />
           <Field
             label="Phone"
             name="submitter_phone"
             type="tel"
             autoComplete="tel"
+            placeholder="(555) 123-4567"
           />
         </Grid2>
       </Section>
@@ -204,35 +210,55 @@ export default function IntakeForm({
       {/* Shipment identifiers */}
       <Section
         title="Shipment details"
-        description="Provide any reference numbers you have — they help us locate the load in our system."
+        description="Provide any reference numbers you have — they help us locate the load in our system. If you're not sure about a field, fill it out to the best of your ability and our team will fill in the rest."
       >
         <Grid2>
           <Field
             label="NTS order / load number"
             name="tms_order_number"
-            placeholder="e.g. NTS-123456"
+            placeholder="e.g. 1018344"
+            hint="Usually found at the top of your order confirmation, rate confirmation, or invoice."
           />
           <Field
             label="BOL number"
             name="bol_number"
-            placeholder="Bill of Lading reference"
+            placeholder="e.g. BOL-1018344"
+            hint="Bill of Lading number — printed on the BOL the driver signed at pickup and delivery."
           />
         </Grid2>
         <Grid2>
-          <Field label="Carrier company name" name="carrier_name" />
-          <Field label="Carrier PRO number" name="carrier_pro_number" />
+          <Field
+            label="Carrier company name"
+            name="carrier_name"
+            placeholder="e.g. Acme Trucking Inc"
+            hint="The trucking company that moved (or was supposed to move) your freight."
+          />
+          <Field
+            label="Carrier PRO number"
+            name="carrier_pro_number"
+            placeholder="Carrier tracking / PRO #"
+            hint="The carrier's internal tracking number for the shipment. Usually on the BOL or delivery receipt."
+          />
         </Grid2>
         <Grid2>
-          <Select label="Freight type" name="freight_type_id">
-            <option value="">— Select —</option>
+          <Select
+            label="Freight type"
+            name="freight_type_id"
+            hint="Best guess is fine — e.g. tractor, vehicle, container, household goods."
+          >
+            <option value="">— Select (optional) —</option>
             {freightTypes.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name}
               </option>
             ))}
           </Select>
-          <Select label="Trailer type" name="trailer_type_id">
-            <option value="">— Select —</option>
+          <Select
+            label="Trailer type"
+            name="trailer_type_id"
+            hint="Not sure? Leave blank — our team will identify it from your load record."
+          >
+            <option value="">— Not sure / leave blank —</option>
             {trailerTypes.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -243,17 +269,19 @@ export default function IntakeForm({
         <Field
           label="Commodity / cargo description"
           name="commodity"
-          placeholder="What was being shipped?"
+          placeholder="e.g. 2022 Kenworth T880, John Deere 9620R tractor, household goods"
+          hint="What was being shipped? Year/make/model is helpful for vehicles and equipment."
         />
       </Section>
 
       {/* Origin / Destination */}
-      <Section title="Origin & destination">
+      <Section
+        title="Origin & destination"
+        description="Start with the ZIP code and we'll auto-fill the city and state for you."
+      >
         <fieldset className="space-y-3 rounded-lg border border-slate-200 p-4">
           <legend className="text-sm font-medium text-slate-700">Origin</legend>
           <Grid3>
-            <Field label="City" name="origin_city" />
-            <Field label="State" name="origin_state" maxLength={2} />
             <ZipField
               label="ZIP"
               name="origin_postal_code"
@@ -277,6 +305,13 @@ export default function IntakeForm({
                 )
               }
             />
+            <Field label="City" name="origin_city" placeholder="Auto-fills from ZIP" />
+            <Field
+              label="State"
+              name="origin_state"
+              maxLength={2}
+              placeholder="AL"
+            />
           </Grid3>
         </fieldset>
 
@@ -285,8 +320,6 @@ export default function IntakeForm({
             Destination
           </legend>
           <Grid3>
-            <Field label="City" name="destination_city" />
-            <Field label="State" name="destination_state" maxLength={2} />
             <ZipField
               label="ZIP"
               name="destination_postal_code"
@@ -310,17 +343,46 @@ export default function IntakeForm({
                 )
               }
             />
+            <Field
+              label="City"
+              name="destination_city"
+              placeholder="Auto-fills from ZIP"
+            />
+            <Field
+              label="State"
+              name="destination_state"
+              maxLength={2}
+              placeholder="CA"
+            />
           </Grid3>
         </fieldset>
       </Section>
 
       {/* Dates */}
-      <Section title="Key dates">
-        <Grid3>
-          <Field label="Pickup date" name="pickup_date" type="date" />
-          <Field label="Delivery date" name="delivery_date" type="date" />
-          <Field label="Date of incident" name="incident_date" type="date" />
-        </Grid3>
+      <Section
+        title="Key dates"
+        description="Approximate dates are fine if you don't remember exactly."
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Field
+            label="Pickup date"
+            name="pickup_date"
+            type="date"
+            hint="When the carrier picked up the freight."
+          />
+          <Field
+            label="Delivery date"
+            name="delivery_date"
+            type="date"
+            hint="When delivery was attempted or completed."
+          />
+          <Field
+            label="Date of incident"
+            name="incident_date"
+            type="date"
+            hint="When the damage or loss was discovered."
+          />
+        </div>
       </Section>
 
       {/* Damage / loss */}
@@ -331,6 +393,7 @@ export default function IntakeForm({
           rows={5}
           required
           placeholder="Be as specific as you can — what was damaged, when you noticed it, who was present, any notations on the BOL at delivery, etc."
+          hint="The more detail you provide here, the faster our team can investigate. Include any notations made on the BOL or delivery receipt."
         />
         <Grid2>
           <Field
@@ -341,6 +404,7 @@ export default function IntakeForm({
             min="0"
             step="0.01"
             placeholder="e.g. 7500.00"
+            hint="What you're seeking in compensation. A rough estimate is fine — you can update it later with repair invoices."
           />
           <Field
             label="Total shipment value (USD)"
@@ -350,6 +414,7 @@ export default function IntakeForm({
             min="0"
             step="0.01"
             placeholder="e.g. 45000.00"
+            hint="The declared or invoice value of the entire shipment."
           />
         </Grid2>
       </Section>
@@ -483,20 +548,35 @@ function Grid2({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ZIP first (narrow), then City (wide), then State (narrow).
+// This pairs naturally with the auto-fill UX: customer types ZIP → city/state
+// populate to the right.
 function Grid3({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_6rem_8rem]">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[7rem_1fr_5rem]">
       {children}
     </div>
+  );
+}
+
+// Shared hint/help text rendered below an input. Stays visible (no hover
+// required) so it works on mobile and is accessible to screen readers.
+function FieldHint({ id, text }: { id: string; text: string }) {
+  return (
+    <span id={id} className="mt-1 block text-xs text-slate-500">
+      {text}
+    </span>
   );
 }
 
 type FieldProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   name: string;
+  hint?: string;
 };
 
-function Field({ label, name, required, ...rest }: FieldProps) {
+function Field({ label, name, required, hint, ...rest }: FieldProps) {
+  const hintId = hint ? `${name}-hint` : undefined;
   return (
     <label className="block">
       <span className="block text-sm font-medium text-slate-700">
@@ -506,9 +586,11 @@ function Field({ label, name, required, ...rest }: FieldProps) {
       <input
         name={name}
         required={required}
+        aria-describedby={hintId}
         className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
         {...rest}
       />
+      {hint && hintId && <FieldHint id={hintId} text={hint} />}
     </label>
   );
 }
@@ -516,9 +598,18 @@ function Field({ label, name, required, ...rest }: FieldProps) {
 type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
   label: string;
   name: string;
+  hint?: string;
 };
 
-function Select({ label, name, children, required, ...rest }: SelectProps) {
+function Select({
+  label,
+  name,
+  children,
+  required,
+  hint,
+  ...rest
+}: SelectProps) {
+  const hintId = hint ? `${name}-hint` : undefined;
   return (
     <label className="block">
       <span className="block text-sm font-medium text-slate-700">
@@ -528,11 +619,13 @@ function Select({ label, name, children, required, ...rest }: SelectProps) {
       <select
         name={name}
         required={required}
+        aria-describedby={hintId}
         className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
         {...rest}
       >
         {children}
       </select>
+      {hint && hintId && <FieldHint id={hintId} text={hint} />}
     </label>
   );
 }
@@ -540,9 +633,11 @@ function Select({ label, name, children, required, ...rest }: SelectProps) {
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   name: string;
+  hint?: string;
 };
 
-function Textarea({ label, name, required, ...rest }: TextareaProps) {
+function Textarea({ label, name, required, hint, ...rest }: TextareaProps) {
+  const hintId = hint ? `${name}-hint` : undefined;
   return (
     <label className="block">
       <span className="block text-sm font-medium text-slate-700">
@@ -552,9 +647,11 @@ function Textarea({ label, name, required, ...rest }: TextareaProps) {
       <textarea
         name={name}
         required={required}
+        aria-describedby={hintId}
         className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
         {...rest}
       />
+      {hint && hintId && <FieldHint id={hintId} text={hint} />}
     </label>
   );
 }
@@ -580,6 +677,8 @@ function ZipField({
         name={name}
         inputMode="numeric"
         maxLength={5}
+        placeholder="33179"
+        autoComplete="postal-code"
         onChange={(e) => {
           const v = e.target.value.replace(/\D/g, "").slice(0, 5);
           e.target.value = v;
