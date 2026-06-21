@@ -27,7 +27,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  *   }
  * }
  *
- * Uses broker's saved preferences if `preferences` not supplied.
+ * Uses teamMember's saved preferences if `preferences` not supplied.
  */
 export async function POST(request: NextRequest) {
     const supabase = await createClient();
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         const { data: row } = await supabase
             .from("dialer_ai_preferences")
             .select("post_performance, post_tips, post_email_draft, post_sms_draft, post_suggest_followup")
-            .eq("broker_id", user.id)
+            .eq("team_member_id", user.id)
             .maybeSingle();
         prefs = {
             performance: row?.post_performance ?? true,
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     const source = transcript
         ? `Call transcript (from GoTo):\n${transcript}`
-        : `Broker's notes (no transcript available):\n${notes}`;
+        : `TeamMember's notes (no transcript available):\n${notes}`;
 
     const fieldSpec = [
         prefs.performance && '  "performance": "1-3 sentence analysis of what went well and what to improve"',

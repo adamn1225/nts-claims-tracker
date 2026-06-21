@@ -38,7 +38,7 @@ import Tooltip from "./Tooltip";
 import { createClient } from "@/lib/supabase/client";
 import { getCustomerDisplayName } from "@/lib/customer-utils";
 import { useCustomerSearch } from "@/contexts/CustomerSearchContext";
-import { useBrokerView } from "@/contexts/BrokerViewContext";
+import { useTeamMemberView } from "@/contexts/TeamMemberViewContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 
 import { getTimezoneByPhone } from "@/lib/timezone-utils";
@@ -248,17 +248,17 @@ function CustomerCard({
         {...listeners}
         onClick={() => onEdit(customer)}
         className={`group relative flex items-center gap-2 rounded border bg-white p-2 transition-all ${customer.is_pinned
-          ? "border-orange-300 shadow-sm"
+          ? "border-primary/40 shadow-sm"
           : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
           } ${isOver
-            ? "ring-2 ring-orange-400 ring-opacity-50 shadow-md"
+            ? "ring-2 ring-primary/50 shadow-md"
             : ""
           } ${isDragging ? "opacity-0" : "cursor-grab active:cursor-grabbing"}`}
       >
         {/* Pin indicator */}
         {customer.is_pinned && (
           <div className="absolute -left-1 -top-1">
-            <Pin className="h-4 w-4 text-orange-500" fill="currentColor" />
+            <Pin className="h-4 w-4 text-primary" fill="currentColor" />
           </div>
         )}
 
@@ -309,7 +309,7 @@ function CustomerCard({
               e.stopPropagation();
               onQuickAction("notes", customer);
             }}
-            className="rounded p-1 text-slate-500 hover:bg-orange-100 hover:text-orange-700"
+            className="rounded p-1 text-slate-500 hover:bg-primary/10 hover:text-primary-text"
             title="Add note"
           >
             <Calendar className="h-3 w-3" />
@@ -334,12 +334,12 @@ function CustomerCard({
         onSelect?.(customer.id);
       }}
       className={`group relative rounded border bg-white transition-all ${customer.is_pinned
-        ? "border-orange-300 shadow-sm"
+        ? "border-primary/40 shadow-sm"
         : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
         } ${isSelected
-          ? "ring-2 ring-orange-500 ring-offset-1"
+          ? "ring-2 ring-primary ring-offset-1"
           : isOver
-            ? "ring-2 ring-orange-400 ring-opacity-50 shadow-md"
+            ? "ring-2 ring-primary/50 shadow-md"
             : ""
         } ${isDragging ? "opacity-0" : "cursor-grab active:cursor-grabbing"}`}
     >
@@ -358,7 +358,7 @@ function CustomerCard({
             {/* Business Name & ID */}
             <Link
               href={`/dashboard/customers/${customer.customer_id}`}
-              className="mb-0.5 block truncate text-sm font-semibold leading-tight text-slate-900 hover:text-orange-600"
+              className="mb-0.5 block truncate text-sm font-semibold leading-tight text-slate-900 hover:text-primary-text"
               onClick={(e) => e.stopPropagation()}
             >
               {customer.business_name || getCustomerDisplayName(customer) || "Unknown"}
@@ -431,7 +431,7 @@ function CustomerCard({
                   e.stopPropagation();
                   onPin(customer.id);
                 }}
-                className="text-orange-500 transition-opacity opacity-100 hover:opacity-70"
+                className="text-primary transition-opacity opacity-100 hover:opacity-70"
                 title="Unpin"
               >
                 <Pin className="h-4 w-4" fill="currentColor" />
@@ -443,7 +443,7 @@ function CustomerCard({
                   e.stopPropagation();
                   onPin(customer.id);
                 }}
-                className="text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-orange-500"
+                className="text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary"
                 title="Pin"
               >
                 <Pin className="h-4 w-4" />
@@ -548,7 +548,7 @@ function CustomerCard({
                 )}
                 <button
                   onClick={() => onQuickAction("schedule", customer)}
-                  className="flex h-7 flex-1 items-center justify-center gap-1 rounded bg-orange-500 text-[11px] font-medium text-white transition-colors hover:bg-orange-600"
+                  className="flex h-7 flex-1 items-center justify-center gap-1 rounded bg-primary text-[11px] font-medium text-white transition-colors hover:bg-primary-text"
                   title="Schedule"
                 >
                   <Calendar className="h-3 w-3" />
@@ -830,7 +830,7 @@ function KanbanColumn({
       id={statusId}
       ref={setNodeRef}
       className={`flex h-[calc(100vh-12rem)] flex-col bg-white transition-all relative ${isOver
-        ? "ring-4 ring-orange-500 ring-opacity-80 bg-orange-50 shadow-xl scale-[1.02]"
+        ? "ring-4 ring-primary/80 bg-primary/5 shadow-xl scale-[1.02]"
         : ""
         }`}
       style={{
@@ -844,7 +844,7 @@ function KanbanColumn({
       {/* Resize Handle */}
       {onResizeStart && (
         <div
-          className={`absolute top-0 right-0 bottom-0 w-1 hover:w-2 cursor-col-resize transition-all z-10 ${isResizing ? 'bg-orange-500 w-2' : 'bg-transparent hover:bg-slate-300'
+          className={`absolute top-0 right-0 bottom-0 w-1 hover:w-2 cursor-col-resize transition-all z-10 ${isResizing ? 'bg-primary w-2' : 'bg-transparent hover:bg-slate-300'
             }`}
           onMouseDown={(e) => onResizeStart(statusId, e)}
           title="Drag to resize column"
@@ -854,7 +854,7 @@ function KanbanColumn({
       {/* Column Header - Inline editable */}
       <div
         className={`shrink-0 border-b px-3 py-2.5 transition-all ${isOver
-          ? "bg-orange-100 border-orange-500 border-b-2"
+          ? "bg-primary/10 border-primary border-b-2"
           : "border-slate-200"
           }`}
       >
@@ -871,7 +871,7 @@ function KanbanColumn({
                   onCancelEdit?.();
                 }
               }}
-              className="h-7 flex-1 rounded border border-orange-500 px-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="h-7 flex-1 rounded border border-primary px-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary"
               autoFocus
             />
             <button
@@ -939,7 +939,7 @@ function KanbanColumn({
             {/* Bottom Row: Title + action buttons */}
             <div className="flex items-center justify-between gap-2">
               <h2
-                className={`text-sm font-semibold text-slate-900 truncate flex-1 ${canManageBoard && statusId !== "inbox" ? "cursor-pointer hover:text-orange-600 transition-colors" : ""}`}
+                className={`text-sm font-semibold text-slate-900 truncate flex-1 ${canManageBoard && statusId !== "inbox" ? "cursor-pointer hover:text-primary-text transition-colors" : ""}`}
                 onClick={canManageBoard && statusId !== "inbox" ? onStartEdit : undefined}
                 title={canManageBoard && statusId !== "inbox" ? "Click to rename" : title}
               >
@@ -951,7 +951,7 @@ function KanbanColumn({
                 {canManageBoard && statusId !== "inbox" && (
                   <button
                     onClick={onStartEdit}
-                    className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-200 hover:text-orange-600 transition-colors"
+                    className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-200 hover:text-primary-text transition-colors"
                     title="Rename column"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -987,7 +987,7 @@ function KanbanColumn({
           <div className="flex items-center justify-between px-3 py-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-orange-400 hover:bg-orange-50 hover:text-orange-700 hover:shadow"
+              className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-primary/60 hover:bg-primary/5 hover:text-primary-text hover:shadow"
             >
               <Filter className="h-4 w-4" />
               <span>Filter by Source</span>
@@ -996,7 +996,7 @@ function KanbanColumn({
             {!showFilters && selectedImportSource && (
               <button
                 onClick={() => setSelectedImportSource(null)}
-                className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-100"
+                className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary-text transition-colors hover:bg-primary/10"
               >
                 Clear
               </button>
@@ -1008,7 +1008,7 @@ function KanbanColumn({
                 <button
                   onClick={() => setSelectedImportSource(null)}
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all ${selectedImportSource === null
-                    ? "bg-orange-500 text-white shadow-sm"
+                    ? "bg-primary text-white shadow-sm"
                     : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-100"
                     }`}
                   title="Show all"
@@ -1043,13 +1043,13 @@ function KanbanColumn({
 
       {/* Cards Container - Tighter spacing like Pipedrive */}
       <div
-        className={`flex-1 space-y-2 overflow-y-auto p-3 transition-colors ${isOver ? "bg-orange-100/70" : ""
+        className={`flex-1 space-y-2 overflow-y-auto p-3 transition-colors ${isOver ? "bg-primary/10" : ""
           }`}
       >
         {/* Drop indicator at top when hovering */}
         {isOver && activeCustomerId && (
-          <div className="mb-2 rounded-lg border-2 border-dashed border-orange-400 bg-orange-100 p-4 text-center">
-            <p className="text-sm font-medium text-orange-700">
+          <div className="mb-2 rounded-lg border-2 border-dashed border-primary/60 bg-primary/10 p-4 text-center">
+            <p className="text-sm font-medium text-primary-text">
               Drop here to move to {title}
             </p>
           </div>
@@ -1128,7 +1128,7 @@ function KanbanColumn({
 
         {customers.length === 0 && (
           <div className="flex h-32 items-center justify-center text-sm text-slate-400">
-            No customers yet
+            No claims yet
           </div>
         )}
 
@@ -1136,7 +1136,7 @@ function KanbanColumn({
         {activeCustomerId && displayCustomers.length > 0 && (
           <div
             className={`min-h-20 rounded-lg border-2 border-dashed transition-colors ${isOver
-              ? "border-orange-500 bg-orange-50"
+              ? "border-primary bg-primary/5"
               : "border-slate-300 bg-slate-50"
               }`}
           >
@@ -1227,7 +1227,7 @@ export default function KanbanBoard({
 }: KanbanBoardProps) {
   const supabase = createClient();
   const { searchQuery, sourceFilter, timezoneFilter, timezoneMode } = useCustomerSearch();
-  const { viewingBroker, currentBroker, canEditCustomerData } = useBrokerView();
+  const { viewingTeamMember, currentTeamMember, canEditCustomerData } = useTeamMemberView();
   const { isCollapsed: isSidebarCollapsed } = useSidebar();
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
   const [isManager, setIsManager] = useState(false);
@@ -1235,16 +1235,16 @@ export default function KanbanBoard({
 
   // Determine if the current user can manage the viewed board
   // (rename/delete/add columns, edit customers, create tasks)
-  const isViewingOwnBoard = !viewingBroker || viewingBroker.id === currentBroker?.id;
-  const isSameOffice = viewingBroker?.office_location != null &&
-    viewingBroker.office_location === currentBroker?.office_location;
+  const isViewingOwnBoard = !viewingTeamMember || viewingTeamMember.id === currentTeamMember?.id;
+  const isSameOffice = viewingTeamMember?.office_location != null &&
+    viewingTeamMember.office_location === currentTeamMember?.office_location;
   // IMPORTANT: Column structural changes (rename/add/delete) are ONLY allowed on your own board.
-  // When an admin views another broker's board, the customer_statuses RLS blocks the real column
+  // When an admin views another teamMember's board, the customer_statuses RLS blocks the real column
   // rows from being fetched, so hardcoded fallback columns are shown with fake string IDs.
   // If an admin renames a fallback column, the customer_statuses UPDATE silently no-ops (fake ID),
   // but the customers.status bulk-update SUCCEEDS — orphaning those customers in "purgatory"
   // (their status no longer matches any real column). Disabling column management when viewing
-  // another broker prevents this data corruption until proper admin RLS policies are in place.
+  // another teamMember prevents this data corruption until proper admin RLS policies are in place.
   const canManageViewedBoard = isViewingOwnBoard;
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteCustomer, setNoteCustomer] = useState<Customer | null>(null);
@@ -1258,7 +1258,7 @@ export default function KanbanBoard({
   const [customerToRemove, setCustomerToRemove] = useState<Customer | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareCustomer, setShareCustomer] = useState<Customer | null>(null);
-  const [currentBrokerId, setCurrentBrokerId] = useState<string>("");
+  const [currentTeamMemberId, setCurrentTeamMemberId] = useState<string>("");
   const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
   const [editingStatusName, setEditingStatusName] = useState("");
   const [isAddingStatus, setIsAddingStatus] = useState(false);
@@ -1400,31 +1400,31 @@ export default function KanbanBoard({
     }),
   );
 
-  // Fetch statuses from Supabase on mount or when viewing broker changes
+  // Fetch statuses from Supabase on mount or when viewing team member changes
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        // Get current broker's office location and role
+        // Get current team member's office location and role
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data: broker } = await supabase
-            .from('brokers')
+          const { data: teamMember } = await supabase
+            .from('team_members')
             .select('id, is_manager, is_admin')
             .eq('id', user.id)
             .single();
 
-          if (broker) {
-            // Set broker ID for sharing
-            setCurrentBrokerId(broker.id);
+          if (teamMember) {
+            // Set teamMember ID for sharing
+            setCurrentTeamMemberId(teamMember.id);
 
             // Set role flags
-            setIsManager(broker?.is_manager || false);
-            setIsAdmin(broker?.is_admin || false);
+            setIsManager(teamMember?.is_manager || false);
+            setIsAdmin(teamMember?.is_admin || false);
           }
         }
 
-        // Check if we're viewing our own data or another broker's
-        const isViewingOwnData = !viewingBroker || viewingBroker.id === user?.id;
+        // Check if we're viewing our own data or another team member's
+        const isViewingOwnData = !viewingTeamMember || viewingTeamMember.id === user?.id;
 
         if (isViewingOwnData) {
           const inboxStatus = {
@@ -1454,7 +1454,7 @@ export default function KanbanBoard({
             const { data: directRead } = await supabase
               .from("customer_statuses")
               .select("*")
-              .eq("broker_id", user.id)
+              .eq("team_member_id", user.id)
               .order("order", { ascending: true });
 
             if (directRead && directRead.length > 0) {
@@ -1465,11 +1465,15 @@ export default function KanbanBoard({
               ]);
             } else {
               // Genuinely new user — seed defaults
+              // CEO's 6 default kanban columns (per email spec). Inbox is
+              // prepended separately as a protected/system column, so the
+              // seed inserts only the 5 working stages.
               const defaultStatuses = [
-                { broker_id: user.id, name: "Prospect", color: "blue",  order: 0, is_system: false, created_by: user.id },
-                { broker_id: user.id, name: "Active",   color: "green", order: 1, is_system: false, created_by: user.id },
-                { broker_id: user.id, name: "Won",      color: "amber", order: 2, is_system: false, created_by: user.id },
-                { broker_id: user.id, name: "Lost",     color: "slate", order: 3, is_system: false, created_by: user.id },
+                { team_member_id: user.id, name: "Claim Started",          color: "blue",   order: 0, is_system: false, created_by: user.id },
+                { team_member_id: user.id, name: "Processing Claim",       color: "amber",  order: 1, is_system: false, created_by: user.id },
+                { team_member_id: user.id, name: "Claim Denied",           color: "red",    order: 2, is_system: false, created_by: user.id },
+                { team_member_id: user.id, name: "Claim Awaiting Payment", color: "orange", order: 3, is_system: false, created_by: user.id },
+                { team_member_id: user.id, name: "Claim Closed",           color: "green",  order: 4, is_system: false, created_by: user.id },
               ];
 
               const { data: seeded } = await supabase
@@ -1485,7 +1489,7 @@ export default function KanbanBoard({
                 const { data: refetch } = await supabase
                   .from("customer_statuses")
                   .select("*")
-                  .eq("broker_id", user.id)
+                  .eq("team_member_id", user.id)
                   .order("order", { ascending: true });
                 if (refetch && refetch.length > 0) {
                   setStatuses([
@@ -1504,18 +1508,18 @@ export default function KanbanBoard({
             setStatuses([inboxStatus]);
           }
         } else {
-          // Viewing another broker's data - fetch their statuses from the database
-          console.log("[KanbanBoard] Viewing another broker, fetching their statuses");
+          // Viewing another teamMember's data - fetch their statuses from the database
+          console.log("[KanbanBoard] Viewing another team member, fetching their statuses");
 
-          // Fetch the viewing broker's custom statuses from the database
-          const { data: viewingBrokerStatuses, error: statusError } = await supabase
+          // Fetch the viewing team member's custom statuses from the database
+          const { data: viewingTeamMemberStatuses, error: statusError } = await supabase
             .from('customer_statuses')
             .select('*')
-            .eq('broker_id', viewingBroker.id)
+            .eq('team_member_id', viewingTeamMember.id)
             .order('order', { ascending: true });
 
           if (statusError) {
-            console.error("Error fetching viewing broker's statuses:", statusError);
+            console.error("Error fetching viewing team member's statuses:", statusError);
           }
 
           const inboxStatus = {
@@ -1527,16 +1531,19 @@ export default function KanbanBoard({
             is_protected: true,
           };
 
-          if (viewingBrokerStatuses && viewingBrokerStatuses.length > 0) {
-            setStatuses([inboxStatus, ...viewingBrokerStatuses]);
+          if (viewingTeamMemberStatuses && viewingTeamMemberStatuses.length > 0) {
+            setStatuses([inboxStatus, ...viewingTeamMemberStatuses]);
           } else {
-            // Fallback to default statuses if the broker has none
+            // Fallback to CEO's 6 default kanban columns (per email spec)
+            // if the viewed teamMember has no custom statuses yet. Inbox is
+            // already in inboxStatus above as a protected/system column.
             setStatuses([
               inboxStatus,
-              { id: "prospect", name: "Prospect", color: "blue", order: 0, customer_count: 0 },
-              { id: "active", name: "Active", color: "green", order: 1, customer_count: 0 },
-              { id: "won", name: "Won", color: "amber", order: 2, customer_count: 0 },
-              { id: "lost", name: "Lost", color: "slate", order: 3, customer_count: 0 },
+              { id: "claim_started",          name: "Claim Started",          color: "blue",   order: 0, customer_count: 0 },
+              { id: "processing_claim",       name: "Processing Claim",       color: "amber",  order: 1, customer_count: 0 },
+              { id: "claim_denied",           name: "Claim Denied",           color: "red",    order: 2, customer_count: 0 },
+              { id: "claim_awaiting_payment", name: "Claim Awaiting Payment", color: "orange", order: 3, customer_count: 0 },
+              { id: "claim_closed",           name: "Claim Closed",           color: "green",  order: 4, customer_count: 0 },
             ]);
           }
         }
@@ -1547,7 +1554,7 @@ export default function KanbanBoard({
       }
     };
     fetchStatuses();
-  }, [supabase, viewingBroker?.id]);
+  }, [supabase, viewingTeamMember?.id]);
 
   // Load user's field visibility preferences from database
   useEffect(() => {
@@ -1558,7 +1565,7 @@ export default function KanbanBoard({
       const { data: prefs } = await supabase
         .from("user_preferences")
         .select("kanban_visible_fields")
-        .eq("broker_id", user.id)
+        .eq("team_member_id", user.id)
         .single();
 
       if (prefs?.kanban_visible_fields) {
@@ -1581,7 +1588,7 @@ export default function KanbanBoard({
           kanban_visible_fields: visibleFields,
           updated_at: new Date().toISOString()
         })
-        .eq("broker_id", user.id);
+        .eq("team_member_id", user.id);
     };
 
     saveFieldPreferences();
@@ -2042,8 +2049,8 @@ export default function KanbanBoard({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Use the viewed broker's ID (admin/manager editing another broker's statuses)
-      const targetBrokerId = viewingBroker?.id || user.id;
+      // Use the viewed teamMember's ID (admin/manager editing another team member's statuses)
+      const targetTeamMemberId = viewingTeamMember?.id || user.id;
 
       // 1. Update the status in customer_statuses table
       const { error: statusError } = await supabase
@@ -2053,12 +2060,12 @@ export default function KanbanBoard({
 
       if (statusError) throw statusError;
 
-      // 2. MIGRATION: Update all customers with this status name (for the target broker only)
+      // 2. MIGRATION: Update all customers with this status name (for the target teamMember only)
       const { error: customersError } = await supabase
         .from("customers")
         .update({ status: newName.trim(), updated_at: new Date().toISOString() })
         .ilike("status", oldName)
-        .eq("broker_id", targetBrokerId);
+        .eq("team_member_id", targetTeamMemberId);
 
       if (customersError) throw customersError;
 
@@ -2140,11 +2147,11 @@ export default function KanbanBoard({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Use the viewed broker's ID (admin/manager adding a column to another broker's board)
-      const targetBrokerId = viewingBroker?.id || user.id;
+      // Use the viewed teamMember's ID (admin/manager adding a column to another team member's board)
+      const targetTeamMemberId = viewingTeamMember?.id || user.id;
 
       const newStatus = {
-        broker_id: targetBrokerId,
+        team_member_id: targetTeamMemberId,
         name: newStatusName.trim(),
         color: newStatusColor,
         order: statuses.length,
@@ -2618,7 +2625,7 @@ export default function KanbanBoard({
       <div className="mb-1 flex items-center justify-between border-b border-slate-200 bg-white px-4 pb-1.5">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">
-            Pipeline Board
+            Claims Board
           </h2>
           {/* <p className="text-xs text-slate-500">
             {loading
@@ -2792,7 +2799,7 @@ export default function KanbanBoard({
 
           {/* Interaction tips - accordion, collapsed by default */}
           {showInteractionTips && (
-            <div className="mx-4 mb-1.5 rounded-md border border-orange-200 bg-orange-50 text-xs text-slate-700">
+            <div className="mx-4 mb-1.5 rounded-md border border-primary/30 bg-primary/5 text-xs text-slate-700">
               <div className="flex items-center justify-between gap-2 px-3 py-1">
                 <button
                   type="button"
@@ -2802,7 +2809,7 @@ export default function KanbanBoard({
                   aria-controls="kanban-tips-content"
                 >
                   <ChevronDown
-                    className={`h-3.5 w-3.5 text-orange-500 transition-transform ${tipsExpanded ? 'rotate-180' : ''}`}
+                    className={`h-3.5 w-3.5 text-primary transition-transform ${tipsExpanded ? 'rotate-180' : ''}`}
                   />
                   <span className="font-medium">Keyboard shortcuts & tips</span>
                   {!tipsExpanded && (
@@ -2813,7 +2820,7 @@ export default function KanbanBoard({
                 </button>
                 <button
                   onClick={dismissInteractionTips}
-                  className="rounded p-0.5 text-slate-500 hover:bg-orange-100 hover:text-slate-900"
+                  className="rounded p-0.5 text-slate-500 hover:bg-primary/10 hover:text-slate-900"
                   title="Dismiss tips"
                   aria-label="Dismiss tips"
                 >
@@ -2823,13 +2830,13 @@ export default function KanbanBoard({
               {tipsExpanded && (
                 <div
                   id="kanban-tips-content"
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-orange-200 px-3 py-2"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-primary/30 px-3 py-2"
                 >
                   <span className="flex items-center gap-1.5">
-                    <ChevronsDown className="h-3.5 w-3.5 text-orange-500" />
+                    <ChevronsDown className="h-3.5 w-3.5 text-primary" />
                     <span><span className="font-semibold">Click a card</span> to see its full details</span>
                   </span>
-                  <span className="hidden h-3 w-px bg-orange-200 sm:inline-block" />
+                  <span className="hidden h-3 w-px bg-primary/30 sm:inline-block" />
                   <span className="flex items-center gap-1.5">
                     <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-700 shadow-sm">←</kbd>
                     <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-700 shadow-sm">→</kbd>
@@ -2837,7 +2844,7 @@ export default function KanbanBoard({
                     <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-700 shadow-sm">↓</kbd>
                     <span>move the selected card between columns and rows</span>
                   </span>
-                  <span className="hidden h-3 w-px bg-orange-200 sm:inline-block" />
+                  <span className="hidden h-3 w-px bg-primary/30 sm:inline-block" />
                   <span className="flex items-center gap-1.5">
                     <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-700 shadow-sm">Esc</kbd>
                     <span>deselects</span>
@@ -2929,17 +2936,17 @@ export default function KanbanBoard({
                   <div className="flex h-[calc(100vh-12rem)] w-full lg:min-w-80">
                     <button
                       onClick={() => setIsAddingStatus(true)}
-                      className="group flex w-full flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-300 bg-slate-50 transition-all hover:border-orange-400 hover:bg-orange-50 hover:shadow-sm"
+                      className="group flex w-full flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-300 bg-slate-50 transition-all hover:border-primary/60 hover:bg-primary/5 hover:shadow-sm"
                       title="Add new column"
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white border-2 border-slate-300 transition-all group-hover:border-orange-500 group-hover:bg-orange-500 group-hover:text-white shadow-sm">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white border-2 border-slate-300 transition-all group-hover:border-primary group-hover:bg-primary group-hover:text-white shadow-sm">
                         <Plus className="h-6 w-6 text-slate-400 transition-colors group-hover:text-white" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-slate-600 group-hover:text-orange-600 transition-colors">
+                        <p className="text-sm font-semibold text-slate-600 group-hover:text-primary-text transition-colors">
                           Add Column
                         </p>
-                        <p className="text-xs text-slate-500 group-hover:text-orange-500 transition-colors">
+                        <p className="text-xs text-slate-500 group-hover:text-primary transition-colors">
                           Create a new status
                         </p>
                       </div>
@@ -2967,7 +2974,7 @@ export default function KanbanBoard({
             visibleFields={visibleFields}
           />
         ) : activeColumnId ? (
-          <div className="h-64 w-80 rounded-lg bg-white shadow-2xl border-2 border-orange-500 opacity-80">
+          <div className="h-64 w-80 rounded-lg bg-white shadow-2xl border-2 border-primary opacity-80">
             <div className="border-b border-slate-200 bg-slate-50 p-4">
               <div className="font-semibold text-slate-900">
                 {statuses.find(s => s.id === activeColumnId)?.name || 'Column'}
@@ -3192,7 +3199,7 @@ export default function KanbanBoard({
                       setNewStatusColor("blue");
                     }
                   }}
-                  placeholder="e.g., Follow-Up, Negotiation, etc."
+                  placeholder="e.g., Documenting, Settlement, etc."
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                   autoFocus
                 />
@@ -3265,7 +3272,7 @@ export default function KanbanBoard({
             setShareCustomer(null);
           }}
           customer={shareCustomer}
-          currentBrokerId={currentBrokerId || ""}
+          currentTeamMemberId={currentTeamMemberId || ""}
         />
       )}
     </DndContext>

@@ -3,8 +3,8 @@
  *
  * Features:
  * - Office-level KPIs
- * - Broker breakdown for the manager's office
- * - Drill-down to individual broker weekly performance
+ * - TeamMember breakdown for the manager's office
+ * - Drill-down to individual teamMember weekly performance
  * - Overdue tasks and follow-up tracking
  *
  * Access: Office managers only (is_manager = true)
@@ -24,9 +24,9 @@ import {
   BarChart3,
 } from "lucide-react";
 
-type BrokerStats = {
-  broker_id: string;
-  broker_name: string;
+type TeamMemberStats = {
+  team_member_id: string;
+  team_member_name: string;
   office_location: string;
   total_customers: number;
   prospect_count: number;
@@ -39,7 +39,7 @@ type BrokerStats = {
 type OverdueTask = {
   id: string;
   title: string;
-  broker_id: string;
+  team_member_id: string;
   customer_id: string;
   due_date: string;
 };
@@ -53,9 +53,9 @@ export default function OfficeReportsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [managerOffice, setManagerOffice] = useState<string | null>(null);
-  const [brokerStats, setBrokerStats] = useState<BrokerStats[]>([]);
+  const [teamMemberStats, setTeamMemberStats] = useState<TeamMemberStats[]>([]);
   const [overdueTasks, setOverdueTasks] = useState<OverdueTask[]>([]);
-  const [selectedBroker, setSelectedBroker] = useState<string | null>(null);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string | null>(null);
 
   const [officeStats, setOfficeStats] = useState({
     total_customers: 0,
@@ -77,18 +77,18 @@ export default function OfficeReportsPage() {
           return;
         }
 
-        const { data: broker, error: fetchError } = await supabase
-          .from("brokers")
+        const { data: teamMember, error: fetchError } = await supabase
+          .from("team_members")
           .select("is_manager, office_location")
           .eq("id", user.id)
           .single();
 
-        if (fetchError || !broker?.is_manager) {
+        if (fetchError || !teamMember?.is_manager) {
           router.push("/dashboard/reports");
           return;
         }
 
-        setManagerOffice(broker.office_location);
+        setManagerOffice(teamMember.office_location);
         setIsManager(true);
       } catch (err) {
         console.error("Authorization error:", err);
@@ -107,26 +107,26 @@ export default function OfficeReportsPage() {
       try {
         setLoading(true);
 
-        // Get broker stats for this office
-        const { data: brokerData, error: brokerError } = await supabase
+        // Get teamMember stats for this office
+        const { data: teamMemberData, error: teamMemberError } = await supabase
           .from("broker_customer_summary")
           .select("*")
           .eq("office_location", managerOffice);
 
-        if (brokerError) throw brokerError;
+        if (teamMemberError) throw teamMemberError;
 
-        setBrokerStats(brokerData || []);
+        setTeamMemberStats(teamMemberData || []);
 
         // Calculate office-level stats
-        const totalCustomers = (brokerData || []).reduce(
+        const totalCustomers = (teamMemberData || []).reduce(
           (sum, b) => sum + (b.total_customers || 0),
           0,
         );
-        const totalWon = (brokerData || []).reduce(
+        const totalWon = (teamMemberData || []).reduce(
           (sum, b) => sum + (b.won_count || 0),
           0,
         );
-        const totalConverted = (brokerData || []).reduce((sum, b) => {
+        const totalConverted = (teamMemberData || []).reduce((sum, b) => {
           const converted =
             (b.active_count || 0) + (b.won_count || 0) + (b.lost_count || 0);
           return sum + converted;
@@ -139,11 +139,11 @@ export default function OfficeReportsPage() {
         // Get overdue tasks for this office
         const { data: taskData, error: taskError } = await supabase
           .from("tasks")
-          .select("id, title, broker_id, customer_id, due_date")
+          .select("id, title, team_member_id, customer_id, due_date")
           .eq("status", "overdue")
           .in(
-            "broker_id",
-            (brokerData || []).map((b) => b.broker_id),
+            "team_member_id",
+            (teamMemberData || []).map((b) => b.team_member_id),
           );
 
         if (taskError) throw taskError;
@@ -169,15 +169,15 @@ export default function OfficeReportsPage() {
     loadOfficeAnalytics();
   }, [isManager, managerOffice, supabase]);
 
-  // Filter broker stats by selected broker
-  const filteredBrokerStats = useMemo(() => {
-    if (!selectedBroker) return brokerStats;
-    return brokerStats.filter((b) => b.broker_id === selectedBroker);
-  }, [brokerStats, selectedBroker]);
+  // Filter teamMember stats by selected team member
+  const filteredTeamMemberStats = useMemo(() => {
+    if (!selectedTeamMember) return teamMemberStats;
+    return teamMemberStats.filter((b) => b.team_member_id === selectedTeamMember);
+  }, [teamMemberStats, selectedTeamMember]);
 
-  const selectedBrokerData = useMemo(() => {
-    return brokerStats.find((b) => b.broker_id === selectedBroker);
-  }, [brokerStats, selectedBroker]);
+  const selectedTeamMemberData = useMemo(() => {
+    return teamMemberStats.find((b) => b.team_member_id === selectedTeamMember);
+  }, [teamMemberStats, selectedTeamMember]);
 
   if (loading) {
     return (
@@ -264,14 +264,14 @@ export default function OfficeReportsPage() {
         </div>
       </div>
 
-      {/* Broker Performance Breakdown */}
+      {/* TeamMember Performance Breakdown */}
       <div className="rounded-lg border border-slate-200 bg-white">
         <div className="border-b border-slate-200 p-6">
           <h2 className="text-lg font-semibold text-slate-900">
-            Broker Performance
+            TeamMember Performance
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Click a broker to view detailed metrics
+            Click a team member to view detailed metrics
           </p>
         </div>
 
@@ -280,7 +280,7 @@ export default function OfficeReportsPage() {
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
-                  Broker Name
+                  TeamMember Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
                   Total Customers
@@ -300,39 +300,39 @@ export default function OfficeReportsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {brokerStats.map((broker) => (
+              {teamMemberStats.map((teamMember) => (
                 <tr
-                  key={broker.broker_id}
+                  key={teamMember.team_member_id}
                   onClick={() =>
-                    setSelectedBroker(
-                      selectedBroker === broker.broker_id
+                    setSelectedTeamMember(
+                      selectedTeamMember === teamMember.team_member_id
                         ? null
-                        : broker.broker_id,
+                        : teamMember.team_member_id,
                     )
                   }
                   className={`cursor-pointer transition-colors ${
-                    selectedBroker === broker.broker_id
+                    selectedTeamMember === teamMember.team_member_id
                       ? "bg-orange-50"
                       : "hover:bg-slate-50"
                   }`}
                 >
                   <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                    {broker.broker_name}
+                    {teamMember.team_member_name}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-700">
-                    {broker.total_customers}
+                    {teamMember.total_customers}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-700">
-                    {broker.prospect_count}
+                    {teamMember.prospect_count}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-700">
-                    {broker.active_count}
+                    {teamMember.active_count}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-green-600">
-                    {broker.won_count}
+                    {teamMember.won_count}
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-blue-600">
-                    {broker.win_rate_pct}%
+                    {teamMember.win_rate_pct}%
                   </td>
                 </tr>
               ))}
@@ -341,20 +341,20 @@ export default function OfficeReportsPage() {
         </div>
       </div>
 
-      {/* Selected Broker Details */}
-      {selectedBrokerData && (
+      {/* Selected TeamMember Details */}
+      {selectedTeamMemberData && (
         <div className="rounded-lg border border-orange-200 bg-orange-50 p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-slate-900">
-                {selectedBrokerData.broker_name} - Detailed Metrics
+                {selectedTeamMemberData.team_member_name} - Detailed Metrics
               </h3>
               <p className="mt-1 text-sm text-slate-600">
-                This broker's full performance breakdown
+                This teamMember's full performance breakdown
               </p>
             </div>
             <button
-              onClick={() => setSelectedBroker(null)}
+              onClick={() => setSelectedTeamMember(null)}
               className="text-sm text-slate-600 hover:text-slate-900 font-medium"
             >
               Close
@@ -365,13 +365,13 @@ export default function OfficeReportsPage() {
             <div className="rounded-lg bg-white p-4">
               <p className="text-xs text-slate-600">Prospect Conversion Rate</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">
-                {selectedBrokerData.prospect_count > 0
+                {selectedTeamMemberData.prospect_count > 0
                   ? Math.round(
-                      ((selectedBrokerData.active_count +
-                        selectedBrokerData.won_count) /
-                        (selectedBrokerData.prospect_count +
-                          selectedBrokerData.active_count +
-                          selectedBrokerData.won_count)) *
+                      ((selectedTeamMemberData.active_count +
+                        selectedTeamMemberData.won_count) /
+                        (selectedTeamMemberData.prospect_count +
+                          selectedTeamMemberData.active_count +
+                          selectedTeamMemberData.won_count)) *
                         100,
                     )
                   : 0}
@@ -385,19 +385,19 @@ export default function OfficeReportsPage() {
                 <div className="flex justify-between">
                   <span>Prospects:</span>
                   <span className="font-semibold">
-                    {selectedBrokerData.prospect_count}
+                    {selectedTeamMemberData.prospect_count}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Active:</span>
                   <span className="font-semibold">
-                    {selectedBrokerData.active_count}
+                    {selectedTeamMemberData.active_count}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Won:</span>
                   <span className="font-semibold text-green-600">
-                    {selectedBrokerData.won_count}
+                    {selectedTeamMemberData.won_count}
                   </span>
                 </div>
               </div>

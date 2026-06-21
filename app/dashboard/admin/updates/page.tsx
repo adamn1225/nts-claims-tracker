@@ -55,13 +55,13 @@ export default function AdminUpdatesPage() {
       return;
     }
 
-    const { data: broker } = await supabase
-      .from("brokers")
-      .select("is_admin")
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
       .eq("id", user.id)
       .single();
 
-    if (!broker?.is_admin) {
+    if (profile?.role !== "admin") {
       router.push("/dashboard");
     }
   };

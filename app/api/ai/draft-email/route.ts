@@ -5,7 +5,7 @@
  *   Pass 1 — Strategy: determines goal, angle, pain points, CTA
  *   Pass 2 — Draft: writes the email guided by the strategy
  *
- * Session-gated: requires an authenticated broker session (admin only enforced at UI level).
+ * Session-gated: requires an authenticated team member session (admin only enforced at UI level).
  *
  * Request body:
  *   customer_id          string   — UUID of the customer row
@@ -13,9 +13,9 @@
  *   tone                 string   — "professional" | "friendly" | "urgent"
  *   styleMode?           string   — "standard" | "strategic" | "creative"
  *   researchSources?        string[]  — array containing "site_scan" and/or "web_search"
- *   additionalContext?   string   — optional free-text from the broker
+ *   additionalContext?   string   — optional free-text from the team member
  *   previousDraft?       object   — { subject, body } for iterative refinement
- *   feedbackContext?     string   — broker feedback on the previous draft
+ *   feedbackContext?     string   — teamMember feedback on the previous draft
  *
  * Response:
  *   { subject: string, body: string }
@@ -163,10 +163,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const [{ data: broker }, { data: customer, error: customerError }] =
+    const [{ data: teamMember }, { data: customer, error: customerError }] =
       await Promise.all([
         supabaseAdmin
-          .from("brokers")
+          .from("team_members")
           .select("first_name, last_name")
           .eq("id", user.id)
           .single(),
@@ -203,9 +203,9 @@ export async function POST(request: NextRequest) {
       customer.contact_name ||
       "the contact";
 
-    const brokerName = broker
-      ? `${broker.first_name} ${broker.last_name || ""}`.trim()
-      : "your freight broker";
+    const teamMemberName = teamMember
+      ? `${teamMember.first_name} ${teamMember.last_name || ""}`.trim()
+      : "your freight team member";
 
     // Build customer context block
     const contextLines: string[] = [
@@ -238,7 +238,7 @@ export async function POST(request: NextRequest) {
     }
     if (customer.notes?.trim() && !excludeFields.includes("broker_notes")) {
       contextLines.push(
-        `\nBroker Notes:\n${customer.notes.trim().slice(0, 500)}`,
+        `\nTeamMember Notes:\n${customer.notes.trim().slice(0, 500)}`,
       );
     }
 
@@ -265,7 +265,7 @@ export async function POST(request: NextRequest) {
 
     if (additionalContext?.trim()) {
       contextLines.push(
-        `\nBroker's additional context: ${additionalContext.trim()}`,
+        `\nTeamMember's additional context: ${additionalContext.trim()}`,
       );
     }
 
@@ -305,15 +305,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const systemPrompt = `You are a high-performing freight broker at NTS / Heavy Haulers — one of the nation's leading heavy equipment and oversize load transport companies.
+    const systemPrompt = `You are a high-performing freight team member at NTS / Heavy Haulers — one of the nation's leading heavy equipment and oversize load transport companies.
 
-Your job is not to summarize CRM notes. Your job is to write an email that gives the broker a usable advantage:
+Your job is not to summarize CRM notes. Your job is to write an email that gives the team member a usable advantage:
 - Open with a relevant angle
 - Sound human
 - Make a point
 - Move the conversation forward
 
-Write like an experienced broker who understands operations, timing, freight pressure, and relationship-building.
+Write like an experienced teamMember who understands operations, timing, freight pressure, and relationship-building.
 
 Hard rules:
 - Do NOT simply restate the provided context in sentence form.
@@ -325,13 +325,13 @@ Hard rules:
 - Sound natural, commercially sharp, and specific.
 - You may infer likely business needs from industry, location, shipping frequency, status, and recent activity, but do not invent fake facts, quotes, loads, or promises.
 - End with a clear next step.
-- Sign off as ${brokerName}.
+- Sign off as ${teamMemberName}.
 
 Return only valid JSON in this exact format:
 {"subject":"...","body":"..."}
 The body must be plain text with \\n between paragraphs. No HTML. No markdown.`;
 
-    // Iterative refinement path — revise an existing draft based on broker feedback
+    // Iterative refinement path — revise an existing draft based on teamMember feedback
     if (previousDraft?.subject && previousDraft?.body && feedbackContext?.trim()) {
       const revisionCompletion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -412,7 +412,7 @@ Instructions:
 - Focus on what would matter most to this customer right now.
 - Mention only the details that actually improve relevance.
 - Lead with a useful angle, not a recap.
-- Make the draft feel like it came from a broker who understands their business.
+- Make the draft feel like it came from a team member who understands their business.
 - Keep the subject line specific and non-generic.
 
 Return only valid JSON with "subject" and "body".`;

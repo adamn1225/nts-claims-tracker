@@ -42,14 +42,14 @@ export default function ApiDocsPage() {
           router.push("/auth/login");
           return;
         }
-        const { data: broker, error: brokerError } = await supabase
-          .from("brokers")
+        const { data: teamMember, error: teamMemberError } = await supabase
+          .from("team_members")
           .select("is_admin")
           .eq("id", user.id)
           .single();
 
-        setIsAdmin(Boolean(broker?.is_admin));
-        if (brokerError) console.warn("Broker lookup error", brokerError.message);
+        setIsAdmin(Boolean(teamMember?.is_admin));
+        if (teamMemberError) console.warn("TeamMember lookup error", teamMemberError.message);
       } finally {
         setLoading(false);
       }
@@ -406,7 +406,7 @@ export default function ApiDocsPage() {
               <h2 className="mb-4 text-2xl font-bold text-slate-900">Unassigned Contacts API</h2>
               <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
                 <p className="text-sm text-blue-900">
-                  <strong>Note:</strong> Unassigned contacts use the same Customer schema but with <code className="rounded bg-blue-100 px-1">broker_id = null</code>.
+                  <strong>Note:</strong> Unassigned contacts use the same Customer schema but with <code className="rounded bg-blue-100 px-1">team_member_id = null</code>.
                   These are contacts in the import pool awaiting assignment.
                 </p>
               </div>
@@ -685,7 +685,7 @@ function ObjectSchemas() {
   const customerFields = [
     { name: 'id', type: 'string (uuid)', desc: 'Unique identifier' },
     { name: 'customer_id', type: 'string', desc: 'Human-readable ID (e.g., NS-0001)' },
-    { name: 'broker_id', type: 'string | null', desc: 'Assigned broker (null = unassigned)' },
+    { name: 'team_member_id', type: 'string | null', desc: 'Assigned team member (null = unassigned)' },
     { name: 'first_name', type: 'string | null', desc: 'Contact first name' },
     { name: 'last_name', type: 'string | null', desc: 'Contact last name' },
     { name: 'contact_name', type: 'string', desc: 'Full contact name (required)' },
@@ -708,7 +708,7 @@ function ObjectSchemas() {
 
   const taskFields = [
     { name: 'id', type: 'string (uuid)', desc: 'Unique identifier' },
-    { name: 'broker_id', type: 'string | null', desc: 'Assigned broker' },
+    { name: 'team_member_id', type: 'string | null', desc: 'Assigned team member' },
     { name: 'customer_id', type: 'string | null', desc: 'Related customer ID' },
     { name: 'title', type: 'string', desc: 'Task title (required)' },
     { name: 'description', type: 'string | null', desc: 'Task description/notes' },

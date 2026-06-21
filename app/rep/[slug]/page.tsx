@@ -19,11 +19,11 @@ function initials(first: string | null, last: string | null) {
   return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "NT";
 }
 
-export default async function PublicBrokerPage({ params }: Props) {
+export default async function PublicTeamMemberPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: broker } = await supabase
+  const { data: teamMember } = await supabase
     .from("public_broker_pages")
     .select(
       "id, first_name, last_name, office_location, avatar_url, headline, bio, linkedin_url, specialties, phone, profile_slug, landing_config_approved, landing_status",
@@ -31,16 +31,16 @@ export default async function PublicBrokerPage({ params }: Props) {
     .eq("profile_slug", slug)
     .single();
 
-  if (!broker) notFound();
+  if (!teamMember) notFound();
 
   // Only an admin-approved config is shown publicly.
-  const brokerRow = broker as typeof broker & {
+  const teamMemberRow = teamMember as typeof teamMember & {
     landing_config_approved?: unknown;
     landing_status?: string | null;
   };
   const config = coerceLandingConfig(
-    brokerRow.landing_status === "approved"
-      ? brokerRow.landing_config_approved
+    teamMemberRow.landing_status === "approved"
+      ? teamMemberRow.landing_config_approved
       : null,
   );
   const brand = getBrand(config.brand);
@@ -51,7 +51,7 @@ export default async function PublicBrokerPage({ params }: Props) {
   const { data: portfolio } = await supabase
     .from("broker_portfolio")
     .select("id, image_path, caption, equipment_type, origin, destination")
-    .eq("broker_id", broker.id)
+    .eq("team_member_id", teamMember.id)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
@@ -64,13 +64,13 @@ export default async function PublicBrokerPage({ params }: Props) {
     destination: string | null;
   }[];
 
-  const BUCKET = "broker-portfolio";
+  const BUCKET = "teamMember-portfolio";
   function getPublicUrl(path: string) {
     return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   }
 
   const fullName =
-    [broker.first_name, broker.last_name].filter(Boolean).join(" ") || "Agent";
+    [teamMember.first_name, teamMember.last_name].filter(Boolean).join(" ") || "Agent";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,9 +91,9 @@ export default async function PublicBrokerPage({ params }: Props) {
             {/* Avatar */}
             <div className="-mt-10 mb-4">
               <div className="relative h-20 w-20 overflow-hidden rounded-2xl ring-4 ring-white">
-                {broker.avatar_url ? (
+                {teamMember.avatar_url ? (
                   <Image
-                    src={broker.avatar_url}
+                    src={teamMember.avatar_url}
                     alt={fullName}
                     fill
                     sizes="80px"
@@ -106,7 +106,7 @@ export default async function PublicBrokerPage({ params }: Props) {
                       backgroundImage: `linear-gradient(to bottom right, ${brand.primary}, ${brand.accent})`,
                     }}
                   >
-                    {initials(broker.first_name, broker.last_name)}
+                    {initials(teamMember.first_name, teamMember.last_name)}
                   </div>
                 )}
               </div>
@@ -114,30 +114,30 @@ export default async function PublicBrokerPage({ params }: Props) {
 
             <h1 className="text-2xl font-bold text-gray-900">{fullName}</h1>
 
-            {broker.headline && (
-              <p className="mt-1 text-gray-600">{broker.headline}</p>
+            {teamMember.headline && (
+              <p className="mt-1 text-gray-600">{teamMember.headline}</p>
             )}
 
             <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">
-              {broker.office_location && (
+              {teamMember.office_location && (
                 <span className="inline-flex items-center gap-1">
                   <MapPin className="h-4 w-4" style={{ color: brand.primary }} />
-                  {broker.office_location}
+                  {teamMember.office_location}
                 </span>
               )}
-              {broker.phone && (
+              {teamMember.phone && (
                 <a
-                  href={`tel:${broker.phone}`}
+                  href={`tel:${teamMember.phone}`}
                   className="inline-flex items-center gap-1 font-medium hover:underline"
                   style={{ color: brand.primary }}
                 >
                   <Phone className="h-4 w-4" />
-                  {broker.phone}
+                  {teamMember.phone}
                 </a>
               )}
-              {broker.linkedin_url && (
+              {teamMember.linkedin_url && (
                 <a
-                  href={broker.linkedin_url}
+                  href={teamMember.linkedin_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 font-medium text-[#0A66C2] hover:underline"
@@ -148,9 +148,9 @@ export default async function PublicBrokerPage({ params }: Props) {
               )}
             </div>
 
-            {broker.specialties && broker.specialties.length > 0 && (
+            {teamMember.specialties && teamMember.specialties.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {broker.specialties.map((s: string) => (
+                {teamMember.specialties.map((s: string) => (
                   <span
                     key={s}
                     className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
@@ -161,9 +161,9 @@ export default async function PublicBrokerPage({ params }: Props) {
               </div>
             )}
 
-            {broker.bio && (
+            {teamMember.bio && (
               <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-gray-600 border-t border-gray-100 pt-5">
-                {broker.bio}
+                {teamMember.bio}
               </p>
             )}
           </div>
@@ -318,7 +318,7 @@ export default async function PublicBrokerPage({ params }: Props) {
               Request a freight quote
             </h2>
           </div>
-          <ContactForm brokerId={broker.id} brokerName={fullName} />
+          <ContactForm teamMemberId={teamMember.id} teamMemberName={fullName} />
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">

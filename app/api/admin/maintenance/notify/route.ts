@@ -24,7 +24,7 @@ function formatWhen(iso: string | null): string | null {
 
 /**
  * POST /api/admin/maintenance/notify
- * Admin-only: email all active brokers an advance maintenance warning.
+ * Admin-only: email all active team members an advance maintenance warning.
  * Reads the current maintenance window from app_settings.
  */
 export async function POST() {
@@ -37,13 +37,13 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: adminBroker } = await supabase
-    .from("brokers")
+  const { data: adminTeamMember } = await supabase
+    .from("team_members")
     .select("is_admin")
     .eq("id", user.id)
     .single();
 
-  if (!adminBroker?.is_admin) {
+  if (!adminTeamMember?.is_admin) {
     return NextResponse.json(
       { error: "Admin access required" },
       { status: 403 },
@@ -62,20 +62,20 @@ export async function POST() {
   const customMessage = settings?.maintenance_message?.trim() || null;
 
   // Active recipients
-  const { data: brokers, error: brokersError } = await supabase
-    .from("brokers")
+  const { data: teamMembers, error: teamMembersError } = await supabase
+    .from("team_members")
     .select("email, first_name")
     .eq("is_active", true)
     .not("email", "is", null);
 
-  if (brokersError) {
+  if (teamMembersError) {
     return NextResponse.json(
       { error: "Failed to load recipients" },
       { status: 500 },
     );
   }
 
-  const recipients = (brokers ?? []).filter((b) => b.email);
+  const recipients = (teamMembers ?? []).filter((b) => b.email);
   if (recipients.length === 0) {
     return NextResponse.json(
       { error: "No active users with an email address" },
@@ -93,8 +93,8 @@ export async function POST() {
   let failed = 0;
 
   await Promise.all(
-    recipients.map(async (broker) => {
-      const greetingName = broker.first_name?.trim() || "there";
+    recipients.map(async (teamMember) => {
+      const greetingName = teamMember.first_name?.trim() || "there";
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1A1A1A;">
           <div style="background:#E85D04; padding:20px 24px; border-radius:8px 8px 0 0;">
@@ -136,7 +136,7 @@ export async function POST() {
         .join("\n");
 
       const ok = await sendEmail({
-        to: broker.email as string,
+        to: teamMember.email as string,
         subject,
         html,
         text,

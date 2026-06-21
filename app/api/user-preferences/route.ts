@@ -67,7 +67,7 @@ interface NotificationPreferences {
   inAppNotificationsEnabled: boolean;
   emailNotificationsEnabled: boolean;
   digestTime?: string; // Optional: admin can set custom digest time
-  timezone?: string; // IANA timezone (e.g. America/New_York) for this broker
+  timezone?: string; // IANA timezone (e.g. America/New_York) for this teamMember
 }
 
 /**
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("user_preferences")
       .select("in_app_notifications_enabled, email_notifications_enabled, digest_time, timezone")
-      .eq("broker_id", user.id)
+      .eq("team_member_id", user.id)
       .single();
 
     if (error && error.code !== "PGRST116") {
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       updateData.digest_time = body.digestTime;
     }
 
-    // Include timezone if provided (per-broker setting)
+    // Include timezone if provided (per-teamMember setting)
     if (body.timezone) {
       updateData.timezone = body.timezone;
     }
@@ -167,12 +167,12 @@ export async function POST(request: NextRequest) {
       .from("user_preferences")
       .upsert(
         {
-          broker_id: user.id,
+          team_member_id: user.id,
           ...updateData,
           updated_at: new Date().toISOString(),
         },
         {
-          onConflict: "broker_id",
+          onConflict: "team_member_id",
         },
       )
       .select();

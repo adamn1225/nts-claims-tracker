@@ -29,7 +29,7 @@ export interface SalesGroup {
     memberCount: number;
 }
 
-interface Broker {
+interface TeamMember {
     id: string;
     first_name: string;
     last_name: string;
@@ -41,7 +41,7 @@ interface Props {
     onClose: () => void;
     /** Called whenever groups are mutated so the dashboard can refetch */
     onGroupsChanged: (groups: SalesGroup[]) => void;
-    allBrokers: Broker[];
+    allTeamMembers: TeamMember[];
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ export default function SalesGroupManager({
     isOpen,
     onClose,
     onGroupsChanged,
-    allBrokers,
+    allTeamMembers,
 }: Props) {
     const [groups, setGroups] = useState<SalesGroup[]>([]);
     const [loading, setLoading] = useState(false);
@@ -87,7 +87,7 @@ export default function SalesGroupManager({
     // Add-member dropdown state  
     const [addingToGroupId, setAddingToGroupId] = useState<string | null>(null);
     const [memberSearch, setMemberSearch] = useState("");
-    const [addingBrokerId, setAddingBrokerId] = useState<string | null>(null);
+    const [addingTeamMemberId, setAddingTeamMemberId] = useState<string | null>(null);
 
     // Delete confirmation
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -187,13 +187,13 @@ export default function SalesGroupManager({
     };
 
     // ── Add member ────────────────────────────────────────────────────────────
-    const handleAddMember = async (groupId: string, brokerId: string) => {
-        setAddingBrokerId(brokerId);
+    const handleAddMember = async (groupId: string, teamMemberId: string) => {
+        setAddingTeamMemberId(teamMemberId);
         try {
             const res = await fetch(`/api/sales-monitor/groups/${groupId}/members`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ brokerIds: [brokerId] }),
+                body: JSON.stringify({ teamMemberIds: [teamMemberId] }),
             });
             const data = await res.json();
             if (!res.ok) { alert(data.error || "Failed to add member."); return; }
@@ -207,17 +207,17 @@ export default function SalesGroupManager({
             setMemberSearch("");
             setAddingToGroupId(null);
         } finally {
-            setAddingBrokerId(null);
+            setAddingTeamMemberId(null);
         }
     };
 
     // ── Remove member ─────────────────────────────────────────────────────────
-    const handleRemoveMember = async (groupId: string, brokerId: string) => {
+    const handleRemoveMember = async (groupId: string, teamMemberId: string) => {
         try {
             const res = await fetch(`/api/sales-monitor/groups/${groupId}/members`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ brokerId }),
+                body: JSON.stringify({ teamMemberId }),
             });
             const data = await res.json();
             if (!res.ok) { alert(data.error || "Failed to remove member."); return; }
@@ -234,13 +234,13 @@ export default function SalesGroupManager({
     };
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-    const getBrokerName = (brokerId: string) => {
-        const b = allBrokers.find((b) => b.id === brokerId);
-        return b ? `${b.first_name} ${b.last_name}` : brokerId.slice(0, 8) + "…";
+    const getTeamMemberName = (teamMemberId: string) => {
+        const b = allTeamMembers.find((b) => b.id === teamMemberId);
+        return b ? `${b.first_name} ${b.last_name}` : teamMemberId.slice(0, 8) + "…";
     };
 
-    const getAvailableBrokers = (group: SalesGroup) =>
-        allBrokers
+    const getAvailableTeamMembers = (group: SalesGroup) =>
+        allTeamMembers
             .filter((b) => !group.memberIds.includes(b.id))
             .filter((b) => {
                 if (!memberSearch) return true;
@@ -352,7 +352,7 @@ export default function SalesGroupManager({
                             <Users className="mx-auto mb-2 h-8 w-8 text-slate-300" />
                             <p className="text-sm font-medium text-slate-500">No groups yet</p>
                             <p className="mt-1 text-xs text-slate-400">
-                                Create a group to organize brokers (e.g. PIP cohort, new hires) and filter the dashboard.
+                                Create a group to organize teamMembers (e.g. PIP cohort, new hires) and filter the dashboard.
                             </p>
                         </div>
                     )}
@@ -363,7 +363,7 @@ export default function SalesGroupManager({
                         const isExpanded = expandedId === group.id;
                         const isEditing = editingId === group.id;
                         const isAddingMembers = addingToGroupId === group.id;
-                        const memberBrokers = group.memberIds.map((id) => allBrokers.find((b) => b.id === id)).filter(Boolean) as Broker[];
+                        const memberTeamMembers = group.memberIds.map((id) => allTeamMembers.find((b) => b.id === id)).filter(Boolean) as TeamMember[];
 
                         return (
                             <div key={group.id} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
@@ -479,11 +479,11 @@ export default function SalesGroupManager({
                                         )}
 
                                         {/* Members list */}
-                                        {memberBrokers.length === 0 ? (
-                                            <p className="text-xs text-slate-400 italic">No members yet. Add brokers below.</p>
+                                        {memberTeamMembers.length === 0 ? (
+                                            <p className="text-xs text-slate-400 italic">No members yet. Add teamMembers below.</p>
                                         ) : (
                                             <ul className="space-y-1">
-                                                {memberBrokers.map((b) => (
+                                                {memberTeamMembers.map((b) => (
                                                     <li key={b.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
                                                         <div>
                                                             <span className="text-sm font-medium text-slate-800">{b.first_name} {b.last_name}</span>
@@ -508,25 +508,25 @@ export default function SalesGroupManager({
                                             <div className="space-y-2">
                                                 <input
                                                     type="text"
-                                                    placeholder="Search brokers..."
+                                                    placeholder="Search team members..."
                                                     value={memberSearch}
                                                     onChange={(e) => setMemberSearch(e.target.value)}
                                                     autoFocus
                                                     className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:border-orange-400 focus:outline-none"
                                                 />
                                                 <ul className="max-h-40 overflow-y-auto space-y-0.5">
-                                                    {getAvailableBrokers(group).length === 0 ? (
+                                                    {getAvailableTeamMembers(group).length === 0 ? (
                                                         <li className="px-2 py-2 text-xs text-slate-400">
-                                                            {memberSearch ? "No matches." : "All active brokers are already in this group."}
+                                                            {memberSearch ? "No matches." : "All active team members are already in this group."}
                                                         </li>
-                                                    ) : getAvailableBrokers(group).map((b) => (
+                                                    ) : getAvailableTeamMembers(group).map((b) => (
                                                         <li key={b.id}>
                                                             <button
                                                                 onClick={() => handleAddMember(group.id, b.id)}
-                                                                disabled={addingBrokerId === b.id}
+                                                                disabled={addingTeamMemberId === b.id}
                                                                 className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-orange-50 disabled:opacity-50"
                                                             >
-                                                                {addingBrokerId === b.id
+                                                                {addingTeamMemberId === b.id
                                                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-500" />
                                                                     : <UserPlus className="h-3.5 w-3.5 text-slate-400" />
                                                                 }
@@ -546,7 +546,7 @@ export default function SalesGroupManager({
                                                 className="flex items-center gap-1.5 text-xs font-medium text-orange-500 hover:text-orange-700"
                                             >
                                                 <UserPlus className="h-3.5 w-3.5" />
-                                                Add broker to group
+                                                Add teamMember to group
                                             </button>
                                         )}
                                     </div>

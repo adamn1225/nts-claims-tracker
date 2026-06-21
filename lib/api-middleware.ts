@@ -21,7 +21,7 @@ const supabaseAdmin = createClient(
 
 export interface ApiToken {
   id: string;
-  broker_id: string;
+  team_member_id: string;
   name: string;
   scopes: string[];
   rate_limit_per_hour: number;

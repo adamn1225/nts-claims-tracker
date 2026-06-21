@@ -8,8 +8,9 @@
 ## Project Overview
 
 **Application Name:** NTS Claims Tracker
-**Purpose:** A freight broker CRM focused on customer follow-ups, task management, and opportunity tracking. Replaces sticky notes and manual tracking with a centralized system for managing customer relationships and sales pipeline.
-**Target Users:** Freight brokers and sales team members at Nationwide Transport Services (NTS/Heavy Haulers)
+**Purpose:** A claims management system for tracking cargo and transportation-related claims through their full lifecycle (intake, documentation, investigation, carrier review, settlement, and closure). Replaces spreadsheets, scattered email threads, and disconnected document storage with a centralized system aligned to the Claims Processing SOP (see `workspace-docs/claims-sop.txt`).
+**Target Users:** Primarily the NTS claims department; brokers (read/comment access on claims tied to their customers); managers and admins (full visibility and reporting). External carrier access is under evaluation and not yet in scope.
+**Origin Note:** This codebase was forked from an internal sales CRM ("NTS Sales Tracker"). Generic CRM scaffolding (customers, tasks, contact logs, GoTo call logging, brokers) is being repurposed for claims workflows. When in doubt, the claims SOP and claims terminology are the source of truth, not the sales-tracker heritage.
 
 ## Technology Stack
 
@@ -25,53 +26,87 @@
 
 **Colors:**
 
-- Primary: #E85D04 (NTS Orange - from logo)
-- Secondary: #1A1A1A (Dark slate)
-- Accent: #FFA726 (Light orange for highlights)
-- Success: #10B981 (Green for completed tasks)
-- Warning: #F59E0B (Amber for pending)
+Semantic palette — every color has a single, well-defined job. Do not introduce new ad-hoc colors; use the tokens below (or the Tailwind `slate-*` neutral scale).
 
-**Style:** Modern, clean, professional logistics/transportation aesthetic
+| Token | Hex | Role |
+| --- | --- | --- |
+| Primary | `#E85D04` | NTS Orange — primary CTAs, active states, brand moments |
+| Primary (text-safe) | `#C2410C` | Use when orange must appear as small body text on white (AA-compliant variant) |
+| Secondary | `#1A1A1A` | Headings, body text, dark surfaces |
+| Accent | `#2563EB` | Steel blue — links, secondary CTAs, informational highlights (split-complement of primary) |
+| Success | `#059669` | Resolved / paid / closed-with-recovery |
+| Warning | `#F59E0B` | Pending parties, missing documents, approaching deadlines (use as fill/icon) |
+| Warning (text-safe) | `#B45309` | Use when amber must appear as text on white |
+| Danger | `#DC2626` | Do Not Pay, denied claims, missed deadlines, overdue past N days |
+| Info | `#0EA5E9` | Acknowledgment sent, neutral status updates (use as fill/icon) |
+| Info (text-safe) | `#0369A1` | Use when info-blue must appear as text on white |
+| Critical | `#7C3AED` | Legal-bucket claims, high-value escalations (purple — distinct from any urgency color) |
+| Neutrals | Tailwind `slate-50` → `slate-950` | Backgrounds, borders, muted text |
+
+**Claim-stage color mapping (default board):**
+
+- Intake → `info` (blue)
+- Documenting → `warning` (amber — waiting on parties)
+- Investigating → `slate-500` (neutral internal work)
+- Carrier Review → `primary` (orange — action with a party)
+- Settlement → `accent` (steel blue — negotiation in progress)
+- Closed (paid) → `success` (green)
+- Denied (side state) → `danger` (red)
+- Legal (side state) → `critical` (purple)
+- Do Not Pay flag → `danger` background with bold treatment
+
+**Tailwind tokens:** Wired up as `bg-primary`, `text-accent`, `border-danger`, etc. via `@theme inline` in [app/globals.css](app/globals.css). Always prefer semantic tokens over raw `orange-500` / `blue-600` utility classes so future palette changes propagate cleanly.
+
+**Style:** Modern, clean, professional logistics/operations aesthetic — closer to an insurance/claims console (Linear, Stripe Dashboard, Guidewire) than a marketing site.
 **Components:** Custom components built on Tailwind CSS, Lucide icons
 
 ## Core Features
 
-### 1. Customer Management (Kanban Board)
+### 1. Claim Management (Kanban / Board View)
 
-- **Pinnable Customer Cards:** Keep high-priority clients visible
-- **Columns:** Prospect → Active → Won → Lost
-- **Card Details:** Contact info, shipping frequency, industry, last contact
-- **Quick Actions:** Call, email, schedule follow-up
+- **Pinnable Claim Cards:** Keep high-exposure or escalated claims visible
+- **Columns (draft, configurable):** Intake → Documenting → Investigating → Carrier Review → Settlement → Closed (with side states for Denied / Legal)
+- **Card Details:** Claim number, shipper/customer, carrier, BOL reference, claim value bucket (under $10K / Credit-High Value / Legal), date opened, current owner, days open, last activity
+- **Quick Actions:** Log call/email, request documentation, send acknowledgment letter, upload evidence, change status, place carrier hold
 
-### 2. Task & Follow-Up System
+### 2. Task, Follow-Up & Correspondence System
 
-- **Calendar View:** Visual timeline of scheduled follow-ups
-- **Task Lists:** Overdue, today, upcoming, completed
-- **Reminders:** Email/in-app notifications for upcoming tasks
-- **Contact Log:** Track all interactions with each customer
+- **Calendar View:** Visual timeline of acknowledgment deadlines, follow-up cadences, statute/recovery deadlines
+- **Task Lists:** Overdue, today, upcoming, completed (typed: "request BOL", "send acknowledgment", "follow up on repair estimate", etc.)
+- **Reminders:** Email/in-app notifications for unresponsive parties and approaching deadlines
+- **Correspondence Log:** Track every phone call, email, and message with shippers, carriers, factoring companies, accounts payable, and insurers
 
-### 3. Book of Business Tracking
+### 3. Claims Portfolio Tracking
 
-- **Client Classification:** Prospect vs. Active Client
-- **Shipping Frequency:** Multiple per week, weekly, bi-weekly, monthly, quarterly, yearly
-- **Industry Tracking:** Categorize clients by industry type
-- **Location Data:** City/State for territory management
+- **Claim Classification:** Current Claims (under $10,000), Credit / High Value Claims, Legal Claims (mirrors the SOP tracking spreadsheets)
+- **Carrier Risk Tracking:** "Do Not Pay" flags, payment/dispatch holds, performance notes
+- **Party Tracking:** Shipper, customer, carrier, factoring company, accounts payable, insurance carrier per claim
+- **Document Vault:** BOLs, signed delivery receipts, photos/videos, witness statements, repair estimates, replacement invoices, presentation-of-loss documents, releases, settlement agreements
 
 ## Development Guidelines
 
 ### Data Model Priority
 
-1. **Customers Table:** Core entity with contact details, classification, shipping frequency
-2. **Tasks Table:** Follow-ups, reminders, calendar events linked to customers
-3. **Contact Log:** Activity history for each customer interaction
-4. **User Preferences:** Pinned cards, view settings, notification preferences
+1. **Claims Table:** Core entity — claim number, shipper/customer, carrier, BOL ref, intake source (FreightClaims.com / email / phone), value bucket, status, opened/closed dates, owner, exposure amount
+2. **Claim Parties Table:** Linked shipper, customer, carrier, factoring company, accounts-payable contact, insurer per claim
+3. **Claim Documents Table:** BOLs, PODs, photos, repair estimates, releases, settlement agreements (with type, source, uploaded-by, timestamps)
+4. **Tasks Table:** Follow-ups, document requests, acknowledgment deadlines, recovery deadlines linked to a claim
+5. **Correspondence Log:** Every call, email, and message linked to a claim and a party
+6. **Carrier Holds / Flags:** "Do Not Pay", payment/dispatch holds, monitoring notes, with audit trail
+7. **Customers Table (legacy from sales-tracker):** Retained for shipper/customer master data; may be repurposed or replaced — do not extend it without checking the claims data model first
+8. **User Preferences:** Pinned claims, view settings, notification preferences
 
 ### Business Rules
 
-- **Follow-Up Automation:** Suggest next contact date based on shipping frequency
-- **Overdue Alerts:** Highlight customers without recent contact
-- **Pin Limit:** Max 5-10 pinned customers to maintain focus
-- **Task Completion:** Archive completed tasks, maintain history
+- **SOP-Aligned Workflow:** Step sequencing should mirror `workspace-docs/claims-sop.txt` (intake → acknowledgment letters → documentation requests → spreadsheet/CRM tracking → carrier monitoring → correspondence → closing)
+- **Acknowledgment Automation:** On claim creation, auto-suggest acknowledgment letters to shipper/customer, accounts payable, carrier, and factoring company (if applicable)
+- **Document Request Tracking:** Standard request checklist (BOL, signed delivery receipt, pickup/delivery photos, witness statements, repair estimates, presentation of loss) with per-item status
+- **Overdue Alerts:** Highlight claims with no party response, missing documents past N days, or approaching statute/recovery deadlines
+- **Carrier Holds:** Placing a "Do Not Pay" or dispatch hold requires manager approval and writes an audit entry
+- **Value-Bucket Routing:** Claims auto-categorize into Current (<$10K), Credit/High Value, or Legal based on exposure amount and manual flags
+- **Pin Limit:** Max 5-10 pinned claims to maintain focus
+- **Closure Requirements:** A claim cannot be closed without recorded resolution status, all required closing documents (releases, settlement agreements, payment confirmations), and notification to applicable parties
+- **Retention:** Archive closed claims and documents per company retention policy
 
 ### Integration Points
 
@@ -122,16 +157,20 @@
 - **Example:** HelpModal shows different help topics for Power Dialer vs Kanban vs Calendar pages
 - **When to Use:** Help systems, contextual navigation, page-specific tooltips/guidance
 
-#### Call Quality Coaching Tool (Company-Wide)
+#### Call Logging & Summarization (Claims Context)
 
-- **Location:** `/dashboard/performance` → "Coaching" tab (admin-only)
-- **Scope:** Works for ALL company GoTo users (120+ users), NOT just CRM users (5 users)
-- **Purpose:** Analyze call recordings to detect missing qualifying questions for sales coaching
-- **Implementation:** Uses GoTo `userKey` to analyze any company user's calls, regardless of CRM access
-- **API Endpoint:** `/api/ai/analyze-call-quality` - Accepts `userKey` (primary) or `brokerId` (legacy)
-- **Data Source:** GoTo Connect API recordings + OpenAI GPT-4 transcript analysis
-- **Key Point:** This is NOT a self-service tool for individual brokers - it's strictly for managers/coaches to review team performance
-- **Note:** Only ~5 out of 120 brokers use this CRM, but all 120+ can be analyzed via this tool
+- **Scope:** GoTo Connect integration is retained for **claim-related call logging only** (calls between claims staff and shippers, carriers, factoring companies, insurers, or brokers). Sales-coaching call analysis from the original sales-tracker has been removed from scope.
+- **AI Summarization:** Recorded claim calls can be summarized into the claim's correspondence log (key points, commitments made, next steps, party identification). Human review is always required before the summary is treated as authoritative.
+- **Linking:** Calls should be attachable to a specific claim and party. Unlinked call recordings stay in a triage view.
+- **Trust Boundary:** Recordings and transcripts may contain sensitive customer, carrier, or settlement data — admin/manager-only visibility by default; claims-staff visibility scoped to their assigned claims.
+
+#### AI-Assisted Claim Workflows
+
+- **Document Extraction:** Use AI to extract structured fields from BOLs, PODs, repair estimates, and damage-report PDFs/photos (party names, amounts, dates, damage descriptions) — always presented as draft fields the user reviews before saving.
+- **Correspondence Drafting:** "Draft acknowledgment letter", "Draft follow-up to carrier", "Draft settlement offer" using claim context. Human edits before send.
+- **Triage & Classification:** Suggested severity, suggested liable party, suggested value bucket — surfaced as recommendations with evidence citations, never as automatic decisions.
+- **Settlement Guidance:** Summarize precedent from similar closed claims (after enough historical data exists) to inform negotiation — advisory only.
+- **Implementation Pattern:** Follow `app/api/ai/*` conventions — OpenAI client, `gpt-4o-mini` for lightweight text tasks, session/role gating, prompts kept in the route. Coordinate persistence with `supabase-specialist` and source-material handling with `ai-architect`.
 
 #### Location Input Fields & Geocoding
 
@@ -269,14 +308,25 @@ These preferences apply to ALL projects unless explicitly overridden:
 
 ## 🎯 Project-Specific Instructions
 
-### Freight Broker Terminology
+### Claims Terminology
 
-- **Customer/Client:** Companies that ship freight
-- **Prospect:** Potential customer not yet converted
-- **Book of Business:** A broker's portfolio of customers and prospects
-- **Shipping Frequency:** How often a customer needs transportation services
-- **Follow-Up:** Scheduled contact to maintain relationship or close deal
-- **Contact Log:** History of interactions (calls, emails, meetings)
+- **Claim:** A formal report of loss, damage, or service failure related to a shipment
+- **Shipper / Customer:** The party whose freight is the subject of the claim
+- **Carrier:** The trucking company that moved (or was to move) the freight
+- **BOL (Bill of Lading):** Primary shipment contract and the document where damage notations must appear at delivery
+- **POD (Proof of Delivery):** Signed delivery receipt, often required for damage claims
+- **Presentation of Loss:** Formal documentation packet establishing the claimed loss amount
+- **Factoring Company:** Third party that funds a carrier's receivables; often notified of claims affecting carrier payment
+- **Accounts Payable (AP):** Internal NTS team notified so payment to a carrier can be held pending resolution
+- **Do Not Pay:** Carrier-level status preventing further payments until claim is resolved
+- **Acknowledgment Letter:** Initial outbound notice sent to involved parties when a claim is opened
+- **Subrogation / Recovery:** Pursuing reimbursement from a liable party or their insurer
+- **Closing Documents:** Releases, settlement agreements, payment confirmations required before a claim is closed
+- **Value Buckets:** Current Claims (<$10K) / Credit-High Value / Legal — mirrors the SOP tracking spreadsheets
+
+### Legacy Sales-Tracker Terminology (Avoid)
+
+- Do not introduce new code or copy using: "prospect", "book of business", "shipping frequency", "opportunity", "won/lost", "sales pipeline", "qualifying questions", "AE/account executive" (unless referencing the broker who owns the underlying customer relationship). These come from the upstream sales-tracker and do not apply to claims workflows.
 
 ### UI/UX Priorities
 
@@ -295,16 +345,21 @@ These preferences apply to ALL projects unless explicitly overridden:
 
 ### Database Naming Conventions
 
-- Use freight industry terms: `customer`, `shipment_frequency`, `contact_log`
-- Avoid generic terms like `items` or `users` (use `brokers`)
-- Timestamp all activities: `last_contact_date`, `next_follow_up_date`
+- Use claims-domain terms: `claim`, `claim_party`, `claim_document`, `correspondence_log`, `carrier_hold`
+- Retain legacy generic tables (`customers`, `brokers`, `tasks`, `contact_log`) where they still apply, but new domain tables should use claims naming
+- Timestamp all activities: `opened_at`, `acknowledged_at`, `last_party_response_at`, `closed_at`, `due_at`
+- Audit-friendly: every status change, hold, and document upload should be attributable to a user and timestamped
 - Email tracking: `last_reminder_sent_date`, `digest_time` for user preferences
 
 ### Security & Access
 
-- Row-Level Security (RLS) in Supabase: Brokers see only their assigned customers
-- Managers/Admins: Can view team-wide data and reports
-- Audit trail: Track who modified customer records and when
+- Row-Level Security (RLS) in Supabase, by role:
+  - **Claims staff:** Full read/write on claims they own or are assigned to; read on team queue
+  - **Brokers:** Read and comment access on claims tied to customers they own (no edits to claim status, holds, or settlement data)
+  - **Managers / Admins:** Full visibility across all claims, holds, and reporting; required for approving "Do Not Pay" and payment holds
+  - **External carriers (future, not yet in scope):** If introduced, scope tightly to the specific claim and limited fields; never expose other carriers' data or internal notes
+- Audit trail: Track who created, modified, or closed any claim record; track every status change, hold placement/removal, document upload, and outbound correspondence
+- Sensitive data: BOLs, settlement amounts, and legal-bucket claims may carry additional access restrictions
 
 ---
 

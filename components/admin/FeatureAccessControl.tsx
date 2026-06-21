@@ -4,8 +4,8 @@
  * Admin panel for managing app-wide feature permissions.
  * Allows admins to:
  * - Globally disable expensive AI features to control costs
- * - Set default permissions for new brokers
- * - Bulk update permissions for existing brokers
+ * - Set default permissions for new teamMembers
+ * - Bulk update permissions for existing teamMembers
  */
 
 "use client";
@@ -52,10 +52,10 @@ export default function FeatureAccessControl() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [brokers, setBrokers] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"defaults" | "bulk">("defaults");
   
-  // Default permissions for new brokers
+  // Default permissions for new teamMembers
   const [defaults, setDefaults] = useState({
     can_use_ai_email: false,
     can_use_web_search: false,
@@ -65,7 +65,7 @@ export default function FeatureAccessControl() {
   // Bulk update selections
   const [bulkAction, setBulkAction] = useState<"enable" | "disable">("disable");
   const [selectedFeature, setSelectedFeature] = useState("can_use_ai_email");
-  const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -74,15 +74,15 @@ export default function FeatureAccessControl() {
   const loadData = async () => {
     setLoading(true);
 
-    // Load brokers
-    const { data: brokersData } = await supabase
-      .from("brokers")
+    // Load teamMembers
+    const { data: teamMembersData } = await supabase
+      .from("team_members")
       .select("id, first_name, last_name, email, is_admin, is_manager")
       .eq("is_active", true)
       .order("first_name");
 
-    if (brokersData) {
-      setBrokers(brokersData);
+    if (teamMembersData) {
+      setTeamMembers(teamMembersData);
     }
 
     // Load default settings (stored in a settings table or use hardcoded for now)
@@ -96,7 +96,7 @@ export default function FeatureAccessControl() {
     try {
       // In a real implementation, save these to a settings table
       // For now, just show success
-      alert("Default permissions saved! These will apply to newly invited brokers.");
+      alert("Default permissions saved! These will apply to newly invited team members.");
     } catch (error) {
       console.error("Error saving defaults:", error);
       alert("Failed to save defaults");
@@ -106,8 +106,8 @@ export default function FeatureAccessControl() {
   };
 
   const handleBulkUpdate = async () => {
-    if (selectedBrokers.length === 0) {
-      alert("Please select at least one broker");
+    if (selectedTeamMembers.length === 0) {
+      alert("Please select at least one team member");
       return;
     }
 
@@ -118,7 +118,7 @@ export default function FeatureAccessControl() {
 
     if (
       !confirm(
-        `${action.toUpperCase()} "${featureLabel}" for ${selectedBrokers.length} broker(s)?`
+        `${action.toUpperCase()} "${featureLabel}" for ${selectedTeamMembers.length} team member(s)?`
       )
     ) {
       return;
@@ -128,26 +128,26 @@ export default function FeatureAccessControl() {
     try {
       const newValue = bulkAction === "enable";
 
-      // Update broker_permissions for all selected brokers
-      for (const brokerId of selectedBrokers) {
+      // Update broker_permissions for all selected teamMembers
+      for (const teamMemberId of selectedTeamMembers) {
         const { error } = await supabase
-          .from("broker_permissions")
+          .from("team_member_permissions")
           .upsert({
-            broker_id: brokerId,
+            team_member_id: teamMemberId,
             [selectedFeature]: newValue,
           }, {
-            onConflict: "broker_id",
+            onConflict: "team_member_id",
           });
 
         if (error) {
-          console.error(`Error updating ${brokerId}:`, error);
+          console.error(`Error updating ${teamMemberId}:`, error);
         }
       }
 
       alert(
-        `Successfully ${action}d "${featureLabel}" for ${selectedBrokers.length} broker(s)`
+        `Successfully ${action}d "${featureLabel}" for ${selectedTeamMembers.length} team member(s)`
       );
-      setSelectedBrokers([]);
+      setSelectedTeamMembers([]);
     } catch (error) {
       console.error("Bulk update error:", error);
       alert("Failed to update permissions");
@@ -156,21 +156,21 @@ export default function FeatureAccessControl() {
     }
   };
 
-  const toggleBrokerSelection = (brokerId: string) => {
-    setSelectedBrokers((prev) =>
-      prev.includes(brokerId)
-        ? prev.filter((id) => id !== brokerId)
-        : [...prev, brokerId]
+  const toggleTeamMemberSelection = (teamMemberId: string) => {
+    setSelectedTeamMembers((prev) =>
+      prev.includes(teamMemberId)
+        ? prev.filter((id) => id !== teamMemberId)
+        : [...prev, teamMemberId]
     );
   };
 
-  const selectAllBrokers = () => {
-    const nonAdmins = brokers.filter((b) => !b.is_admin);
-    setSelectedBrokers(nonAdmins.map((b) => b.id));
+  const selectAllTeamMembers = () => {
+    const nonAdmins = teamMembers.filter((b) => !b.is_admin);
+    setSelectedTeamMembers(nonAdmins.map((b) => b.id));
   };
 
   const deselectAll = () => {
-    setSelectedBrokers([]);
+    setSelectedTeamMembers([]);
   };
 
   if (loading) {
@@ -222,10 +222,10 @@ export default function FeatureAccessControl() {
         <div className="space-y-6">
           <div>
             <h3 className="mb-1 text-lg font-semibold text-slate-900">
-              Default Permissions for New Brokers
+              Default Permissions for New TeamMembers
             </h3>
             <p className="text-sm text-slate-600">
-              These permissions will be automatically granted when you invite new brokers.
+              These permissions will be automatically granted when you invite new teamMembers.
             </p>
           </div>
 
@@ -317,7 +317,7 @@ export default function FeatureAccessControl() {
               Bulk Update Permissions
             </h3>
             <p className="text-sm text-slate-600">
-              Enable or disable features for multiple brokers at once.
+              Enable or disable features for multiple teamMembers at once.
             </p>
           </div>
 
@@ -366,25 +366,25 @@ export default function FeatureAccessControl() {
             <div className="flex items-end">
               <button
                 onClick={handleBulkUpdate}
-                disabled={saving || selectedBrokers.length === 0}
+                disabled={saving || selectedTeamMembers.length === 0}
                 className="h-10 w-full rounded-lg bg-orange-500 px-4 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
               >
                 {saving
                   ? "Updating..."
-                  : `${bulkAction === "enable" ? "Enable" : "Disable"} for ${selectedBrokers.length} broker(s)`}
+                  : `${bulkAction === "enable" ? "Enable" : "Disable"} for ${selectedTeamMembers.length} team member(s)`}
               </button>
             </div>
           </div>
 
-          {/* Broker Selection */}
+          {/* TeamMember Selection */}
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h4 className="text-sm font-semibold text-slate-700">
-                Select Brokers ({selectedBrokers.length} selected)
+                Select TeamMembers ({selectedTeamMembers.length} selected)
               </h4>
               <div className="flex gap-2">
                 <button
-                  onClick={selectAllBrokers}
+                  onClick={selectAllTeamMembers}
                   className="text-sm text-orange-600 hover:text-orange-700"
                 >
                   Select all non-admins
@@ -418,43 +418,43 @@ export default function FeatureAccessControl() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {brokers.map((broker) => (
+                  {teamMembers.map((teamMember) => (
                     <tr
-                      key={broker.id}
+                      key={teamMember.id}
                       className={`hover:bg-slate-50 ${
-                        broker.is_admin ? "opacity-50" : ""
+                        teamMember.is_admin ? "opacity-50" : ""
                       }`}
                     >
                       <td className="px-4 py-2">
                         <input
                           type="checkbox"
-                          disabled={broker.is_admin}
-                          checked={selectedBrokers.includes(broker.id)}
-                          onChange={() => toggleBrokerSelection(broker.id)}
+                          disabled={teamMember.is_admin}
+                          checked={selectedTeamMembers.includes(teamMember.id)}
+                          onChange={() => toggleTeamMemberSelection(teamMember.id)}
                           className="h-4 w-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500 disabled:cursor-not-allowed"
                         />
                       </td>
                       <td className="px-4 py-2 text-sm font-medium text-slate-900">
-                        {broker.first_name} {broker.last_name}
+                        {teamMember.first_name} {teamMember.last_name}
                       </td>
                       <td className="px-4 py-2 text-sm text-slate-600">
-                        {broker.email}
+                        {teamMember.email}
                       </td>
                       <td className="px-4 py-2 text-sm">
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs ${
-                            broker.is_admin
+                            teamMember.is_admin
                               ? "bg-amber-100 text-amber-800"
-                              : broker.is_manager
+                              : teamMember.is_manager
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-slate-100 text-slate-700"
                           }`}
                         >
-                          {broker.is_admin
+                          {teamMember.is_admin
                             ? "Admin"
-                            : broker.is_manager
+                            : teamMember.is_manager
                               ? "Manager"
-                              : "Broker"}
+                              : "TeamMember"}
                         </span>
                       </td>
                     </tr>

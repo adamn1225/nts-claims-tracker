@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   const stateType = (payload?.state as Record<string, unknown>)?.type as string | undefined;
   const metadata = payload?.metadata as Record<string, unknown> | undefined;
 
-  // We need the broker's account key to look up which broker this belongs to
+  // We need the team member's account key to look up which teamMember this belongs to
   const accountKey = metadata?.accountKey as string | undefined;
 
   if (!stateType || !accountKey) {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   }
 
-  // Find the broker who owns this account key
+  // Find the team member who owns this account key
   const { data: connection } = await supabase
     .from("goto_connections")
     .select("user_id")

@@ -33,16 +33,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get broker record to ensure user is active
-    const { data: broker, error: brokerError } = await supabase
-      .from("brokers")
+    // Get teamMember record to ensure user is active
+    const { data: teamMember, error: teamMemberError } = await supabase
+      .from("team_members")
       .select("id, is_active")
       .eq("id", user.id)
       .single();
 
-    if (brokerError || !broker || !broker.is_active) {
+    if (teamMemberError || !teamMember || !teamMember.is_active) {
       return NextResponse.json(
-        { error: "Broker not found or inactive" },
+        { error: "Team member not found or inactive" },
         { status: 403 }
       );
     }

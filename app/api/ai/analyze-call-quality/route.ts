@@ -1,7 +1,7 @@
 /**
  * POST /api/ai/analyze-call-quality
  *
- * Analyzes call recordings to detect if brokers are asking key qualifying questions.
+ * Analyzes call recordings to detect if teamMembers are asking key qualifying questions.
  * Used by sales coaches to identify training opportunities.
  *
  * Qualifying questions checked:
@@ -12,8 +12,8 @@
  *   5. Follow-up Scheduled? (Did they set a date/time for next contact?)
  *
  * Request body:
- *   brokerId?  string   — Analyze specific broker (admins only, optional = all brokers)
- *   userKey?   string   — GoTo user key (alternative to brokerId)
+ *   teamMemberId?  string   — Analyze specific teamMember (admins only, optional = all team members)
+ *   userKey?   string   — GoTo user key (alternative to teamMemberId)
  *   days?      number   — Days to look back (default: 7, max: 30)
  *   minDuration? number — Minimum call duration in seconds (default: 60 = skip quick calls)
  *
@@ -22,7 +22,7 @@
  *     analyzed: number,
  *     calls: [{
  *       id: string,
- *       brokerName: string,
+ *       teamMemberName: string,
  *       startTime: string,
  *       duration: number,
  *       direction: "INBOUND" | "OUTBOUND",
@@ -60,8 +60,8 @@ const QUALIFYING_QUESTIONS = [
 
 interface AnalyzedCall {
     id: string;
-    brokerName: string;
-    brokerEmail: string;
+    teamMemberName: string;
+    teamMemberEmail: string;
     gotoUserKey: string;
     startTime: string;
     duration: number;
@@ -112,27 +112,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Authorization check
-    const { data: callerBroker, error: brokerError } = await supabase
-        .from("brokers")
+    const { data: callerTeamMember, error: teamMemberError } = await supabase
+        .from("team_members")
         .select("is_admin, is_sales_coach, id, first_name, last_name, email")
         .eq("id", user.id)
         .maybeSingle();
 
     console.log("[analyze-call-quality] Auth check:", {
         userId: user.id,
-        callerBroker,
-        brokerError,
+        callerTeamMember,
+        teamMemberError,
     });
 
-    if (!callerBroker) {
+    if (!callerTeamMember) {
         return NextResponse.json({
-            error: "Broker not found",
+            error: "Team member not found",
             userId: user.id,
-            details: brokerError?.message ?? "No broker record for this user",
+            details: teamMemberError?.message ?? "No team member record for this user",
         }, { status: 404 });
     }
 
-    const hasCoachAccess = Boolean(callerBroker.is_admin || (callerBroker as { is_sales_coach?: boolean }).is_sales_coach);
+    const hasCoachAccess = Boolean(callerTeamMember.is_admin || (callerTeamMember as { is_sales_coach?: boolean }).is_sales_coach);
 
     if (!hasCoachAccess) {
         return NextResponse.json({ error: "Forbidden - Admin or sales coach access required" }, { status: 403 });
@@ -239,8 +239,8 @@ export async function POST(request: NextRequest) {
 
             analyzed.push({
                 id: recording.id,
-                brokerName: userName ?? "Unknown",
-                brokerEmail: "",
+                teamMemberName: userName ?? "Unknown",
+                teamMemberEmail: "",
                 gotoUserKey: userKey,
                 startTime: recording.startTime,
                 duration: recording.duration,
@@ -271,13 +271,13 @@ export async function POST(request: NextRequest) {
 
     if (totalHits > 0 && userKey) {
         try {
-            // Resolve the broker_id from the GoTo userKey via goto_connections.
+            // Resolve the team_member_id from the GoTo userKey via goto_connections.
             const serviceSupabase = createServiceClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
                 process.env.SUPABASE_SERVICE_ROLE_KEY!,
             );
 
-            // goto_connections stores user_key alongside user_id (broker id)
+            // goto_connections stores user_key alongside user_id (teamMember id)
             const { data: conn } = await serviceSupabase
                 .from("goto_connections")
                 .select("user_id")
@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
                 .maybeSingle();
 
             if (conn?.user_id) {
-                // Upsert: add this run's hits to the broker's running total
+                // Upsert: add this run's hits to the team member's running total
                 await serviceSupabase.rpc("increment_call_quality_score", {
                     p_broker_id: conn.user_id,
                     p_questions_hit: totalHits,
@@ -321,8 +321,8 @@ async function analyzeCallTranscript(transcript: string): Promise<{
     questionsMissing: string[];
     explanation: string;
 }> {
-    const systemPrompt = `You are a sales coaching assistant for freight brokers.
-Analyze call transcripts to detect if the broker asked these 5 qualifying questions:
+    const systemPrompt = `You are a sales coaching assistant for freight team members.
+Analyze call transcripts to detect if the team member asked these 5 qualifying questions:
 
 1. **Business or Personal**: Did they ask if this is a business shipment or personal transport?
 2. **Shipping Frequency**: Did they ask how often the customer ships freight?
@@ -332,7 +332,7 @@ Analyze call transcripts to detect if the broker asked these 5 qualifying questi
 
 Return a JSON object: { "covered": ["question1", "question2"], "missing": ["question3"], "explanation": "brief analysis" }
 
-Be strict but fair. The broker doesn't need exact phrasing, but the intent must be clear.`;
+Be strict but fair. The teamMember doesn't need exact phrasing, but the intent must be clear.`;
 
     const userPrompt = `Analyze this sales call transcript:
 

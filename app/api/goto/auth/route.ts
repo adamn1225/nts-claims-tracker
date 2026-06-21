@@ -19,13 +19,13 @@ export async function GET(request: NextRequest) {
 
   // Only admins may request the admin token connection
   if (isAdminAuth) {
-    const { data: broker } = await supabase
-      .from("brokers")
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("is_admin")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!broker?.is_admin) {
+    if (!teamMember?.is_admin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
   // the user session itself — together they prevent silent token re-issuance.
   authUrl.searchParams.set("prompt", "consent");
   authUrl.searchParams.set("max_age", "0");
-  // Pass broker ID + admin flag in state so the callback can identify context
+  // Pass teamMember ID + admin flag in state so the callback can identify context
   // Format: "{userId}|admin" or just "{userId}"
   authUrl.searchParams.set("state", isAdminAuth ? `${user.id}|admin` : user.id);
 

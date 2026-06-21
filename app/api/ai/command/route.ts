@@ -29,8 +29,8 @@ type CommandAction = "distribute" | "create_tasks" | "reassign" | "filter" | "re
 
 type ParsedCommand = {
   action: CommandAction;
-  broker_name?: string;
-  broker_id?: string;
+  team_member_name?: string;
+  team_member_id?: string;
   quantity?: number;
   filters?: {
     industry?: string;
@@ -61,13 +61,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if user is admin/manager
-  const { data: broker } = await supabase
-    .from("brokers")
+  const { data: teamMember } = await supabase
+    .from("team_members")
     .select("is_admin, is_manager, first_name, last_name")
     .eq("id", user.id)
     .single();
 
-  if (!broker?.is_admin && !broker?.is_manager) {
+  if (!teamMember?.is_admin && !teamMember?.is_manager) {
     return NextResponse.json({ error: "Admin/Manager access required" }, { status: 403 });
   }
 
@@ -92,13 +92,13 @@ export async function POST(request: NextRequest) {
     if (revertData) {
       const { customer_ids, previous_broker_ids, task_ids } = revertData;
 
-      // Restore previous broker assignments
+      // Restore previous teamMember assignments
       if (customer_ids && previous_broker_ids && customer_ids.length === previous_broker_ids.length) {
         for (let i = 0; i < customer_ids.length; i++) {
           const { error } = await supabase
             .from("customers")
             .update({ 
-              broker_id: previous_broker_ids[i], 
+              team_member_id: previous_broker_ids[i], 
               updated_at: new Date().toISOString() 
             })
             .eq("id", customer_ids[i]);
@@ -125,10 +125,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 1: Get all active brokers with customer counts for better context
-    const { data: allBrokers } = await supabase
+    // Step 1: Get all active team members with customer counts for better context
+    const { data: allTeamMembers } = await supabase
       .from("broker_customer_summary")
-      .select("broker_id, first_name, last_name, full_name, email, office_location, total_customers, active_customers, prospects, is_admin, is_manager")
+      .select("team_member_id, first_name, last_name, full_name, email, office_location, total_customers, active_customers, prospects, is_admin, is_manager")
       .order("last_name");
 
     // Step 2: Use AI to parse the command
@@ -137,21 +137,21 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are a command parser for a freight broker CRM system.
+          content: `You are a command parser for a freight team member CRM system.
 Parse natural language commands into structured actions.
 
 Available actions:
-- distribute: Assign contacts/leads to a broker
+- distribute: Assign contacts/leads to a team member
 - create_tasks: Create follow-up tasks for contacts
-- reassign: Move contacts from one broker to another
+- reassign: Move contacts from one team member to another
 - filter: Search/filter contacts (read-only)
 
-Available brokers:
-${allBrokers?.map(b => 
+Available teamMembers:
+${allTeamMembers?.map(b => 
   `- ${b.full_name} (${b.email}, ${b.office_location}, ${b.total_customers || 0} customers, ${b.active_customers || 0} active)`
 ).join('\n')}
 
-IMPORTANT: When parsing broker names:
+IMPORTANT: When parsing teamMember names:
 - Match on first name, last name, or full name
 - Use last initial if provided (e.g., "David R" = first_name + last_name starts with R)
 - Use office location if specified (e.g., "David from Dallas")
@@ -159,7 +159,7 @@ IMPORTANT: When parsing broker names:
 
 Extract:
 1. Action type
-2. Broker name (if mentioned)
+2. TeamMember name (if mentioned)
 3. Quantity (number of contacts)
 4. Filters (industry, state, source, status, shipping_frequency)
 5. Task type (call, follow_up)
@@ -168,7 +168,7 @@ Extract:
 Return ONLY valid JSON with this exact structure:
 {
   "action": "distribute" | "create_tasks" | "reassign" | "filter" | "unknown",
-  "broker_name": "string or null",
+  "team_member_name": "string or null",
   "quantity": number or null,
   "filters": {
     "industry": "string or null",
@@ -192,65 +192,65 @@ Return ONLY valid JSON with this exact structure:
 
     const parsed: ParsedCommand = JSON.parse(parseCompletion.choices[0].message.content || "{}");
 
-    // Step 3: Enhanced broker name resolution with disambiguation
-    if (parsed.broker_name && allBrokers) {
-      const searchTerm = parsed.broker_name.toLowerCase().trim();
+    // Step 3: Enhanced teamMember name resolution with disambiguation
+    if (parsed.team_member_name && allTeamMembers) {
+      const searchTerm = parsed.team_member_name.toLowerCase().trim();
       
       // Try exact full name match first
-      let matchedBroker = allBrokers.find(b => 
+      let matchedTeamMember = allTeamMembers.find(b => 
         b.full_name?.toLowerCase() === searchTerm
       );
 
       // Try first name + last initial (e.g., "David R")
-      if (!matchedBroker && searchTerm.includes(' ')) {
+      if (!matchedTeamMember && searchTerm.includes(' ')) {
         const parts = searchTerm.split(' ');
         if (parts.length === 2 && parts[1].length === 1) {
           // Format: "David R"
-          matchedBroker = allBrokers.find(b => 
+          matchedTeamMember = allTeamMembers.find(b => 
             b.first_name?.toLowerCase() === parts[0] &&
             b.last_name?.toLowerCase().startsWith(parts[1])
           );
         } else {
           // Try first + last name combination
-          matchedBroker = allBrokers.find(b => 
+          matchedTeamMember = allTeamMembers.find(b => 
             b.full_name?.toLowerCase().includes(searchTerm)
           );
         }
       }
 
       // Try first name only (but check for duplicates)
-      if (!matchedBroker) {
-        const firstNameMatches = allBrokers.filter(b => 
+      if (!matchedTeamMember) {
+        const firstNameMatches = allTeamMembers.filter(b => 
           b.first_name?.toLowerCase() === searchTerm
         );
         
         if (firstNameMatches.length === 1) {
-          matchedBroker = firstNameMatches[0];
+          matchedTeamMember = firstNameMatches[0];
         } else if (firstNameMatches.length > 1) {
-          // Multiple brokers with same first name - need disambiguation
+          // Multiple teamMembers with same first name - need disambiguation
           return NextResponse.json({
             understood: true,
             action: parsed.action,
             parameters: parsed,
             preview: [],
             executed: false,
-            error: `Multiple brokers named "${parsed.broker_name}" found. Please specify:\n${
+            error: `Multiple teamMembers named "${parsed.team_member_name}" found. Please specify:\n${
               firstNameMatches.map(b => `  • ${b.full_name} (${b.office_location})`).join('\n')
-            }\n\nTry: "${parsed.broker_name} ${firstNameMatches[0].last_name}" or "${parsed.broker_name} from ${firstNameMatches[0].office_location}"`,
+            }\n\nTry: "${parsed.team_member_name} ${firstNameMatches[0].last_name}" or "${parsed.team_member_name} from ${firstNameMatches[0].office_location}"`,
           });
         }
       }
 
       // Partial match as last resort
-      if (!matchedBroker) {
-        matchedBroker = allBrokers.find(b => 
+      if (!matchedTeamMember) {
+        matchedTeamMember = allTeamMembers.find(b => 
           b.first_name?.toLowerCase().includes(searchTerm) ||
           b.last_name?.toLowerCase().includes(searchTerm)
         );
       }
 
-      if (matchedBroker) {
-        parsed.broker_id = matchedBroker.broker_id;
+      if (matchedTeamMember) {
+        parsed.team_member_id = matchedTeamMember.team_member_id;
       } else {
         return NextResponse.json({
           understood: false,
@@ -258,15 +258,15 @@ Return ONLY valid JSON with this exact structure:
           parameters: parsed,
           preview: [],
           executed: false,
-          error: `Could not find broker "${parsed.broker_name}". Available brokers:\n${
-            allBrokers.slice(0, 10).map(b => `  • ${b.full_name} (${b.office_location})`).join('\n')
+          error: `Could not find teamMember "${parsed.team_member_name}". Available teamMembers:\n${
+            allTeamMembers.slice(0, 10).map(b => `  • ${b.full_name} (${b.office_location})`).join('\n')
           }`,
         });
       }
     }
 
     // Step 4: Build query based on filters
-    let contactsQuery = supabase.from("customers").select("id, business_name, contact_name, state, industry, broker_id");
+    let contactsQuery = supabase.from("customers").select("id, business_name, contact_name, state, industry, team_member_id");
 
     // Apply filters
     if (parsed.filters?.industry) {
@@ -287,7 +287,7 @@ Return ONLY valid JSON with this exact structure:
 
     // For distribution, get unassigned contacts
     if (parsed.action === "distribute") {
-      contactsQuery = contactsQuery.is("broker_id", null);
+      contactsQuery = contactsQuery.is("team_member_id", null);
     }
 
     const { data: matchingContacts, error: contactsError } = await contactsQuery;
@@ -316,8 +316,8 @@ Return ONLY valid JSON with this exact structure:
       }
     }
 
-    // Step 6: Generate preview with broker context
-    const selectedBroker = parsed.broker_id ? allBrokers?.find(b => b.broker_id === parsed.broker_id) : null;
+    // Step 6: Generate preview with teamMember context
+    const selectedTeamMember = parsed.team_member_id ? allTeamMembers?.find(b => b.team_member_id === parsed.team_member_id) : null;
     const preview = selectedContacts.slice(0, 10).map(c => 
       `${c.business_name || c.contact_name || "Unknown"} (${c.state || "?"}${c.industry ? ` - ${c.industry}` : ""})`
     );
@@ -326,21 +326,21 @@ Return ONLY valid JSON with this exact structure:
       preview.push(`...and ${selectedContacts.length - 10} more`);
     }
 
-    // Add broker context to preview
-    if (selectedBroker) {
-      preview.unshift(`📌 Target Broker: ${selectedBroker.full_name} (${selectedBroker.office_location}, ${selectedBroker.active_customers || 0} active customers)`);
+    // Add teamMember context to preview
+    if (selectedTeamMember) {
+      preview.unshift(`📌 Target TeamMember: ${selectedTeamMember.full_name} (${selectedTeamMember.office_location}, ${selectedTeamMember.active_customers || 0} active customers)`);
     }
 
     // Step 7: Execute if requested
     if (execute) {
       const contactIds = selectedContacts.map(c => c.id);
-      const previousBrokerIds = selectedContacts.map(c => c.broker_id);
+      const previousTeamMemberIds = selectedContacts.map(c => c.team_member_id);
 
-      if (parsed.action === "distribute" && parsed.broker_id) {
-        // Assign contacts to broker
+      if (parsed.action === "distribute" && parsed.team_member_id) {
+        // Assign contacts to teamMember
         const { error: assignError } = await supabase
           .from("customers")
-          .update({ broker_id: parsed.broker_id, updated_at: new Date().toISOString() })
+          .update({ team_member_id: parsed.team_member_id, updated_at: new Date().toISOString() })
           .in("id", contactIds);
 
         if (assignError) throw assignError;
@@ -350,7 +350,7 @@ Return ONLY valid JSON with this exact structure:
         // Create tasks if requested
         if (parsed.task_type) {
           const tasks = contactIds.map(customerId => ({
-            broker_id: parsed.broker_id,
+            team_member_id: parsed.team_member_id,
             customer_id: customerId,
             title: parsed.task_type === "call" ? "Initial Contact Call" : "Follow-up",
             type: parsed.task_type,
@@ -368,18 +368,18 @@ Return ONLY valid JSON with this exact structure:
           createdTaskIds = createdTasks?.map(t => t.id) || [];
         }
 
-        const brokerFullName = allBrokers?.find(b => b.broker_id === parsed.broker_id);
+        const teamMemberFullName = allTeamMembers?.find(b => b.team_member_id === parsed.team_member_id);
         return NextResponse.json({
           understood: true,
           action: parsed.action,
           parameters: parsed,
           preview,
           executed: true,
-          confirmation: `✅ Assigned ${contactIds.length} contacts to ${brokerFullName?.full_name}${parsed.task_type ? ` and created ${contactIds.length} ${parsed.task_type} tasks` : ""}`,
-          brokerInfo: selectedBroker ? {
-            name: selectedBroker.full_name || "Unknown",
-            office: selectedBroker.office_location || "N/A",
-            activeCustomers: selectedBroker.active_customers || 0,
+          confirmation: `✅ Assigned ${contactIds.length} contacts to ${teamMemberFullName?.full_name}${parsed.task_type ? ` and created ${contactIds.length} ${parsed.task_type} tasks` : ""}`,
+          teamMemberInfo: selectedTeamMember ? {
+            name: selectedTeamMember.full_name || "Unknown",
+            office: selectedTeamMember.office_location || "N/A",
+            activeCustomers: selectedTeamMember.active_customers || 0,
           } : undefined,
           contactsDistributed: selectedContacts.map(c => ({
             name: c.business_name || c.contact_name || "Unknown",
@@ -388,16 +388,16 @@ Return ONLY valid JSON with this exact structure:
           })),
           revertData: {
             customer_ids: contactIds,
-            previous_broker_ids: previousBrokerIds,
+            previous_broker_ids: previousTeamMemberIds,
             task_ids: createdTaskIds.length > 0 ? createdTaskIds : undefined,
           },
         });
       }
 
-      if (parsed.action === "create_tasks" && parsed.broker_id) {
-        // Create tasks for existing broker's customers
+      if (parsed.action === "create_tasks" && parsed.team_member_id) {
+        // Create tasks for existing teamMember's customers
         const tasks = contactIds.map(customerId => ({
-          broker_id: parsed.broker_id,
+          team_member_id: parsed.team_member_id,
           customer_id: customerId,
           title: parsed.task_type === "call" ? "Follow-up Call" : "Follow-up",
           type: parsed.task_type || "follow_up",
@@ -421,10 +421,10 @@ Return ONLY valid JSON with this exact structure:
           preview,
           executed: true,
           confirmation: `✅ Created ${tasks.length} ${parsed.task_type || "follow-up"} tasks`,
-          brokerInfo: selectedBroker ? {
-            name: selectedBroker.full_name || "Unknown",
-            office: selectedBroker.office_location || "N/A",
-            activeCustomers: selectedBroker.active_customers || 0,
+          teamMemberInfo: selectedTeamMember ? {
+            name: selectedTeamMember.full_name || "Unknown",
+            office: selectedTeamMember.office_location || "N/A",
+            activeCustomers: selectedTeamMember.active_customers || 0,
           } : undefined,
           contactsDistributed: selectedContacts.map(c => ({
             name: c.business_name || c.contact_name || "Unknown",
@@ -433,7 +433,7 @@ Return ONLY valid JSON with this exact structure:
           })),
           revertData: {
             customer_ids: contactIds,
-            previous_broker_ids: previousBrokerIds,
+            previous_broker_ids: previousTeamMemberIds,
             task_ids: createdTaskIds,
           },
         });
@@ -448,10 +448,10 @@ Return ONLY valid JSON with this exact structure:
       preview,
       executed: false,
       message: `Preview: ${selectedContacts.length} contacts ready. Click "Execute" to confirm.`,
-      brokerInfo: selectedBroker ? {
-        name: selectedBroker.full_name || "Unknown",
-        office: selectedBroker.office_location || "N/A",
-        activeCustomers: selectedBroker.active_customers || 0,
+      teamMemberInfo: selectedTeamMember ? {
+        name: selectedTeamMember.full_name || "Unknown",
+        office: selectedTeamMember.office_location || "N/A",
+        activeCustomers: selectedTeamMember.active_customers || 0,
       } : undefined,
     });
 

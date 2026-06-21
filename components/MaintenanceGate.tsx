@@ -38,12 +38,12 @@ export default function MaintenanceGate() {
           if (active) setIsAdmin(false);
           return;
         }
-        const { data: broker } = await supabase
-          .from("brokers")
+        const { data: teamMember } = await supabase
+          .from("team_members")
           .select("is_admin")
           .eq("id", user.id)
           .single();
-        if (active) setIsAdmin(Boolean(broker?.is_admin));
+        if (active) setIsAdmin(Boolean(teamMember?.is_admin));
       } catch {
         if (active) setIsAdmin(false);
       }

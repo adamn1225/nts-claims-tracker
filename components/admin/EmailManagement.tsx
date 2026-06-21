@@ -88,7 +88,7 @@ export default function EmailManagement() {
                 📅 Daily Digest Configuration
               </h2>
               <p className="text-sm text-slate-600">
-                Manage the automated daily task digest email sent to all brokers each morning.
+                Manage the automated daily task digest email sent to all team members each morning.
                 Customize the template and set the send time.
               </p>
             </div>
@@ -123,11 +123,11 @@ export default function EmailManagement() {
                 </li>
                 <li className="flex gap-2">
                   <span className="text-slate-400">•</span>
-                  <span>Each broker can set their preferred time in Notification Settings (default 8:00 AM EST)</span>
+                  <span>Each teamMember can set their preferred time in Notification Settings (default 8:00 AM EST)</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-slate-400">•</span>
-                  <span>Only sent if broker has tasks and hasn't received digest today</span>
+                  <span>Only sent if teamMember has tasks and hasn't received digest today</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-slate-400">•</span>

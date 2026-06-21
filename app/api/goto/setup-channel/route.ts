@@ -3,7 +3,7 @@ import { decrypt } from "@/lib/encryption";
 
 // Gets a valid GoTo access token, refreshing if needed
 // Returns null if connection not found or refresh failed
-async function getValidAccessToken(brokerId: string): Promise<string | null> {
+async function getValidAccessToken(teamMemberId: string): Promise<string | null> {
   // Import server supabase dynamically to avoid issues
   const { createClient } = await import("@/lib/supabase/server");
   const { encrypt } = await import("@/lib/encryption");
@@ -12,7 +12,7 @@ async function getValidAccessToken(brokerId: string): Promise<string | null> {
   const { data: connection } = await supabase
     .from("goto_connections")
     .select("access_token, refresh_token, expires_at")
-    .eq("user_id", brokerId)
+    .eq("user_id", teamMemberId)
     .maybeSingle();
 
   if (!connection) return null;
@@ -52,7 +52,7 @@ async function getValidAccessToken(brokerId: string): Promise<string | null> {
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
       })
-      .eq("user_id", brokerId);
+      .eq("user_id", teamMemberId);
 
     return data.access_token;
   }
@@ -62,7 +62,7 @@ async function getValidAccessToken(brokerId: string): Promise<string | null> {
 
 // POST /api/goto/setup-channel
 // Creates a GoTo webhook notification channel and subscribes to call events.
-// Called when a broker starts a Power Dialer session.
+// Called when a team member starts a Power Dialer session.
 export async function POST(request: NextRequest) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = await createClient();
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.URL || "";
   const webhookUrl = `${appUrl}/api/goto/webhook`;
 
-  // Unique channel nickname per session (broker_id + timestamp)
+  // Unique channel nickname per session (team_member_id + timestamp)
   const channelNickname = `nts-dialer-${user.id.slice(0, 8)}-${Date.now()}`;
 
   // Step 1: Create webhook notification channel

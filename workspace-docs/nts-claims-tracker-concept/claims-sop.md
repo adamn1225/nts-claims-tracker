@@ -1,0 +1,180 @@
+## Proceding email from Jason
+
+### Email #1
+> Guys, I was on the phone with George and Karen and I was looking at the FreightClaims website- And it's so bad really.
+> 
+> Then it occurred to me that the sales tracker already has everything we need to the Claims Portal.
+> 
+> We can call it ClaimsTracker 
+> 
+> But basically, set up an intake form that populates the claims into the "INBOX"
+> 
+> Then we setup the columns into about 5-6 Columns
+> 
+> Inbox
+> Claim Started
+> Processing Claim
+> Claim Denied
+> Claim Awaiting Payment 
+> Claim Closed
+> 
+> Then we can set up reporting based on customer claims, Claims values, Average days to close, Claims paid out.
+> Vehicle type claims, Trailer Type claims
+> 
+> Since we are already working on the CRM integration it will make it much easier for the Claims team to access and manage all of the broker information and the customer information.
+> 
+> I showed them a quick demo of the Salestracker and I think its an easy way to transition with something that is already set up and working well as is
+> 
+> But this is so garbage- https://onlineclaimform.freightclaims.com/?customer_key=d87c74b1-3c4f-40b5-a207-1236b0fe2a41
+> 
+> 
+> George and Karen can give feedback on what is good and what is missing but I honestly think it already has everything we need- we just need to trim it down because it has a lot of things we don't need.
+
+### Email #2
+
+> If you also want to look at the Freightclaims.com
+> 
+> Jason@ntslogistics.com
+> R6!qZJeKk5RJgek
+> 
+> 
+> Basically, we want to have a card for each claim, and it should contain.
+> 
+> Order Number
+> Customer Name
+> Broker Name
+> Business name
+> Phone number
+> Email
+> Documents to Upload
+> NOTES
+> Damage Claim Amount
+> Value of Shipment
+> Date Claim was submitted
+> Notes. (Email, Phone, texts) (Just like it has now)
+> Freight Type ( For reporting)
+> Trailer type ( For reporting)
+> 
+> 
+> We need a form like this but much neater and cleaner
+> ntslogistics.com/claims
+> 
+> They will fill out the form and it will go to the INBOX- or "New Claim" Column
+> 
+> Then they will bring it from that Column to Claim Started Column
+> 
+> Then Claim in Process
+> 
+> Awaiting Payment
+> 
+> Claim Closed
+
+# Standard Operating Procedure (SOP)
+
+Claims Processing Procedures
+Objective
+This SOP is designed to establish the standard procedures required for the handling and processing of all cargo and transportation-related claims. While certain claims may require adjustments due to circumstances beyond the company’s control, these procedures should be followed on the majority of claims to help ensure consistency, accuracy, proper documentation, and timely claim resolution.
+The purpose of these procedures is to:
+•	Maintain consistent claim handling standards;
+•	Preserve evidence and documentation;
+•	Improve communication with involved parties;
+•	Reduce preventable errors and exposure;
+•	Assist with recovery efforts; and
+•	Ensure professional and organized claim administration.
+________________________________________
+Step 1: Claims Reported via FreightClaims.com
+1.	Enter claim into the claims management system.
+2.	Send initial claim acknowledgment letters to:
+o	Shipper/Customer;
+o	Accounts Payable
+o	Carrier;  and
+o	Factoring company, if applicable.
+
+3.	Request the following documentation:
+o	Bill of Lading (BOL);
+o	Signed delivery receipt;
+o	Pickup and delivery photos/videos;
+o	Witness statements, if available;
+o	Repair estimates or replacement invoices;
+o	Presentation of loss documentation, if not already submitted
+
+4.	Save all correspondence and supporting documents to the claim file.
+5.	Confirm all applicable parties have been properly notified.
+________________________________________
+Step 2: Claims Reported via Email
+1.	Enter claim into the claims management system.
+2.	Send initial claim acknowledgment letters to:
+o	Shipper/Customer;
+o	Accounts Payable
+o	Carrier; and
+o	Factoring company, if applicable.
+3.	Request the following documentation:
+o	Bill of Lading (BOL);
+o	Signed delivery receipt;
+o	Pickup and delivery photos/videos;
+o	Witness statements, if available;
+o	Repair estimates or replacement invoices;
+o	Presentation of loss documentation.
+4.	Save all correspondence and supporting documents to the claim file.
+5.	Confirm all applicable parties have been properly notified.
+________________________________________
+Step 3: Spreadsheet and Claim Tracking Updates
+1.	Add claim to the appropriate tracking spreadsheet:
+o	Current Claims (under $10,000);
+o	Credit / High Value Claims;
+o	Legal Claims.
+2.	Verify customer contact information using publicly available sources when necessary.
+3.	Confirm consistency of:
+o	Customer name;
+o	Phone number;
+o	Email address;
+o	Billing information; and
+o	Delivery/pickup location details.
+4.	Review available order documentation and system data for discrepancies or fraud indicators.
+5.	Document any inconsistencies or concerns within the claim notes.
+________________________________________
+Step 4: CRM Procedures for All Claims
+1.	Update CRM/account notes appropriately.
+2.	Mark account or carrier status as “Do Not Pay” when approved or required by management.
+3.	Upload and save:
+o	Correspondence;
+o	Photos/videos;
+o	Estimates;
+o	Insurance documents;
+o	Claim forms; and
+o	Supporting evidence.
+
+4.	Maintain accurate and ongoing claim notes throughout the life of the claim.
+________________________________________
+Step 5: Carrier Monitoring Procedures
+1.	Add internal monitoring notes regarding carrier performance or claim exposure when appropriate.
+2.	Place temporary payment or dispatch holds on carriers when approved by management and warranted by claim severity or risk.
+3.	Upon claim resolution:
+o	Update carrier notes;
+o	Remove restrictions if obligations have been satisfied; and
+o	Document final resolution status.
+________________________________________
+Step 6: Correspondence with Carriers, Shippers, and Insurance Companies
+1.	Maintain professional written communication throughout the claim process.
+2.	Send periodic status updates as the claim progresses.
+3.	Request and follow up on outstanding documentation or information.
+4.	Document all phone calls, emails, and claim discussions in the claim file.
+5.	Escalate non-responsive parties to management when necessary.
+________________________________________
+Step 7: Claim Closing Procedures
+1.	Verify settlement or payment completion.
+2.	Obtain and save any required:
+o	Releases;
+o	Settlement agreements;
+o	Payment confirmations; and
+o	Closing documentation.
+
+3.	Notify all applicable parties of claim resolution.
+4.	Update claim status in all systems and spreadsheets.
+5.	Remove any internal restrictions or holds if applicable.
+6.	Archive claim documentation in accordance with company retention policies.
+________________________________________
+Conclusion
+Claims procedures should be regularly reviewed and updated as new claim scenarios, legal developments, operational challenges, and procedural gaps are identified.
+All departments involved in transportation operations, accounting, customer service, dispatch, safety, and claims should understand and follow these procedures to help maintain the company’s standards, improve claim outcomes, and reduce preventable operational and financial exposure.
+

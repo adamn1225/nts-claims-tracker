@@ -1,26 +1,26 @@
 import { useState, useEffect } from "react";
 import { Customer, CustomerStatus, TmsReference } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
-import { useBrokerView } from "@/contexts/BrokerViewContext";
+import { useTeamMemberView } from "@/contexts/TeamMemberViewContext";
 import { useClickToCall } from "@/contexts/ClickToCallContext";
 
 export function useCustomers() {
-  const { currentBroker, viewingBroker } = useBrokerView();
+  const { currentTeamMember, viewingTeamMember } = useTeamMemberView();
   const { makeCall } = useClickToCall();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [taskCustomer, setTaskCustomer] = useState<Customer | null>(null);
-  const [currentBrokerId, setCurrentBrokerId] = useState<string>("");
+  const [currentTeamMemberId, setCurrentTeamMemberId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Use viewing broker's ID for filtering, fallback to current broker
-  const activeBrokerId = viewingBroker?.id || currentBroker?.id || "";
+  // Use viewing team member's ID for filtering, fallback to current team member
+  const activeTeamMemberId = viewingTeamMember?.id || currentTeamMember?.id || "";
 
   const normalizeStatusName = (value: string) => value.trim();
 
-  // Fetch broker ID and customers on mount or when viewing broker changes
+  // Fetch teamMember ID and customers on mount or when viewing team member changes
   useEffect(() => {
     const initializeData = async () => {
       const supabase = createClient();
@@ -34,33 +34,33 @@ export function useCustomers() {
         return;
       }
 
-      setCurrentBrokerId(user.id);
+      setCurrentTeamMemberId(user.id);
 
-      // Fetch customers for the viewing broker (or current if not viewing another)
-      const brokerIdToFetch = viewingBroker?.id || user.id;
-      await fetchCustomers(brokerIdToFetch);
+      // Fetch customers for the viewing team member (or current if not viewing another)
+      const teamMemberIdToFetch = viewingTeamMember?.id || user.id;
+      await fetchCustomers(teamMemberIdToFetch);
       setIsLoading(false);
     };
 
     initializeData();
-  }, [viewingBroker?.id]); // Re-fetch when viewing broker changes
+  }, [viewingTeamMember?.id]); // Re-fetch when viewing team member changes
 
   // Real-time subscription for customer changes
   useEffect(() => {
-    if (!activeBrokerId) return;
+    if (!activeTeamMemberId) return;
 
     const supabase = createClient();
 
-    // Subscribe to changes on customers table for this broker
+    // Subscribe to changes on customers table for this teamMember
     const channel = supabase
-      .channel(`customers:${activeBrokerId}`)
+      .channel(`customers:${activeTeamMemberId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "customers",
-          filter: `broker_id=eq.${activeBrokerId}`,
+          filter: `team_member_id=eq.${activeTeamMemberId}`,
         },
         async (payload) => {
           console.log("Real-time INSERT:", payload.new);
@@ -75,7 +75,7 @@ export function useCustomers() {
             .from("contact_log")
             .select("customer_id")
             .eq("customer_id", payload.new.id)
-            .eq("broker_id", activeBrokerId)
+            .eq("team_member_id", activeTeamMemberId)
             .eq("type", "note");
 
           const { data: collaboratorsData } = await supabase
@@ -83,11 +83,11 @@ export function useCustomers() {
             .select(
               `
               id,
-              broker_id,
+              team_member_id,
               role,
               access_level,
               active,
-              brokers!inner(id, first_name, last_name)
+              teamMembers!inner(id, first_name, last_name)
             `
             )
             .eq("customer_id", payload.new.id)
@@ -96,8 +96,8 @@ export function useCustomers() {
           const collaborators = collaboratorsData
             ? collaboratorsData.map((collab: any) => ({
               id: collab.id,
-              broker_id: collab.broker_id,
-              broker_name: `${collab.brokers.first_name} ${collab.brokers.last_name || ""
+              team_member_id: collab.team_member_id,
+              team_member_name: `${collab.teamMembers.first_name} ${collab.teamMembers.last_name || ""
                 }`.trim(),
               role: collab.role,
               access_level: collab.access_level,
@@ -128,7 +128,7 @@ export function useCustomers() {
           event: "UPDATE",
           schema: "public",
           table: "customers",
-          filter: `broker_id=eq.${activeBrokerId}`,
+          filter: `team_member_id=eq.${activeTeamMemberId}`,
         },
         async (payload) => {
           console.log("Real-time UPDATE:", payload.new);
@@ -143,7 +143,7 @@ export function useCustomers() {
             .from("contact_log")
             .select("customer_id")
             .eq("customer_id", payload.new.id)
-            .eq("broker_id", activeBrokerId)
+            .eq("team_member_id", activeTeamMemberId)
             .eq("type", "note");
 
           const { data: collaboratorsData } = await supabase
@@ -151,11 +151,11 @@ export function useCustomers() {
             .select(
               `
               id,
-              broker_id,
+              team_member_id,
               role,
               access_level,
               active,
-              brokers!inner(id, first_name, last_name)
+              teamMembers!inner(id, first_name, last_name)
             `
             )
             .eq("customer_id", payload.new.id)
@@ -164,8 +164,8 @@ export function useCustomers() {
           const collaborators = collaboratorsData
             ? collaboratorsData.map((collab: any) => ({
               id: collab.id,
-              broker_id: collab.broker_id,
-              broker_name: `${collab.brokers.first_name} ${collab.brokers.last_name || ""
+              team_member_id: collab.team_member_id,
+              team_member_name: `${collab.teamMembers.first_name} ${collab.teamMembers.last_name || ""
                 }`.trim(),
               role: collab.role,
               access_level: collab.access_level,
@@ -193,7 +193,7 @@ export function useCustomers() {
           event: "DELETE",
           schema: "public",
           table: "customers",
-          filter: `broker_id=eq.${activeBrokerId}`,
+          filter: `team_member_id=eq.${activeTeamMemberId}`,
         },
         (payload) => {
           console.log("Real-time DELETE:", payload.old);
@@ -217,11 +217,11 @@ export function useCustomers() {
             .select(
               `
               id,
-              broker_id,
+              team_member_id,
               role,
               access_level,
               active,
-              brokers!inner(id, first_name, last_name)
+              teamMembers!inner(id, first_name, last_name)
             `
             )
             .eq("customer_id", customerId)
@@ -230,8 +230,8 @@ export function useCustomers() {
           const collaborators = collaboratorsData
             ? collaboratorsData.map((collab: any) => ({
               id: collab.id,
-              broker_id: collab.broker_id,
-              broker_name: `${collab.brokers.first_name} ${collab.brokers.last_name || ""
+              team_member_id: collab.team_member_id,
+              team_member_name: `${collab.teamMembers.first_name} ${collab.teamMembers.last_name || ""
                 }`.trim(),
               role: collab.role,
               access_level: collab.access_level,
@@ -265,11 +265,11 @@ export function useCustomers() {
             .select(
               `
               id,
-              broker_id,
+              team_member_id,
               role,
               access_level,
               active,
-              brokers!inner(id, first_name, last_name)
+              teamMembers!inner(id, first_name, last_name)
             `
             )
             .eq("customer_id", customerId)
@@ -278,8 +278,8 @@ export function useCustomers() {
           const collaborators = collaboratorsData
             ? collaboratorsData.map((collab: any) => ({
               id: collab.id,
-              broker_id: collab.broker_id,
-              broker_name: `${collab.brokers.first_name} ${collab.brokers.last_name || ""
+              team_member_id: collab.team_member_id,
+              team_member_name: `${collab.teamMembers.first_name} ${collab.teamMembers.last_name || ""
                 }`.trim(),
               role: collab.role,
               access_level: collab.access_level,
@@ -313,11 +313,11 @@ export function useCustomers() {
             .select(
               `
               id,
-              broker_id,
+              team_member_id,
               role,
               access_level,
               active,
-              brokers!inner(id, first_name, last_name)
+              teamMembers!inner(id, first_name, last_name)
             `
             )
             .eq("customer_id", customerId)
@@ -326,8 +326,8 @@ export function useCustomers() {
           const collaborators = collaboratorsData
             ? collaboratorsData.map((collab: any) => ({
               id: collab.id,
-              broker_id: collab.broker_id,
-              broker_name: `${collab.brokers.first_name} ${collab.brokers.last_name || ""
+              team_member_id: collab.team_member_id,
+              team_member_name: `${collab.teamMembers.first_name} ${collab.teamMembers.last_name || ""
                 }`.trim(),
               role: collab.role,
               access_level: collab.access_level,
@@ -346,11 +346,11 @@ export function useCustomers() {
       )
       .subscribe();
 
-    // Cleanup subscription on unmount or when activeBrokerId changes
+    // Cleanup subscription on unmount or when activeTeamMemberId changes
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeBrokerId]);
+  }, [activeTeamMemberId]);
 
   const fetchCustomers = async (userId: string) => {
     const supabase = createClient();
@@ -362,7 +362,7 @@ export function useCustomers() {
       const { data: customersData, error: customersError } = await supabase
         .from("customers")
         .select("*")
-        .eq("broker_id", userId)
+        .eq("team_member_id", userId)
         .order("created_at", { ascending: false });
 
       if (customersError) {
@@ -385,7 +385,7 @@ export function useCustomers() {
       const { data: tmsData, error: tmsError } = await supabase
         .from("tms_references")
         .select("*")
-        .eq("broker_id", userId);
+        .eq("team_member_id", userId);
 
       if (tmsError) {
         console.error("Error fetching TMS references:", {
@@ -400,7 +400,7 @@ export function useCustomers() {
       const { data: noteCountsData, error: noteCountsError } = await supabase
         .from("contact_log")
         .select("customer_id")
-        .eq("broker_id", userId)
+        .eq("team_member_id", userId)
         .eq("type", "note");
 
       if (noteCountsError) {
@@ -415,13 +415,13 @@ export function useCustomers() {
       // Fetch collaborators for all customers
       let collaboratorsData: any[] = [];
       try {
-        // Fetch collaborators with broker names using explicit join
+        // Fetch collaborators with teamMember names using explicit join
         const { data, error: collaboratorsError } = await supabase
           .from("customer_collaborators")
           .select(
             `
             id,
-            broker_id,
+            team_member_id,
             customer_id,
             role,
             access_level,
@@ -433,19 +433,19 @@ export function useCustomers() {
         if (collaboratorsError) {
           console.error("Error fetching collaborators:", collaboratorsError.message || JSON.stringify(collaboratorsError));
         } else if (data) {
-          // Fetch broker names separately to avoid relationship ambiguity
-          const brokerIds = [...new Set(data.map((c: any) => c.broker_id))];
-          if (brokerIds.length > 0) {
-            const { data: brokersData } = await supabase
-              .from("brokers")
+          // Fetch teamMember names separately to avoid relationship ambiguity
+          const teamMemberIds = [...new Set(data.map((c: any) => c.team_member_id))];
+          if (teamMemberIds.length > 0) {
+            const { data: teamMembersData } = await supabase
+              .from("team_members")
               .select("id, first_name, last_name")
-              .in("id", brokerIds);
+              .in("id", teamMemberIds);
 
-            // Map broker names to collaborators
-            const brokerMap = new Map(brokersData?.map((b: any) => [b.id, b]) || []);
+            // Map teamMember names to collaborators
+            const teamMemberMap = new Map(teamMembersData?.map((b: any) => [b.id, b]) || []);
             const enrichedCollaborators = data.map((c: any) => ({
               ...c,
-              brokers: brokerMap.get(c.broker_id),
+              teamMembers: teamMemberMap.get(c.team_member_id),
             }));
             collaboratorsData = enrichedCollaborators;
           } else {
@@ -469,8 +469,8 @@ export function useCustomers() {
         string,
         Array<{
           id: string;
-          broker_id: string;
-          broker_name: string;
+          team_member_id: string;
+          team_member_name: string;
           role: "owner" | "partner";
           access_level: "full" | "view_only";
           active: boolean;
@@ -478,15 +478,15 @@ export function useCustomers() {
       >();
       collaboratorsData?.forEach((collab: any) => {
         const customerId = collab.customer_id;
-        const brokerName = `${collab.brokers.first_name} ${collab.brokers.last_name || ""
+        const teamMemberName = `${collab.teamMembers.first_name} ${collab.teamMembers.last_name || ""
           }`.trim();
         if (!collaboratorsByCustomer.has(customerId)) {
           collaboratorsByCustomer.set(customerId, []);
         }
         collaboratorsByCustomer.get(customerId)!.push({
           id: collab.id,
-          broker_id: collab.broker_id,
-          broker_name: brokerName,
+          team_member_id: collab.team_member_id,
+          team_member_name: teamMemberName,
           role: collab.role,
           access_level: collab.access_level,
           active: collab.active,
@@ -619,7 +619,7 @@ export function useCustomers() {
     // Add note to contact log
     if (note.trim()) {
       const { error: logError } = await supabase.from("contact_log").insert({
-        broker_id: currentBrokerId,
+        team_member_id: currentTeamMemberId,
         customer_id: customerId,
         type: "note",
         subject: "Quick Note",
@@ -694,7 +694,7 @@ export function useCustomers() {
         if (tms_references.length > 0) {
           const refsToInsert = tms_references.map((ref: TmsReference) => ({
             customer_id: editingCustomer.id,
-            broker_id: currentBrokerId,
+            team_member_id: currentTeamMemberId,
             type: ref.type,
             external_id: ref.external_id,
             label: ref.label || null,
@@ -721,7 +721,7 @@ export function useCustomers() {
       const newCustomer = {
         ...dataWithoutCustomerId,
         // customer_id will be auto-generated by database trigger (don't include it here)
-        broker_id: viewingBroker?.id || currentBrokerId, // Use viewed broker when admin/manager adds on their behalf
+        team_member_id: viewingTeamMember?.id || currentTeamMemberId, // Use viewed teamMember when admin/manager adds on their behalf
         is_pinned: false,
         on_kanban_board: true, // New customers appear in both kanban and list view
         created_at: new Date().toISOString(),
@@ -743,7 +743,7 @@ export function useCustomers() {
       if (tms_references && tms_references.length > 0 && data) {
         const refsToInsert = tms_references.map((ref: TmsReference) => ({
           customer_id: data.id,
-          broker_id: viewingBroker?.id || currentBrokerId, // Match the customer's broker
+          team_member_id: viewingTeamMember?.id || currentTeamMemberId, // Match the customer's teamMember
           type: ref.type,
           external_id: ref.external_id,
           label: ref.label || null,
@@ -762,8 +762,8 @@ export function useCustomers() {
       return data;
     }
 
-    // Refresh customers list using the active broker ID (current or viewing)
-    await fetchCustomers(activeBrokerId || currentBrokerId);
+    // Refresh customers list using the active teamMember ID (current or viewing)
+    await fetchCustomers(activeTeamMemberId || currentTeamMemberId);
   };
 
   const handleStatusChange = async (
@@ -872,17 +872,17 @@ export function useCustomers() {
   };
 
   // Check if current user can reassign customers
-  const canReassign = currentBroker?.is_admin || currentBroker?.is_manager;
+  const canReassign = currentTeamMember?.is_admin || currentTeamMember?.is_manager;
 
-  // The effective broker ID for new records (viewed broker when admin/manager is viewing)
-  const activeBrokerIdForNew = viewingBroker?.id || currentBrokerId;
+  // The effective teamMember ID for new records (viewed teamMember when admin/manager is viewing)
+  const activeTeamMemberIdForNew = viewingTeamMember?.id || currentTeamMemberId;
 
   return {
     customers,
-    currentBrokerId,
-    activeBrokerIdForNew,
-    currentBroker,
-    viewingBroker,
+    currentTeamMemberId,
+    activeTeamMemberIdForNew,
+    currentTeamMember,
+    viewingTeamMember,
     canReassign: Boolean(canReassign),
     showCustomerModal,
     editingCustomer,

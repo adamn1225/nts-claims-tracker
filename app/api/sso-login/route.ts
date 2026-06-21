@@ -47,27 +47,27 @@ export async function GET(req: NextRequest) {
     // magicLinkData.user is always the correct user — no pagination issues
     const userId = magicLinkData.user.id;
 
-    // Check whether the broker row already exists. We must NEVER overwrite
+    // Check whether the team member row already exists. We must NEVER overwrite
     // app-managed fields (is_admin, is_manager, office_location, names, etc.)
     // with data from the external CRM JWT — the JWT doesn't know about app-level
     // permissions, so doing so silently strips admin/manager rights on every SSO login.
-    const { data: existingBroker } = await supabase
-      .from("brokers")
+    const { data: existingTeamMember } = await supabase
+      .from("team_members")
       .select("id")
       .eq("id", userId)
       .maybeSingle();
 
-    let brokerError: any = null;
+    let teamMemberError: any = null;
 
-    if (!existingBroker) {
-      // First-time SSO login — create a minimal broker row. All profile fields
+    if (!existingTeamMember) {
+      // First-time SSO login — create a minimal teamMember row. All profile fields
       // (first_name, last_name, office_location, phone, admin/manager flags) are
       // intentionally left null/false. The middleware will redirect the user to
       // /auth/complete-profile to fill them in, and an admin can grant elevated
       // permissions afterward. We do NOT derive a fake first_name from the email
       // local part — that just produces garbage like "jj" that the user has to
       // overwrite anyway.
-      const { error } = await supabase.from("brokers").insert({
+      const { error } = await supabase.from("team_members").insert({
         id: userId,
         email: payload.email,
         first_name: null,
@@ -78,50 +78,50 @@ export async function GET(req: NextRequest) {
         is_manager: false,
         is_active: true,
       });
-      brokerError = error;
+      teamMemberError = error;
     } else {
-      // Existing broker — only refresh email and re-activate the account.
+      // Existing teamMember — only refresh email and re-activate the account.
       // NEVER touch is_admin/is_manager, office_location, names, or phone —
       // those are managed inside this app.
       const { error } = await supabase
-        .from("brokers")
+        .from("team_members")
         .update({
           email: payload.email,
           is_active: true,
         })
         .eq("id", userId);
-      brokerError = error;
+      teamMemberError = error;
     }
 
-    if (brokerError) {
-      // On a brand-new SSO sign-up, the broker INSERT failing leaves the user
-      // with an auth account but no broker row — middleware then can't decide
+    if (teamMemberError) {
+      // On a brand-new SSO sign-up, the team member INSERT failing leaves the user
+      // with an auth account but no team member row — middleware then can't decide
       // what to do and the dashboard spins forever. Fail loudly so the SSO
       // page surfaces a real error instead of stranding the user.
-      console.error("Failed to create/update broker record:", brokerError);
-      if (!existingBroker) {
+      console.error("Failed to create/update team member record:", teamMemberError);
+      if (!existingTeamMember) {
         return NextResponse.json(
           {
             success: false,
-            error: `Could not create your broker profile: ${brokerError.message}. Please contact an admin.`,
+            error: `Could not create your team member profile: ${teamMemberError.message}. Please contact an admin.`,
           },
           { status: 500 },
         );
       }
-      // For an existing broker, a failed UPDATE is non-fatal — they can still log in.
+      // For an existing teamMember, a failed UPDATE is non-fatal — they can still log in.
     } else {
-      // Seed default pipeline statuses for brand-new brokers (no-op if they already exist)
+      // Seed default pipeline statuses for brand-new teamMembers (no-op if they already exist)
       const { count } = await supabase
         .from("customer_statuses")
         .select("*", { count: "exact", head: true })
-        .eq("broker_id", userId);
+        .eq("team_member_id", userId);
 
       if (count === 0) {
         await supabase.from("customer_statuses").insert([
-          { broker_id: userId, name: "Prospect", color: "blue",  order: 0, is_system: false, created_by: userId },
-          { broker_id: userId, name: "Active",   color: "green", order: 1, is_system: false, created_by: userId },
-          { broker_id: userId, name: "Won",      color: "amber", order: 2, is_system: false, created_by: userId },
-          { broker_id: userId, name: "Lost",     color: "slate", order: 3, is_system: false, created_by: userId },
+          { team_member_id: userId, name: "Prospect", color: "blue",  order: 0, is_system: false, created_by: userId },
+          { team_member_id: userId, name: "Active",   color: "green", order: 1, is_system: false, created_by: userId },
+          { team_member_id: userId, name: "Won",      color: "amber", order: 2, is_system: false, created_by: userId },
+          { team_member_id: userId, name: "Lost",     color: "slate", order: 3, is_system: false, created_by: userId },
         ]);
       }
     }

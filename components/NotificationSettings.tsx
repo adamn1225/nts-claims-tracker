@@ -114,11 +114,11 @@ export default function NotificationSettings() {
           <div className="flex items-start gap-3">
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                enabled ? "bg-orange-100" : "bg-slate-100"
+                enabled ? "bg-primary/10" : "bg-slate-100"
               }`}
             >
               {enabled ? (
-                <Bell className="h-5 w-5 text-orange-600" />
+                <Bell className="h-5 w-5 text-primary-text" />
               ) : (
                 <BellOff className="h-5 w-5 text-slate-400" />
               )}
@@ -131,13 +131,13 @@ export default function NotificationSettings() {
                 Receive instant alerts for upcoming tasks and follow-ups
               </p>
               {permission === "granted" && enabled && (
-                <div className="mt-2 flex items-center gap-1 text-xs text-green-700">
+                <div className="mt-2 flex items-center gap-1 text-xs text-success">
                   <Check className="h-3 w-3" />
                   <span>Enabled and working</span>
                 </div>
               )}
               {permission === "denied" && (
-                <p className="mt-2 text-xs text-red-600">
+                <p className="mt-2 text-xs text-danger">
                   Permission denied. Please enable in browser settings.
                 </p>
               )}
@@ -148,7 +148,7 @@ export default function NotificationSettings() {
             onClick={handleToggle}
             disabled={isRequesting || permission === "denied"}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              enabled ? "bg-orange-500" : "bg-slate-300"
+              enabled ? "bg-primary" : "bg-slate-300"
             } disabled:opacity-50`}
           >
             <span
@@ -164,14 +164,14 @@ export default function NotificationSettings() {
       {enabled && permission === "granted" && (
         <button
           onClick={handleTestNotification}
-          className="w-full rounded-lg border-2 border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 transition-colors hover:bg-orange-100"
+          className="w-full rounded-lg border-2 border-primary/30 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary-text transition-colors hover:bg-primary/10"
         >
           Send Test Notification
         </button>
       )}
 
       {/* Help Text */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
+      <div className="rounded-lg border border-info/30 bg-info/5 p-3 text-xs text-info-text">
         <p>
           <strong>How it works:</strong> When enabled, you'll receive browser
           notifications for:

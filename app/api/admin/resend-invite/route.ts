@@ -16,11 +16,11 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { brokerId, email, firstName, lastName } = await request.json();
+    const { teamMemberId, email, firstName, lastName } = await request.json();
 
-    if (!brokerId || !email) {
+    if (!teamMemberId || !email) {
       return NextResponse.json(
-        { error: "Broker ID and email are required" },
+        { error: "TeamMember ID and email are required" },
         { status: 400 },
       );
     }
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     // Update the user's password AND confirm email
     const { error: updateError } =
-      await supabaseAdmin.auth.admin.updateUserById(brokerId, {
+      await supabaseAdmin.auth.admin.updateUserById(teamMemberId, {
         password: tempPassword,
         email_confirm: true, // Ensure email is confirmed
       });
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
                   <tr>
                     <td style="background-color: #f8fafc; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
                       <p style="color: #64748b; font-size: 13px; margin: 0;">
-                        Nationwide Transport Services | Freight Broker CRM
+                        Nationwide Transport Services | Freight TeamMember CRM
                       </p>
                     </td>
                   </tr>

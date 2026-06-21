@@ -55,7 +55,7 @@ export async function POST(
     const rows = items
         .map(sanitizeContact)
         .filter((r) => typeof r.name === "string" && (r.name as string).trim().length > 0)
-        .map((r) => ({ ...r, list_id: listId, broker_id: user.id }));
+        .map((r) => ({ ...r, list_id: listId, team_member_id: user.id }));
 
     if (rows.length === 0) {
         return NextResponse.json({ error: "No valid contacts" }, { status: 400 });

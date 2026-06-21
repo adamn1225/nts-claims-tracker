@@ -16,9 +16,9 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.ntsconnect.com";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { newBrokerId, oldBrokerId, customerId, customerName, reassignedBy, reassignedByBrokerId } = body;
+    const { newTeamMemberId, oldTeamMemberId, customerId, customerName, reassignedBy, reassignedByTeamMemberId } = body;
 
-    if (!newBrokerId || !customerId || !customerName) {
+    if (!newTeamMemberId || !customerId || !customerName) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Skip if reassigning to self (hyperfocused workspace principle)
-    if (newBrokerId === reassignedByBrokerId) {
+    if (newTeamMemberId === reassignedByTeamMemberId) {
       console.log("Skipping self-reassignment notification (user knows what they did)");
       return NextResponse.json({ success: true, skipped: true });
     }
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Fetch new broker information with email preferences
-    const { data: broker, error: brokerError } = await supabase
-      .from("brokers")
+    // Fetch new teamMember information with email preferences
+    const { data: teamMember, error: teamMemberError } = await supabase
+      .from("team_members")
       .select(`
         id,
         email,
@@ -51,21 +51,21 @@ export async function POST(request: NextRequest) {
           email_notifications_enabled
         )
       `)
-      .eq("id", newBrokerId)
+      .eq("id", newTeamMemberId)
       .eq("is_active", true)
       .single();
 
-    if (brokerError || !broker) {
-      console.error("Error fetching new broker:", brokerError);
+    if (teamMemberError || !teamMember) {
+      console.error("Error fetching new team member:", teamMemberError);
       return NextResponse.json(
-        { error: "Broker not found" },
+        { error: "Team member not found" },
         { status: 404 }
       );
     }
 
-    // Notify ONLY the new broker (not the old broker - reduces noise)
+    // Notify ONLY the new teamMember (not the old teamMember - reduces noise)
     const { error } = await supabase.from("notifications").insert({
-      broker_id: newBrokerId,
+      team_member_id: newTeamMemberId,
       customer_id: customerId,
       type: "contact_reassigned",
       title: "Contact Reassigned to You",
@@ -84,28 +84,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notification if enabled
-    const prefs = Array.isArray(broker.user_preferences)
-      ? broker.user_preferences[0]
-      : broker.user_preferences;
+    const prefs = Array.isArray(teamMember.user_preferences)
+      ? teamMember.user_preferences[0]
+      : teamMember.user_preferences;
 
     if (prefs?.email_notifications_enabled) {
       const emailTemplate = generateContactReassignedEmail(
-        broker.first_name || "there",
+        teamMember.first_name || "there",
         customerName,
         reassignedBy,
         appUrl
       );
 
       await sendEmail({
-        to: broker.email,
+        to: teamMember.email,
         subject: emailTemplate.subject,
         html: emailTemplate.html,
       });
 
-      console.log(`📧 Reassignment email notification sent to ${broker.email}`);
+      console.log(`📧 Reassignment email notification sent to ${teamMember.email}`);
     }
 
-    console.log(`✅ Created reassignment notification for new broker ${newBrokerId} (${customerName})`);
+    console.log(`✅ Created reassignment notification for new team member ${newTeamMemberId} (${customerName})`);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

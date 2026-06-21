@@ -15,7 +15,7 @@ import TaskDetailModal from "@/components/TaskDetailModal";
 import TaskCompletionModal from "@/components/TaskCompletionModal";
 import TaskFlowModal from "@/components/TaskFlowModal";
 import { createClient } from "@/lib/supabase/client";
-import { useBrokerView } from "@/contexts/BrokerViewContext";
+import { useTeamMemberView } from "@/contexts/TeamMemberViewContext";
 import { checkOverdueNotifications } from "@/app/actions/notifications";
 import { getCustomerDisplayName } from "@/lib/customer-utils";
 import {
@@ -180,7 +180,7 @@ function formatCreatedAt(createdAt: string | null) {
 
 export default function TasksPage() {
   const router = useRouter();
-  const { viewingBroker, loading: brokerLoading } = useBrokerView();
+  const { viewingTeamMember, loading: teamMemberLoading } = useTeamMemberView();
   const [tasks, setTasks] = useState<(Task & { customer?: Customer })[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filter, setFilter] = useState<
@@ -208,15 +208,15 @@ export default function TasksPage() {
   const [showNoTasksModal, setShowNoTasksModal] = useState(false);
   const [showAllDoneModal, setShowAllDoneModal] = useState(false);
 
-  // Fetch broker ID and initial data
+  // Fetch teamMember ID and initial data
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (brokerLoading || !viewingBroker) return;
+      if (teamMemberLoading || !viewingTeamMember) return;
 
       // Fetch tasks and customers in parallel
       await Promise.all([
-        fetchTasks(viewingBroker.id),
-        fetchCustomers(viewingBroker.id),
+        fetchTasks(viewingTeamMember.id),
+        fetchCustomers(viewingTeamMember.id),
       ]);
 
       // Check for overdue tasks and generate notifications
@@ -229,28 +229,28 @@ export default function TasksPage() {
     };
 
     fetchInitialData();
-  }, [viewingBroker, brokerLoading]);
+  }, [viewingTeamMember, teamMemberLoading]);
 
   // Real-time subscription for tasks
   useEffect(() => {
-    if (!viewingBroker) return;
+    if (!viewingTeamMember) return;
 
     const supabase = createClient();
 
     const channel = supabase
-      .channel(`tasks:${viewingBroker.id}`)
+      .channel(`tasks:${viewingTeamMember.id}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "tasks",
-          filter: `broker_id=eq.${viewingBroker.id}`,
+          filter: `team_member_id=eq.${viewingTeamMember.id}`,
         },
         async (payload) => {
           console.log("Real-time task change:", payload);
           // Refetch tasks to get updated data with customer info
-          await fetchTasks(viewingBroker.id);
+          await fetchTasks(viewingTeamMember.id);
         }
       )
       .subscribe();
@@ -258,7 +258,7 @@ export default function TasksPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [viewingBroker]);
+  }, [viewingTeamMember]);
 
   const fetchTasks = async (userId: string) => {
     const supabase = createClient();
@@ -271,7 +271,7 @@ export default function TasksPage() {
         customer:customers(*)
       `,
       )
-      .eq("broker_id", userId)
+      .eq("team_member_id", userId)
       .order("due_date", { ascending: true });
 
     if (error) {
@@ -297,7 +297,7 @@ export default function TasksPage() {
     const { data, error } = await supabase
       .from("customers")
       .select("*")
-      .eq("broker_id", userId)
+      .eq("team_member_id", userId)
       .order("business_name", { ascending: true });
 
     if (error) {
@@ -342,7 +342,7 @@ export default function TasksPage() {
           title: `Follow-up: ${completingTask.title}`,
           type: completingTask.type,
           customer_id: completingTask.customer_id,
-          broker_id: completingTask.broker_id,
+          team_member_id: completingTask.team_member_id,
           due_date: followUpDate,
           priority: completingTask.priority,
           status: "pending" as TaskStatus,
@@ -367,7 +367,7 @@ export default function TasksPage() {
           title: nextTask.title,
           type: nextTask.type,
           customer_id: completingTask.customer_id,
-          broker_id: completingTask.broker_id,
+          team_member_id: completingTask.team_member_id,
           due_date: nextTask.due_date,
           due_time: nextTask.due_time || null,
           priority: nextTask.priority || "medium",
@@ -412,8 +412,8 @@ export default function TasksPage() {
     );
 
     // If we created a follow-up or next task, refetch tasks to show it
-    if ((followUpTaskId || nextTask) && viewingBroker) {
-      await fetchTasks(viewingBroker.id);
+    if ((followUpTaskId || nextTask) && viewingTeamMember) {
+      await fetchTasks(viewingTeamMember.id);
     }
 
     // Note: Modal handles navigation/closing itself after completion
@@ -500,14 +500,14 @@ export default function TasksPage() {
         .eq("id", editingTask.id)
         .single();
       
-      if (viewingBroker) await fetchTasks(viewingBroker.id);
+      if (viewingTeamMember) await fetchTasks(viewingTeamMember.id);
       setEditingTask(null);
       return updatedTask;
     } else {
       // Create new task
       const newTask = {
         ...cleanedData,
-        broker_id: viewingBroker?.id,
+        team_member_id: viewingTeamMember?.id,
         status: "pending" as TaskStatus,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -599,7 +599,7 @@ export default function TasksPage() {
       }
 
       // Refresh tasks
-      if (viewingBroker) await fetchTasks(viewingBroker.id);
+      if (viewingTeamMember) await fetchTasks(viewingTeamMember.id);
       setIsModalOpen(false);
       setEditingTask(null);
       return data;
@@ -636,7 +636,7 @@ export default function TasksPage() {
     }
 
     // Refresh tasks
-    if (viewingBroker) await fetchTasks(viewingBroker.id);
+    if (viewingTeamMember) await fetchTasks(viewingTeamMember.id);
     setTaskToDelete(null);
     setArchiveReason("");
   };
@@ -1204,7 +1204,7 @@ export default function TasksPage() {
         onClose={handleCloseModal}
         onSave={handleSaveTask}
         task={editingTask}
-        brokerId={viewingBroker?.id || ""}
+        teamMemberId={viewingTeamMember?.id || ""}
         customers={customers}
       />
 
@@ -1270,8 +1270,8 @@ export default function TasksPage() {
         onClose={() => setShowTaskFlow(false)}
         tasks={tasks}
         onTaskCompleted={async () => {
-          if (viewingBroker) {
-            await fetchTasks(viewingBroker.id);
+          if (viewingTeamMember) {
+            await fetchTasks(viewingTeamMember.id);
           }
         }}
         onTaskDeleted={(taskId) => {
@@ -1286,7 +1286,7 @@ export default function TasksPage() {
           setIsModalOpen(true);
           setShowTaskFlow(false);
         }}
-        brokerId={viewingBroker?.id || ""}
+        teamMemberId={viewingTeamMember?.id || ""}
       />
 
       {/* No Tasks Modal */}
@@ -1361,7 +1361,7 @@ export default function TasksPage() {
                       priority: "high",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
-                      broker_id: viewingBroker?.id || "",
+                      team_member_id: viewingTeamMember?.id || "",
                       customer_id: null,
                       status: "pending",
                       created_at: new Date().toISOString(),
@@ -1407,7 +1407,7 @@ export default function TasksPage() {
                       priority: "high",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
-                      broker_id: viewingBroker?.id || "",
+                      team_member_id: viewingTeamMember?.id || "",
                       customer_id: null,
                       status: "pending",
                       created_at: new Date().toISOString(),
@@ -1453,7 +1453,7 @@ export default function TasksPage() {
                       priority: "medium",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
-                      broker_id: viewingBroker?.id || "",
+                      team_member_id: viewingTeamMember?.id || "",
                       customer_id: null,
                       status: "pending",
                       created_at: new Date().toISOString(),
@@ -1499,7 +1499,7 @@ export default function TasksPage() {
                       priority: "medium",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
-                      broker_id: viewingBroker?.id || "",
+                      team_member_id: viewingTeamMember?.id || "",
                       customer_id: null,
                       status: "pending",
                       created_at: new Date().toISOString(),

@@ -44,24 +44,28 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
           throw new Error("Not authenticated");
         }
 
-        // Use RPC function to get broker-specific statuses (filtered by auth.uid())
+        // Use RPC function to get teamMember-specific statuses (filtered by auth.uid())
         const { data, error } = await supabase.rpc("get_user_statuses");
 
         if (error) throw error;
 
-        // RPC function returns statuses filtered by broker_id
-        // Each broker sees only their own custom statuses
+        // RPC function returns statuses filtered by team_member_id
+        // Each teamMember sees only their own custom statuses
         if (data && data.length > 0) {
           setStatuses(data);
         }
       } catch (err) {
         console.error("Error fetching statuses:", err);
-        // Fallback to defaults if fetch fails
+        // Fallback to the CEO's 6 default kanban columns (per email spec).
+        // Inbox is the protected landing column for all newly-assigned claims.
+        // Mirrors the seed in supabase/migrations/20260620000006_seeds_and_rls.sql.
         setStatuses([
-          { id: "prospect", name: "Prospect", color: "blue" },
-          { id: "active", name: "Active", color: "green" },
-          { id: "won", name: "Won", color: "amber" },
-          { id: "lost", name: "Lost", color: "slate" },
+          { id: "inbox",                  name: "Inbox",                  color: "slate"  },
+          { id: "claim_started",          name: "Claim Started",          color: "blue"   },
+          { id: "processing_claim",       name: "Processing Claim",       color: "amber"  },
+          { id: "claim_denied",           name: "Claim Denied",           color: "red"    },
+          { id: "claim_awaiting_payment", name: "Claim Awaiting Payment", color: "orange" },
+          { id: "claim_closed",           name: "Claim Closed",           color: "green"  },
         ]);
       } finally {
         setLoadingStatuses(false);
@@ -118,13 +122,13 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
       {isViewPage && (
         <div className="border-b border-slate-200 bg-white">
           <div className="px-4 py-3 sm:px-6">
-            {/* Top Row: Tabs and New Customer Button */}
+            {/* Top Row: Tabs and New Claim Button */}
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
                 <Link
                   href="/dashboard/customers/kanban"
                   className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${isKanban
-                      ? "bg-white text-orange-600 shadow-sm"
+                      ? "bg-white text-primary-text shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
@@ -134,7 +138,7 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                 <Link
                   href="/dashboard/customers/list"
                   className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${isList
-                      ? "bg-white text-orange-600 shadow-sm"
+                      ? "bg-white text-primary-text shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
@@ -149,7 +153,7 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                 <Link
                   href="/dashboard/customers/calendar"
                   className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${isCalendar
-                      ? "bg-white text-orange-600 shadow-sm"
+                      ? "bg-white text-primary-text shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
@@ -161,10 +165,10 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
               <Link
                 href="/dashboard/customers/kanban?action=new"
                 data-tour="new-customer"
-                className="flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-orange-500 px-3 py-2 font-medium text-white shadow-sm transition-colors hover:bg-orange-600"
+                className="flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-primary px-3 py-2 font-medium text-white shadow-sm transition-colors hover:bg-primary-text"
               >
                 <Plus className="h-4 w-4" />
-                <span className="text-sm">New Customer</span>
+                <span className="text-sm">New Claim</span>
               </Link>
             </div>
 
@@ -220,8 +224,8 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by ID, name, company, location..."
-                    className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    placeholder="Search by claim #, party, BOL, location..."
+                    className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>

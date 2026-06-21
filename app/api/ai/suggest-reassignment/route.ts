@@ -1,9 +1,9 @@
 /**
  * POST /api/ai/suggest-reassignment
  *
- * AI-powered broker reassignment suggestions for admins.
- * Analyzes customer data, broker workload, geography, and industry to suggest
- * optimal broker assignments for selected customers.
+ * AI-powered teamMember reassignment suggestions for admins.
+ * Analyzes customer data, teamMember workload, geography, and industry to suggest
+ * optimal teamMember assignments for selected customers.
  *
  * Request body:
  *   customerIds   string[]  — Array of customer UUIDs to analyze
@@ -13,11 +13,11 @@
  *     suggestions: Array<{
  *       customerId: string,
  *       customerName: string,
- *       currentBroker: string,
- *       recommendedBroker: string,
+ *       currentTeamMember: string,
+ *       recommendedTeamMember: string,
  *       reason: string,
  *       confidence: 'high' | 'medium' | 'low',
- *       alternativeBrokers: Array<{ brokerId: string, name: string, reason: string }>
+ *       alternativeTeamMembers: Array<{ teamMemberId: string, name: string, reason: string }>
  *     }>
  *   }
  */
@@ -28,7 +28,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-type BrokerProfile = {
+type TeamMemberProfile = {
   id: string;
   name: string;
   office_location: string | null;
@@ -64,13 +64,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if user is admin/manager
-  const { data: broker } = await supabase
-    .from("brokers")
+  const { data: teamMember } = await supabase
+    .from("team_members")
     .select("is_admin, is_manager")
     .eq("id", user.id)
     .single();
 
-  if (!broker?.is_admin && !broker?.is_manager) {
+  if (!teamMember?.is_admin && !teamMember?.is_manager) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
 
@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
         status,
         shipping_frequency,
         estimated_value,
-        broker_id,
-        broker:brokers!customers_broker_id_fkey(first_name, last_name)
+        team_member_id,
+        team member:team_members!customers_broker_id_fkey(first_name, last_name)
       `)
       .in("id", customerIds);
 
@@ -111,39 +111,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No customers found" }, { status: 404 });
     }
 
-    // Step 2: Gather all active brokers with their profiles
-    const { data: allBrokers, error: brokersError } = await supabase
-      .from("brokers")
+    // Step 2: Gather all active team members with their profiles
+    const { data: allTeamMembers, error: teamMembersError } = await supabase
+      .from("team_members")
       .select("id, first_name, last_name, office_location, is_active")
       .eq("is_active", true);
 
-    if (brokersError) throw brokersError;
+    if (teamMembersError) throw teamMembersError;
 
-    // Step 3: Build broker profiles with workload and expertise data
-    const brokerProfiles: BrokerProfile[] = await Promise.all(
-      (allBrokers || []).map(async (b) => {
-        const { data: brokerCustomers } = await supabase
+    // Step 3: Build teamMember profiles with workload and expertise data
+    const teamMemberProfiles: TeamMemberProfile[] = await Promise.all(
+      (allTeamMembers || []).map(async (b) => {
+        const { data: teamMemberCustomers } = await supabase
           .from("customers")
           .select("state, industry, estimated_value")
-          .eq("broker_id", b.id);
+          .eq("team_member_id", b.id);
 
         const { data: activeTasks } = await supabase
           .from("tasks")
           .select("id")
-          .eq("broker_id", b.id)
+          .eq("team_member_id", b.id)
           .eq("status", "pending");
 
-        const states = [...new Set(brokerCustomers?.map((c) => c.state).filter(Boolean))];
-        const industries = [...new Set(brokerCustomers?.map((c) => c.industry).filter(Boolean))];
-        const avgValue = brokerCustomers?.length
-          ? brokerCustomers.reduce((sum, c) => sum + (c.estimated_value || 0), 0) / brokerCustomers.length
+        const states = [...new Set(teamMemberCustomers?.map((c) => c.state).filter(Boolean))];
+        const industries = [...new Set(teamMemberCustomers?.map((c) => c.industry).filter(Boolean))];
+        const avgValue = teamMemberCustomers?.length
+          ? teamMemberCustomers.reduce((sum, c) => sum + (c.estimated_value || 0), 0) / teamMemberCustomers.length
           : 0;
 
         return {
           id: b.id,
           name: `${b.first_name} ${b.last_name}`,
           office_location: b.office_location,
-          customer_count: brokerCustomers?.length || 0,
+          customer_count: teamMemberCustomers?.length || 0,
           active_tasks_count: activeTasks?.length || 0,
           states_coverage: states as string[],
           industries_coverage: industries as string[],
@@ -163,8 +163,8 @@ export async function POST(request: NextRequest) {
       status: c.status,
       shipping_frequency: c.shipping_frequency,
       estimated_value: c.estimated_value,
-      current_broker_id: c.broker_id,
-      current_broker_name: c.broker ? `${c.broker.first_name} ${c.broker.last_name}` : "Unassigned",
+      current_broker_id: c.team_member_id,
+      current_broker_name: c.teamMember ? `${c.teamMember.first_name} ${c.teamMember.last_name}` : "Unassigned",
     }));
 
     // Step 5: Use AI to analyze and suggest reassignments
@@ -173,43 +173,43 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an intelligent broker assignment system for a freight brokerage company.
-Your goal is to suggest optimal broker assignments based on:
-1. Geographic proximity (brokers in same office location as customer's state)
-2. Industry expertise (brokers who already handle similar industries)
-3. Workload balance (avoid overloading brokers with too many customers)
-4. Customer value (high-value customers to experienced brokers with capacity)
-5. Shipping frequency (frequent shippers need brokers with more bandwidth)
+          content: `You are an intelligent teamMember assignment system for a freight brokerage company.
+Your goal is to suggest optimal teamMember assignments based on:
+1. Geographic proximity (teamMembers in same office location as customer's state)
+2. Industry expertise (team members who already handle similar industries)
+3. Workload balance (avoid overloading teamMembers with too many customers)
+4. Customer value (high-value customers to experienced teamMembers with capacity)
+5. Shipping frequency (frequent shippers need teamMembers with more bandwidth)
 
-For each customer, recommend the BEST broker and provide 1-2 alternatives.
+For each customer, recommend the BEST teamMember and provide 1-2 alternatives.
 Provide clear reasoning for each recommendation.
 Confidence levels: high (perfect match), medium (good match), low (acceptable but suboptimal).`,
         },
         {
           role: "user",
-          content: `Analyze these customers and suggest optimal broker assignments:
+          content: `Analyze these customers and suggest optimal teamMember assignments:
 
 CUSTOMERS TO REASSIGN:
 ${JSON.stringify(customerProfiles, null, 2)}
 
 AVAILABLE BROKERS:
-${JSON.stringify(brokerProfiles, null, 2)}
+${JSON.stringify(teamMemberProfiles, null, 2)}
 
 For each customer, provide:
-1. Recommended broker ID
+1. Recommended teamMember ID
 2. Reason for recommendation
 3. Confidence level (high/medium/low)
-4. Up to 2 alternative brokers with reasons
+4. Up to 2 alternative teamMembers with reasons
 
 Return a JSON array with this structure:
 [
   {
     "customerId": "uuid",
-    "recommendedBrokerId": "uuid",
+    "recommendedTeamMemberId": "uuid",
     "reason": "Brief explanation",
     "confidence": "high|medium|low",
     "alternatives": [
-      { "brokerId": "uuid", "reason": "Brief explanation" }
+      { "teamMemberId": "uuid", "reason": "Brief explanation" }
     ]
   }
 ]`,
@@ -221,26 +221,26 @@ Return a JSON array with this structure:
     const aiResponse = JSON.parse(completion.choices[0].message.content || "{}");
     const rawSuggestions = aiResponse.suggestions || [];
 
-    // Step 6: Format suggestions with broker names
+    // Step 6: Format suggestions with teamMember names
     const suggestions = rawSuggestions.map((s: any) => {
       const customer = customerProfiles.find((c) => c.id === s.customerId);
-      const recommendedBroker = brokerProfiles.find((b) => b.id === s.recommendedBrokerId);
+      const recommendedTeamMember = teamMemberProfiles.find((b) => b.id === s.recommendedTeamMemberId);
       const alternatives = (s.alternatives || []).map((alt: any) => ({
-        brokerId: alt.brokerId,
-        name: brokerProfiles.find((b) => b.id === alt.brokerId)?.name || "Unknown",
+        teamMemberId: alt.teamMemberId,
+        name: teamMemberProfiles.find((b) => b.id === alt.teamMemberId)?.name || "Unknown",
         reason: alt.reason,
       }));
 
       return {
         customerId: s.customerId,
         customerName: customer?.business_name || customer?.contact_name || "Unknown",
-        currentBroker: customer?.current_broker_name || "Unassigned",
-        currentBrokerId: customer?.current_broker_id,
-        recommendedBroker: recommendedBroker?.name || "Unknown",
-        recommendedBrokerId: s.recommendedBrokerId,
+        currentTeamMember: customer?.current_broker_name || "Unassigned",
+        currentTeamMemberId: customer?.current_broker_id,
+        recommendedTeamMember: recommendedTeamMember?.name || "Unknown",
+        recommendedTeamMemberId: s.recommendedTeamMemberId,
         reason: s.reason,
         confidence: s.confidence,
-        alternativeBrokers: alternatives,
+        alternativeTeamMembers: alternatives,
       };
     });
 

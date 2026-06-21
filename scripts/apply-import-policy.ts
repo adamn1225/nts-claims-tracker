@@ -10,7 +10,7 @@ async function applyPolicy() {
   
   // Drop existing policy if it exists
   const dropPolicy = `
-    DROP POLICY IF EXISTS "Brokers can view customers they imported" ON customers;
+    DROP POLICY IF EXISTS "TeamMembers can view customers they imported" ON customers;
   `;
   
   const { error: dropError } = await supabase.rpc('exec_sql', { sql: dropPolicy });
@@ -20,10 +20,10 @@ async function applyPolicy() {
   
   // Create new policy
   const createPolicy = `
-    CREATE POLICY "Brokers can view customers they imported"
+    CREATE POLICY "TeamMembers can view customers they imported"
     ON customers FOR SELECT
     USING (
-      -- Can view customers they imported, even if broker_id is NULL
+      -- Can view customers they imported, even if team_member_id is NULL
       auth.uid() = imported_by
     );
   `;

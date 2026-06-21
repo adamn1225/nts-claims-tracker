@@ -30,7 +30,7 @@ interface AiCoachState {
   mode: CoachMode; // "sales", "help", or "admin"
   currentPage: string; // pathname for context-aware help
   conversationId: string | null; // Current conversation session ID
-  isAdmin: boolean; // Whether the current broker is an admin (enables Admin Assistant)
+  isAdmin: boolean; // Whether the current team member is an admin (enables Admin Assistant)
 }
 
 interface AiCoachActions {
@@ -64,33 +64,33 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
   const [currentPage, setCurrentPage] = useState<string>("/dashboard");
   const [conversationHistory, setConversationHistory] = useState<Record<string, CoachMessage[]>>({});
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [brokerId, setBrokerId] = useState<string | null>(null);
+  const [teamMemberId, setTeamMemberId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Get broker ID + admin status on mount
+  // Get teamMember ID + admin status on mount
   useEffect(() => {
-    const fetchBrokerId = async () => {
+    const fetchTeamMemberId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        setBrokerId(user.id);
-        const { data: broker } = await supabase
-          .from("brokers")
+        setTeamMemberId(user.id);
+        const { data: teamMember } = await supabase
+          .from("team_members")
           .select("is_admin")
           .eq("id", user.id)
           .single();
-        setIsAdmin(Boolean(broker?.is_admin));
+        setIsAdmin(Boolean(teamMember?.is_admin));
       }
     };
-    fetchBrokerId();
+    fetchTeamMemberId();
   }, [supabase]);
 
   // Auto-detect customer from URL path when page changes
   useEffect(() => {
     const detectCustomerFromUrl = async () => {
-      console.log("🔍 [AiCoachContext] Auto-detect triggered:", { pathname, brokerId: brokerId ? "present" : "missing" });
+      console.log("🔍 [AiCoachContext] Auto-detect triggered:", { pathname, teamMemberId: teamMemberId ? "present" : "missing" });
       
-      if (!pathname || !brokerId) {
-        console.log("⚠️ [AiCoachContext] Skipping detection: missing pathname or brokerId");
+      if (!pathname || !teamMemberId) {
+        console.log("⚠️ [AiCoachContext] Skipping detection: missing pathname or teamMemberId");
         return;
       }
 
@@ -135,15 +135,15 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
     };
 
     detectCustomerFromUrl();
-  }, [pathname, brokerId, supabase]);
+  }, [pathname, teamMemberId, supabase]);
 
   // Save message to database
   const saveMessageToDb = useCallback(async (message: CoachMessage) => {
-    if (!brokerId) return;
+    if (!teamMemberId) return;
 
     try {
       const { error } = await supabase.from("ai_chat_history").insert({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         customer_id: currentCustomer?.id || null,
         conversation_id: conversationId,
         mode,
@@ -161,7 +161,7 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Failed to save message:", error);
     }
-  }, [brokerId, currentCustomer, conversationId, mode, currentPage, supabase]);
+  }, [teamMemberId, currentCustomer, conversationId, mode, currentPage, supabase]);
 
   const openCoach = useCallback(
     async (customer: Customer | null = null, initialCallState: string = "idle", providedMode?: CoachMode) => {
@@ -189,12 +189,12 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
       
       // Try to load existing conversation history from database
       // This will set conversationId from the database if history exists
-      if (brokerId) {
+      if (teamMemberId) {
         try {
           let query = supabase
             .from("ai_chat_history")
             .select("*")
-            .eq("broker_id", brokerId)
+            .eq("team_member_id", teamMemberId)
             .eq("mode", selectedMode)
             .eq("is_archived", false)
             .order("created_at", { ascending: true })
@@ -238,7 +238,7 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
       setMessages([]); // Start fresh
       console.log("✅ Starting new conversation");
     },
-    [currentPage, brokerId, supabase, currentCustomer]
+    [currentPage, teamMemberId, supabase, currentCustomer]
   );
 
   const closeCoach = useCallback(() => {
@@ -335,7 +335,7 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
   );
 
   const clearConversation = useCallback(async () => {
-    if (!brokerId || !conversationId) return;
+    if (!teamMemberId || !conversationId) return;
 
     try {
       // Archive current conversation instead of deleting
@@ -343,7 +343,7 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
         .from("ai_chat_history")
         .update({ is_archived: true })
         .eq("conversation_id", conversationId)
-        .eq("broker_id", brokerId);
+        .eq("team_member_id", teamMemberId);
 
       if (error) {
         console.error("Error archiving conversation:", error);
@@ -361,7 +361,7 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Failed to archive conversation:", error);
     }
-  }, [brokerId, conversationId, supabase]);
+  }, [teamMemberId, conversationId, supabase]);
 
   // Handle mode switching without closing the chat
   const handleModeChange = useCallback(async (newMode: CoachMode) => {
@@ -373,11 +373,11 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
       const customerId = currentCustomer?.id || null;
       
       // Try to load existing conversation for this mode
-      if (brokerId) {
+      if (teamMemberId) {
         let query = supabase
           .from("ai_chat_history")
           .select("*")
-          .eq("broker_id", brokerId)
+          .eq("team_member_id", teamMemberId)
           .eq("mode", newMode)
           .eq("is_archived", false)
           .order("created_at", { ascending: true })
@@ -427,7 +427,7 @@ export function AiCoachProvider({ children }: { children: React.ReactNode }) {
       setConversationId(newConversationId);
       setMessages([]);
     }
-  }, [currentCustomer, currentPage, brokerId, supabase]);
+  }, [currentCustomer, currentPage, teamMemberId, supabase]);
 
   const updateCallState = useCallback((state: string) => {
     setCallState(state);

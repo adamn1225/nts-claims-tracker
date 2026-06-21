@@ -5,7 +5,7 @@
  * - Outlook Calendar (sync tasks as calendar events)
  * - Microsoft Teams (generate meeting links)
  * 
- * This is OPTIONAL - brokers can choose to connect or not.
+ * This is OPTIONAL - team members can choose to connect or not.
  */
 
 import { createClient } from '@/lib/supabase/client';
@@ -33,13 +33,13 @@ interface MicrosoftTokens {
 /**
  * Check if user has Microsoft integration enabled and tokens available
  */
-export async function isMicrosoftConnected(brokerId: string): Promise<boolean> {
+export async function isMicrosoftConnected(teamMemberId: string): Promise<boolean> {
   const supabase = createClient();
   
   const { data, error } = await supabase
     .from('microsoft_tokens')
     .select('id, expires_at')
-    .eq('broker_id', brokerId)
+    .eq('team_member_id', teamMemberId)
     .single();
   
   if (error || !data) return false;
@@ -51,13 +51,13 @@ export async function isMicrosoftConnected(brokerId: string): Promise<boolean> {
 /**
  * Get valid access token for user (refreshes if needed)
  */
-async function getValidAccessToken(brokerId: string): Promise<string | null> {
+async function getValidAccessToken(teamMemberId: string): Promise<string | null> {
   const supabase = createClient();
   
   const { data, error } = await supabase
     .from('microsoft_tokens')
     .select('*')
-    .eq('broker_id', brokerId)
+    .eq('team_member_id', teamMemberId)
     .single();
   
   if (error || !data) return null;
@@ -67,7 +67,7 @@ async function getValidAccessToken(brokerId: string): Promise<string | null> {
   
   // If token expires in less than 5 minutes, refresh it
   if (expiresAt.getTime() - now.getTime() < 5 * 60 * 1000) {
-    const refreshed = await refreshAccessToken(brokerId, data.refresh_token);
+    const refreshed = await refreshAccessToken(teamMemberId, data.refresh_token);
     return refreshed?.access_token || null;
   }
   
@@ -77,7 +77,7 @@ async function getValidAccessToken(brokerId: string): Promise<string | null> {
 /**
  * Refresh an expired access token
  */
-async function refreshAccessToken(brokerId: string, refreshToken: string): Promise<MicrosoftTokens | null> {
+async function refreshAccessToken(teamMemberId: string, refreshToken: string): Promise<MicrosoftTokens | null> {
   try {
     // This will be implemented once we have Azure credentials
     // For now, return null to gracefully handle missing implementation
@@ -93,7 +93,7 @@ async function refreshAccessToken(brokerId: string, refreshToken: string): Promi
  * Create or update a calendar event in Outlook
  */
 export async function syncTaskToOutlookCalendar(
-  brokerId: string,
+  teamMemberId: string,
   task: {
     title: string;
     description?: string;
@@ -103,7 +103,7 @@ export async function syncTaskToOutlookCalendar(
   }
 ): Promise<{ success: boolean; eventId?: string; error?: string }> {
   try {
-    const accessToken = await getValidAccessToken(brokerId);
+    const accessToken = await getValidAccessToken(teamMemberId);
     if (!accessToken) {
       return { success: false, error: 'Microsoft account not connected' };
     }
@@ -171,7 +171,7 @@ export async function syncTaskToOutlookCalendar(
  * Generate a Microsoft Teams meeting link
  */
 export async function generateTeamsMeetingLink(
-  brokerId: string,
+  teamMemberId: string,
   meeting: {
     title: string;
     start_time: string;
@@ -180,7 +180,7 @@ export async function generateTeamsMeetingLink(
   }
 ): Promise<{ success: boolean; joinUrl?: string; error?: string }> {
   try {
-    const accessToken = await getValidAccessToken(brokerId);
+    const accessToken = await getValidAccessToken(teamMemberId);
     if (!accessToken) {
       return { success: false, error: 'Microsoft account not connected' };
     }
@@ -220,11 +220,11 @@ export async function generateTeamsMeetingLink(
  * Delete calendar event from Outlook
  */
 export async function deleteOutlookCalendarEvent(
-  brokerId: string,
+  teamMemberId: string,
   eventId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const accessToken = await getValidAccessToken(brokerId);
+    const accessToken = await getValidAccessToken(teamMemberId);
     if (!accessToken) {
       return { success: false, error: 'Microsoft account not connected' };
     }
@@ -250,13 +250,13 @@ export async function deleteOutlookCalendarEvent(
 /**
  * Disconnect Microsoft account and delete stored tokens
  */
-export async function disconnectMicrosoftAccount(brokerId: string): Promise<{ success: boolean }> {
+export async function disconnectMicrosoftAccount(teamMemberId: string): Promise<{ success: boolean }> {
   const supabase = createClient();
   
   const { error } = await supabase
     .from('microsoft_tokens')
     .delete()
-    .eq('broker_id', brokerId);
+    .eq('team_member_id', teamMemberId);
   
   if (error) {
     console.error('Error disconnecting Microsoft account:', error);

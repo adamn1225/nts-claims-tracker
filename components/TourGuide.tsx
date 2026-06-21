@@ -196,7 +196,7 @@ export default function TourGuide({
 
       {/* Tour Card */}
       <div
-        className="fixed w-full max-w-md -translate-x-1/2 rounded-lg border border-orange-200 bg-white shadow-2xl"
+        className="fixed w-full max-w-md -translate-x-1/2 rounded-lg border border-primary/30 bg-white shadow-2xl"
         style={{
           zIndex: 10000,
           top: targetElement ? `${position.top}px` : "120px",
@@ -238,9 +238,9 @@ export default function TourGuide({
                   key={index}
                   className={`h-1.5 w-8 rounded-full transition-colors ${
                     index === currentStep
-                      ? "bg-orange-500"
+                      ? "bg-primary"
                       : index < currentStep
-                        ? "bg-orange-300"
+                        ? "bg-primary/40"
                         : "bg-slate-200"
                   }`}
                 />
@@ -258,7 +258,7 @@ export default function TourGuide({
 
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-orange-600"
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary-text"
               >
                 {isLastStep ? (
                   <>

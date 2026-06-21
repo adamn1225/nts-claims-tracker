@@ -439,86 +439,86 @@ export async function getAdminGoToToken(): Promise<string | null> {
 
 /**
  * Resolves a GoTo access token suitable for fetching call history on behalf
- * of a specific NTS broker (`brokerUserId`).
+ * of a specific NTS teamMember (`teamMemberUserId`).
  *
  * Resolution order:
- *   1. Broker's own individual GoTo connection (most accurate — their own device line)
- *   2. Admin GoTo proxy token — works when the broker has no individual connection
- *      but requires knowing the broker's GoTo user key so calls can be scoped
+ *   1. TeamMember's own individual GoTo connection (most accurate — their own device line)
+ *   2. Admin GoTo proxy token — works when the team member has no individual connection
+ *      but requires knowing the team member's GoTo user key so calls can be scoped
  *
  * Returns:
  *   { token, gotoUserKey, isAdminProxy }
  *   - token:        access token to use for GoTo API calls
  *   - gotoUserKey:  GoTo platform user key to scope /call-history/v1/users/{key}/calls
- *                   null when using the broker's own token (API is already user-scoped)
+ *                   null when using the team member's own token (API is already user-scoped)
  *   - isAdminProxy: true when falling back to the org admin token
  */
-export async function resolveGoToTokenForBroker(brokerUserId: string): Promise<{
+export async function resolveGoToTokenForTeamMember(teamMemberUserId: string): Promise<{
   token: string;
   gotoUserKey: string | null;
   isAdminProxy: boolean;
 } | null> {
-  console.log(`[resolveGoToTokenForBroker] Starting token resolution for broker: ${brokerUserId}`);
+  console.log(`[resolveGoToTokenForTeamMember] Starting token resolution for team member: ${teamMemberUserId}`);
 
-  // 1. Try broker's own connection first
-  const brokerConnection = await getGoToConnection(brokerUserId);
-  console.log(`[resolveGoToTokenForBroker] Broker connection found:`, !!brokerConnection);
+  // 1. Try teamMember's own connection first
+  const teamMemberConnection = await getGoToConnection(teamMemberUserId);
+  console.log(`[resolveGoToTokenForTeamMember] TeamMember connection found:`, !!teamMemberConnection);
 
-  if (brokerConnection) {
-    const token = await getGoToAccessToken(brokerUserId);
+  if (teamMemberConnection) {
+    const token = await getGoToAccessToken(teamMemberUserId);
     if (token) {
-      console.log(`[resolveGoToTokenForBroker] ✅ Using broker's own token (not admin proxy)`);
+      console.log(`[resolveGoToTokenForTeamMember] ✅ Using team member's own token (not admin proxy)`);
       return { token, gotoUserKey: null, isAdminProxy: false };
     }
   }
 
-  console.log(`[resolveGoToTokenForBroker] No broker token, falling back to admin proxy...`);
+  console.log(`[resolveGoToTokenForTeamMember] No team member token, falling back to admin proxy...`);
 
   // 2. Fall back to admin proxy token
   const supabase = await createClient();
 
   // Check for a cached goto_user_key first (populated by /api/goto/admin-users)
-  // Broker may have no goto_connections row at all — that's fine, we look them up by email.
-  let gotoUserKey: string | null = brokerConnection?.goto_user_key ?? null;
+  // TeamMember may have no goto_connections row at all — that's fine, we look them up by email.
+  let gotoUserKey: string | null = teamMemberConnection?.goto_user_key ?? null;
 
   if (!gotoUserKey) {
-    // Live lookup: resolve the broker's GoTo user key from their NTS email address
-    const { data: broker } = await supabase
-      .from("brokers")
+    // Live lookup: resolve the team member's GoTo user key from their NTS email address
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("email")
-      .eq("id", brokerUserId)
+      .eq("id", teamMemberUserId)
       .maybeSingle();
 
-    if (broker?.email) {
-      gotoUserKey = await lookupGotoUserKeyByEmail(broker.email);
+    if (teamMember?.email) {
+      gotoUserKey = await lookupGotoUserKeyByEmail(teamMember.email);
     }
 
     // Cache the result so subsequent calls skip the live API lookup
     if (gotoUserKey) {
-      if (brokerConnection) {
+      if (teamMemberConnection) {
         await supabase
           .from("goto_connections")
           .update({ goto_user_key: gotoUserKey })
-          .eq("user_id", brokerUserId);
+          .eq("user_id", teamMemberUserId);
       } else {
-        // Broker has no connection row — nothing to cache on, but the key is in memory for this request
+        // TeamMember has no connection row — nothing to cache on, but the key is in memory for this request
       }
     }
   }
 
   if (!gotoUserKey) {
-    console.warn(`[resolveGoToTokenForBroker] No GoTo user key found for broker ${brokerUserId} — admin has not connected GoTo org-wide or broker email does not match a GoTo account`);
+    console.warn(`[resolveGoToTokenForTeamMember] No GoTo user key found for team member ${teamMemberUserId} — admin has not connected GoTo org-wide or team member email does not match a GoTo account`);
     return null;
   }
 
-  console.log(`[resolveGoToTokenForBroker] Fetching admin token for broker ${brokerUserId} with userKey ${gotoUserKey}`);
+  console.log(`[resolveGoToTokenForTeamMember] Fetching admin token for team member ${teamMemberUserId} with userKey ${gotoUserKey}`);
   const adminToken = await getAdminGoToToken();
   if (!adminToken) {
-    console.warn("[resolveGoToTokenForBroker] Admin GoTo token not found — visit /api/goto/auth?admin=true to connect");
+    console.warn("[resolveGoToTokenForTeamMember] Admin GoTo token not found — visit /api/goto/auth?admin=true to connect");
     return null;
   }
 
-  console.log(`[resolveGoToTokenForBroker] ✅ Successfully resolved admin proxy token for broker ${brokerUserId}`);
+  console.log(`[resolveGoToTokenForTeamMember] ✅ Successfully resolved admin proxy token for team member ${teamMemberUserId}`);
   return { token: adminToken, gotoUserKey, isAdminProxy: true };
 }
 

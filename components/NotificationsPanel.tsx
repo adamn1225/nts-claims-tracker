@@ -9,14 +9,14 @@ import TaskDetailModal from "./TaskDetailModal";
 interface NotificationsPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  brokerId: string;
+  teamMemberId: string;
   onUnreadCountChange?: (count: number) => void;
 }
 
 export default function NotificationsPanel({
   isOpen,
   onClose,
-  brokerId,
+  teamMemberId,
   onUnreadCountChange,
 }: NotificationsPanelProps) {
   const [activeTab, setActiveTab] = useState<"unread" | "read" | "archived">(
@@ -29,7 +29,7 @@ export default function NotificationsPanel({
 
   // Fetch notifications from Supabase
   const fetchNotifications = async () => {
-    if (!brokerId) return;
+    if (!teamMemberId) return;
 
     setLoading(true);
     const supabase = createClient();
@@ -37,7 +37,7 @@ export default function NotificationsPanel({
     const { data, error } = await supabase
       .from("notifications")
       .select("*")
-      .eq("broker_id", brokerId)
+      .eq("team_member_id", teamMemberId)
       .or(`scheduled_for.is.null,scheduled_for.lte.${new Date().toISOString()}`) // Only show if not scheduled or time has arrived
       .order("created_at", { ascending: false });
 
@@ -55,7 +55,7 @@ export default function NotificationsPanel({
   };
 
   useEffect(() => {
-    if (isOpen && brokerId) {
+    if (isOpen && teamMemberId) {
       fetchNotifications();
 
       // Subscribe to real-time updates
@@ -68,7 +68,7 @@ export default function NotificationsPanel({
             event: "*",
             schema: "public",
             table: "notifications",
-            filter: `broker_id=eq.${brokerId}`,
+            filter: `team_member_id=eq.${teamMemberId}`,
           },
           () => {
             fetchNotifications();
@@ -80,7 +80,7 @@ export default function NotificationsPanel({
         supabase.removeChannel(channel);
       };
     }
-  }, [isOpen, brokerId]);
+  }, [isOpen, teamMemberId]);
 
   const handleMarkAsRead = async (notificationId: string) => {
     const supabase = createClient();
@@ -108,7 +108,7 @@ export default function NotificationsPanel({
     const { error } = await supabase
       .from("notifications")
       .update({ is_read: true, read_at: new Date().toISOString() })
-      .eq("broker_id", brokerId)
+      .eq("team_member_id", teamMemberId)
       .eq("is_read", false)
       .eq("is_archived", false);
 
@@ -232,7 +232,7 @@ export default function NotificationsPanel({
       {/* Panel */}
       <div className="fixed right-0 top-0 z-50 flex h-full w-full flex-col bg-white shadow-2xl sm:w-96 lg:w-md">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 bg-[#28323d]">
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 bg-surface-nav">
           <div className="flex items-center gap-2 ">
             <Bell className="h-5 w-5 text-slate-100" />
             <h2 className="text-lg font-semibold text-slate-100">
@@ -253,13 +253,13 @@ export default function NotificationsPanel({
             onClick={() => setActiveTab("unread")}
             className={`relative flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "unread"
-                ? "border-b-2 border-orange-500 bg-white text-orange-600"
+                ? "border-b-2 border-primary bg-white text-primary-text"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Unread
             {unreadCount > 0 && (
-              <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1.5 text-xs font-semibold text-white">
+              <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-white">
                 {unreadCount}
               </span>
             )}
@@ -268,7 +268,7 @@ export default function NotificationsPanel({
             onClick={() => setActiveTab("read")}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "read"
-                ? "border-b-2 border-orange-500 bg-white text-orange-600"
+                ? "border-b-2 border-primary bg-white text-primary-text"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -281,7 +281,7 @@ export default function NotificationsPanel({
             onClick={() => setActiveTab("archived")}
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "archived"
-                ? "border-b-2 border-orange-500 bg-white text-orange-600"
+                ? "border-b-2 border-primary bg-white text-primary-text"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -297,7 +297,7 @@ export default function NotificationsPanel({
           <div className="border-b border-slate-200 bg-slate-50 px-4 py-2">
             <button
               onClick={handleMarkAllAsRead}
-              className="text-sm font-medium text-orange-600 transition-colors hover:text-orange-700"
+              className="text-sm font-medium text-primary-text transition-colors hover:text-primary"
             >
               Mark all as read
             </button>
@@ -324,12 +324,12 @@ export default function NotificationsPanel({
                 <div
                   key={notification.id}
                   className={`group relative px-4 py-3 transition-colors hover:bg-slate-50 ${
-                    !notification.is_read ? "bg-orange-50/30" : ""
+                    !notification.is_read ? "bg-primary/5" : ""
                   }`}
                 >
                   {/* Unread Indicator */}
                   {!notification.is_read && (
-                    <div className="absolute left-2 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-orange-500" />
+                    <div className="absolute left-2 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-primary" />
                   )}
 
                   <div className="ml-3">

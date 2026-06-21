@@ -35,7 +35,7 @@ interface CustomerFormModalProps {
     customer: Partial<Customer> & { tms_references?: TmsReference[] },
   ) => Promise<Customer>;
   customer?: CustomerWithRelations | null;
-  brokerId: string | null;
+  teamMemberId: string | null;
 }
 
 const statusOptions: { value: string; label: string }[] = [
@@ -130,12 +130,12 @@ export default function CustomerFormModal({
   onClose,
   onSave,
   customer,
-  brokerId,
+  teamMemberId,
 }: CustomerFormModalProps) {
   const isEditing = !!customer;
 
   const [formData, setFormData] = useState<Partial<Customer>>({
-    broker_id: brokerId,
+    team_member_id: teamMemberId,
     business_name: customer?.business_name || "",
     first_name: customer?.first_name || "",
     last_name: customer?.last_name || "",
@@ -226,29 +226,29 @@ export default function CustomerFormModal({
   // Check if email notifications are enabled and if user is admin
   useEffect(() => {
     const checkNotificationSettings = async () => {
-      if (!isOpen || !brokerId) return;
+      if (!isOpen || !teamMemberId) return;
 
       const supabase = (await import("@/lib/supabase/client")).createClient();
       const { data } = await supabase
         .from("user_preferences")
         .select("email_notifications_enabled")
-        .eq("broker_id", brokerId)
+        .eq("team_member_id", teamMemberId)
         .single();
 
       setEmailNotificationsDisabled(data?.email_notifications_enabled === false);
       
       // Check if user is admin
-      const { data: broker } = await supabase
-        .from("brokers")
+      const { data: teamMember } = await supabase
+        .from("team_members")
         .select("is_admin")
-        .eq("id", brokerId)
+        .eq("id", teamMemberId)
         .single();
       
-      setIsAdmin(broker?.is_admin === true);
+      setIsAdmin(teamMember?.is_admin === true);
     };
 
     checkNotificationSettings();
-  }, [isOpen, brokerId]);
+  }, [isOpen, teamMemberId]);
 
   // Keyboard shortcuts: Ctrl/Cmd+S to save, Esc to close
   useEffect(() => {
@@ -276,7 +276,7 @@ export default function CustomerFormModal({
   // Reset form data when customer prop changes
   useEffect(() => {
     setFormData({
-      broker_id: brokerId,
+      team_member_id: teamMemberId,
       business_name: customer?.business_name || "",
       contact_name: customer?.contact_name || "",
       first_name: customer?.first_name || "",
@@ -336,7 +336,7 @@ export default function CustomerFormModal({
     // Reset errors and touched fields
     setErrors({});
     setTouchedFields({});
-  }, [customer, brokerId]);
+  }, [customer, teamMemberId]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -614,11 +614,11 @@ export default function CustomerFormModal({
       });
 
       // Create follow-up task if next_follow_up_date is set
-      if (formData.next_follow_up_date && brokerId && savedCustomer?.id) {
+      if (formData.next_follow_up_date && teamMemberId && savedCustomer?.id) {
         try {
           const supabase = (await import("@/lib/supabase/client")).createClient();
           const { data: newTask, error: taskError } = await supabase.from("tasks").insert({
-            broker_id: brokerId,
+            team_member_id: teamMemberId,
             customer_id: savedCustomer.id,
             title: `Follow-Up: ${formData.business_name}`,
             description: `Scheduled follow-up with ${[formData.first_name, formData.last_name].filter(Boolean).join(' ') || formData.business_name}`,
@@ -647,7 +647,7 @@ export default function CustomerFormModal({
       onClose();
       // Reset form
       setFormData({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         business_name: "",
         first_name: "",
         last_name: "",

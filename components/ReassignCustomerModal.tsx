@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 // Notification API routes (server-side only for security)
 import { X } from "lucide-react";
 
-type Broker = {
+type TeamMember = {
   id: string;
   first_name: string;
   last_name?: string;
@@ -20,7 +20,7 @@ type ReassignCustomerModalProps = {
   onCloseAction: () => void;
   customerId: string;
   customerName: string;
-  currentBrokerId: string;
+  currentTeamMemberId: string;
   onSuccessAction: () => void;
 };
 
@@ -29,17 +29,17 @@ export default function ReassignCustomerModal({
   onCloseAction,
   customerId,
   customerName,
-  currentBrokerId,
+  currentTeamMemberId,
   onSuccessAction,
 }: ReassignCustomerModalProps) {
-  const [brokers, setBrokers] = useState<Broker[]>([]);
-  const [selectedBroker, setSelectedBroker] = useState<string>("");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<Broker | null>(null);
+  const [currentUser, setCurrentUser] = useState<TeamMember | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      loadBrokers();
+      loadTeamMembers();
       loadCurrentUser();
     }
   }, [isOpen]);
@@ -49,39 +49,39 @@ export default function ReassignCustomerModal({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: brokerData } = await supabase
-      .from("brokers")
+    const { data: teamMemberData } = await supabase
+      .from("team_members")
       .select("*")
       .eq("id", user.id)
       .single();
 
-    setCurrentUser(brokerData);
+    setCurrentUser(teamMemberData);
   };
 
-  const loadBrokers = async () => {
+  const loadTeamMembers = async () => {
     const supabase = createClient();
     const { data } = await supabase
-      .from("brokers")
+      .from("team_members")
       .select("*")
-      .eq("is_active", true) // Only show active brokers
-      .neq("id", currentBrokerId) // Exclude current broker
+      .eq("is_active", true) // Only show active team members
+      .neq("id", currentTeamMemberId) // Exclude current team member
       .order("first_name");
 
-    setBrokers(data || []);
+    setTeamMembers(data || []);
   };
 
   const handleReassign = async () => {
-    if (!selectedBroker) return;
+    if (!selectedTeamMember) return;
 
     setLoading(true);
     const supabase = createClient();
 
-    const newBrokerId = selectedBroker === "UNASSIGN" ? null : selectedBroker;
+    const newTeamMemberId = selectedTeamMember === "UNASSIGN" ? null : selectedTeamMember;
 
     const { error } = await supabase
       .from("customers")
       .update({
-        broker_id: newBrokerId,
+        team_member_id: newTeamMemberId,
         updated_at: new Date().toISOString(),
       })
       .eq("id", customerId);
@@ -98,17 +98,17 @@ export default function ReassignCustomerModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          newBrokerId,
-          oldBrokerId: currentBrokerId,
+          newTeamMemberId,
+          oldTeamMemberId: currentTeamMemberId,
           customerId,
           customerName,
           reassignedBy: `${currentUser.first_name} ${currentUser.last_name || ''}`.trim(),
-          reassignedByBrokerId: currentUser.id,
+          reassignedByTeamMemberId: currentUser.id,
         }),
       }).catch(err => console.error('Failed to send reassignment notification:', err));
     }
 
-    const action = selectedBroker === "UNASSIGN" ? "unassigned" : "reassigned";
+    const action = selectedTeamMember === "UNASSIGN" ? "unassigned" : "reassigned";
     alert(`Customer ${action} successfully!`);
     setLoading(false);
     onSuccessAction();
@@ -136,7 +136,7 @@ export default function ReassignCustomerModal({
         <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
           <p className="text-sm text-blue-900">
             <span className="font-medium">{customerName}</span> will be reassigned
-            to the selected broker.
+            to the selected team member.
           </p>
         </div>
 
@@ -145,18 +145,18 @@ export default function ReassignCustomerModal({
             Reassign to:
           </label>
           <select
-            value={selectedBroker}
-            onChange={(e) => setSelectedBroker(e.target.value)}
+            value={selectedTeamMember}
+            onChange={(e) => setSelectedTeamMember(e.target.value)}
             disabled={loading}
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           >
-            <option value="">Select a broker...</option>
+            <option value="">Select a team member...</option>
             <option value="UNASSIGN" className="font-medium">(Unassign)</option>
-            {brokers.map((broker) => (
-              <option key={broker.id} value={broker.id}>
-                {broker.first_name} {broker.last_name || ""} -{" "}
-                {broker.office_location || "No Office"}
-                {broker.is_manager && " (Manager)"}
+            {teamMembers.map((teamMember) => (
+              <option key={teamMember.id} value={teamMember.id}>
+                {teamMember.first_name} {teamMember.last_name || ""} -{" "}
+                {teamMember.office_location || "No Office"}
+                {teamMember.is_manager && " (Manager)"}
               </option>
             ))}
           </select>
@@ -172,7 +172,7 @@ export default function ReassignCustomerModal({
           </button>
           <button
             onClick={handleReassign}
-            disabled={!selectedBroker || loading}
+            disabled={!selectedTeamMember || loading}
             className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "Reassigning..." : "Reassign"}

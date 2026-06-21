@@ -5,8 +5,8 @@
  * PURPOSE: Manage team members within their office location
  *
  * FEATURES:
- * - View brokers in their office
- * - Invite new brokers (restricted to their office unless can_invite_any_office)
+ * - View teamMembers in their office
+ * - Invite new teamMembers (restricted to their office unless can_invite_any_office)
  * - View office performance metrics
  * - CANNOT deactivate accounts (admin-only)
  */
@@ -33,8 +33,8 @@ export default async function ManagerConsolePage() {
   }
 
   // Check if user is a manager
-  const { data: broker, error } = await supabase
-    .from("brokers")
+  const { data: teamMember, error } = await supabase
+    .from("team_members")
     .select("is_manager, is_admin, office_location")
     .eq("id", user.id)
     .single();
@@ -42,37 +42,37 @@ export default async function ManagerConsolePage() {
   // Debug logging
   console.log("Manager Console Debug:", {
     error,
-    broker,
+    teamMember,
     userId: user.id,
   });
 
-  if (error || !broker || !broker.is_manager) {
+  if (error || !teamMember || !teamMember.is_manager) {
     console.log("Redirect reason:", {
       hasError: !!error,
-      hasBroker: !!broker,
-      isManager: broker?.is_manager,
+      hasTeamMember: !!teamMember,
+      isManager: teamMember?.is_manager,
     });
     redirect("/dashboard");
   }
 
   // Redirect admins to the full admin console
-  if (broker.is_admin) {
+  if (teamMember.is_admin) {
     redirect("/dashboard/admin");
   }
 
   // Try to load invite permissions from broker_permissions table
   // If table doesn't exist, default to false
-  let canInviteBrokers = false;
+  let canInviteTeamMembers = false;
   let canInviteAnyOffice = false;
 
   const { data: permissions } = await supabase
-    .from("broker_permissions")
+    .from("team_member_permissions")
     .select("can_invite_brokers, can_invite_any_office")
-    .eq("broker_id", user.id)
+    .eq("team_member_id", user.id)
     .single();
 
   if (permissions) {
-    canInviteBrokers = permissions.can_invite_brokers ?? false;
+    canInviteTeamMembers = permissions.can_invite_brokers ?? false;
     canInviteAnyOffice = permissions.can_invite_any_office ?? false;
   }
 
@@ -80,8 +80,8 @@ export default async function ManagerConsolePage() {
     <div className="min-h-screen bg-slate-50">
       <ManagerConsole
         userId={user.id}
-        officeLocation={broker.office_location}
-        canInviteBrokers={canInviteBrokers}
+        officeLocation={teamMember.office_location}
+        canInviteTeamMembers={canInviteTeamMembers}
         canInviteAnyOffice={canInviteAnyOffice}
       />
     </div>

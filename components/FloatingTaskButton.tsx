@@ -7,11 +7,11 @@ import { createClient } from "@/lib/supabase/client";
 import type { Task, Customer } from "@/lib/types";
 
 interface FloatingTaskButtonProps {
-  brokerId: string;
+  teamMemberId: string;
 }
 
 export default function FloatingTaskButton({
-  brokerId,
+  teamMemberId,
 }: FloatingTaskButtonProps) {
   const supabase = createClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function FloatingTaskButton({
         const { data, error } = await supabase
           .from("customers")
           .select("*")
-          .eq("broker_id", brokerId)
+          .eq("team_member_id", teamMemberId)
           .order("business_name");
 
         if (!error && data) {
@@ -36,15 +36,15 @@ export default function FloatingTaskButton({
       }
     };
 
-    if (brokerId && isModalOpen) {
+    if (teamMemberId && isModalOpen) {
       fetchCustomers();
     }
-  }, [brokerId, isModalOpen, supabase]);
+  }, [teamMemberId, isModalOpen, supabase]);
 
   const handleSaveTask = async (taskData: Partial<Task>) => {
     try {
       // Always resolve the current user at save time to ensure auth.uid()
-      // matches broker_id for the RLS policy check
+      // matches team_member_id for the RLS policy check
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -66,7 +66,7 @@ export default function FloatingTaskButton({
         .insert([
           {
             ...cleanedData,
-            broker_id: user.id,
+            team_member_id: user.id,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
@@ -111,7 +111,7 @@ export default function FloatingTaskButton({
         onClick={() => setIsModalOpen(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="fixed bottom-6 right-6 z-40 flex h-14 items-center gap-2 rounded-full bg-orange-500 px-5 shadow-lg transition-all duration-200 hover:bg-orange-600 hover:shadow-xl active:scale-95 sm:h-16 sm:px-6"
+        className="fixed bottom-6 right-6 z-40 flex h-14 items-center gap-2 rounded-full bg-primary px-5 shadow-lg transition-all duration-200 hover:bg-primary-text hover:shadow-xl active:scale-95 sm:h-16 sm:px-6"
         aria-label="Create new task"
         data-tour="floating-task-button"
       >
@@ -130,7 +130,7 @@ export default function FloatingTaskButton({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveTask}
-        brokerId={brokerId}
+        teamMemberId={teamMemberId}
         customers={customers}
       />
     </>

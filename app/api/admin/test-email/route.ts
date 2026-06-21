@@ -20,13 +20,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: broker } = await supabase
-      .from("brokers")
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("is_admin")
       .eq("id", user.id)
       .single();
 
-    if (!broker?.is_admin) {
+    if (!teamMember?.is_admin) {
       return NextResponse.json(
         { error: "Admin access required" },
         { status: 403 },
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       <li>To: ${to}</li>
       <li>Timestamp: ${new Date().toLocaleString()}</li>
     </ul>
-    <p>You can now confidently send task reminders, notifications, and other emails to your brokers.</p>
+    <p>You can now confidently send task reminders, notifications, and other emails to your teamMembers.</p>
   </div>
   <div class="footer">
     <p>NTS Claims Tracker - Admin Panel</p>

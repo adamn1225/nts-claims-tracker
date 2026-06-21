@@ -38,28 +38,28 @@ export type ContactNotificationType =
   | "contact_status_change";
 
 export interface CreateContactNotificationParams {
-  brokerId: string; // Who receives the notification
+  teamMemberId: string; // Who receives the notification
   customerId: string; // Which customer
   customerName: string; // Customer business name
   type: ContactNotificationType;
   title: string;
   message: string;
-  actionBy?: string; // Who performed the action (admin name, broker name)
-  actionByBrokerId?: string; // ID of broker who performed action
+  actionBy?: string; // Who performed the action (admin name, teamMember name)
+  actionByTeamMemberId?: string; // ID of teamMember who performed action
 }
 
 /**
  * Create a contact-related notification
  */
 export async function createContactNotification({
-  brokerId,
+  teamMemberId,
   customerId,
   customerName,
   type,
   title,
   message,
   actionBy,
-  actionByBrokerId,
+  actionByTeamMemberId,
 }: CreateContactNotificationParams): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = getServiceSupabase();
@@ -68,7 +68,7 @@ export async function createContactNotification({
     const { error: notificationError } = await supabase
       .from("notifications")
       .insert({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         customer_id: customerId,
         type,
         title,
@@ -84,11 +84,11 @@ export async function createContactNotification({
     }
 
     console.log(
-      `✅ Created ${type} notification for broker ${brokerId} (${customerName})`,
+      `✅ Created ${type} notification for team member ${teamMemberId} (${customerName})`,
     );
 
     // TODO: Optionally send email notification based on user preferences
-    // await sendContactNotificationEmail(brokerId, type, customerName, message);
+    // await sendContactNotificationEmail(teamMemberId, type, customerName, message);
 
     return { success: true };
   } catch (error: any) {
@@ -98,20 +98,20 @@ export async function createContactNotification({
 }
 
 /**
- * Create notification when contacts are assigned to a broker
+ * Create notification when contacts are assigned to a team member
  */
 export async function notifyContactAssigned({
-  brokerId,
+  teamMemberId,
   customerIds,
   customerNames,
   assignedBy,
-  assignedByBrokerId,
+  assignedByTeamMemberId,
 }: {
-  brokerId: string;
+  teamMemberId: string;
   customerIds: string[];
   customerNames: string[];
   assignedBy: string;
-  assignedByBrokerId?: string;
+  assignedByTeamMemberId?: string;
 }): Promise<void> {
   const count = customerIds.length;
 
@@ -121,27 +121,27 @@ export async function notifyContactAssigned({
     // Create one notification if multiple contacts assigned
     if (count === 1) {
       await createContactNotification({
-        brokerId,
+        teamMemberId,
         customerId: customerIds[0],
         customerName: customerNames[0],
         type: "contact_assigned",
         title: "New Contact Assigned",
         message: `${customerNames[0]} was assigned to you by ${assignedBy}`,
         actionBy: assignedBy,
-        actionByBrokerId: assignedByBrokerId,
+        actionByTeamMemberId: assignedByTeamMemberId,
       });
     } else {
       // For batch assignments, create one summary notification for the first contact
       // and reference the total count in the message
       await createContactNotification({
-        brokerId,
+        teamMemberId,
         customerId: customerIds[0],
         customerName: customerNames[0],
         type: "contact_assigned",
         title: `${count} New Contacts Assigned`,
         message: `${count} contacts were assigned to you by ${assignedBy}`,
         actionBy: assignedBy,
-        actionByBrokerId: assignedByBrokerId,
+        actionByTeamMemberId: assignedByTeamMemberId,
       });
     }
   } catch (error) {
@@ -150,50 +150,50 @@ export async function notifyContactAssigned({
 }
 
 /**
- * Create notification when a contact is reassigned from one broker to another
+ * Create notification when a contact is reassigned from one team member to another
  */
 export async function notifyContactReassigned({
-  newBrokerId,
-  oldBrokerId,
+  newTeamMemberId,
+  oldTeamMemberId,
   customerId,
   customerName,
   reassignedBy,
-  reassignedByBrokerId,
+  reassignedByTeamMemberId,
 }: {
-  newBrokerId: string | null; // null if unassigned
-  oldBrokerId: string | null; // null if previously unassigned
+  newTeamMemberId: string | null; // null if unassigned
+  oldTeamMemberId: string | null; // null if previously unassigned
   customerId: string;
   customerName: string;
   reassignedBy: string;
-  reassignedByBrokerId?: string;
+  reassignedByTeamMemberId?: string;
 }): Promise<void> {
   try {
-    // Notify new broker (if being assigned)
-    if (newBrokerId) {
+    // Notify new teamMember (if being assigned)
+    if (newTeamMemberId) {
       await createContactNotification({
-        brokerId: newBrokerId,
+        teamMemberId: newTeamMemberId,
         customerId,
         customerName,
         type: "contact_reassigned",
         title: "Contact Reassigned to You",
         message: `${customerName} was reassigned to you by ${reassignedBy}`,
         actionBy: reassignedBy,
-        actionByBrokerId: reassignedByBrokerId,
+        actionByTeamMemberId: reassignedByTeamMemberId,
       });
     }
 
-    // Optionally notify old broker (if being removed/reassigned away)
+    // Optionally notify old teamMember (if being removed/reassigned away)
     // Commenting this out for now to avoid notification spam
-    // if (oldBrokerId) {
+    // if (oldTeamMemberId) {
     //   await createContactNotification({
-    //     brokerId: oldBrokerId,
+    //     teamMemberId: oldTeamMemberId,
     //     customerId,
     //     customerName,
     //     type: "contact_reassigned",
     //     title: "Contact Reassigned",
-    //     message: `${customerName} was reassigned to another broker by ${reassignedBy}`,
+    //     message: `${customerName} was reassigned to another team member by ${reassignedBy}`,
     //     actionBy: reassignedBy,
-    //     actionByBrokerId: reassignedByBrokerId,
+    //     actionByTeamMemberId: reassignedByTeamMemberId,
     //   });
     // }
   } catch (error) {
@@ -205,18 +205,18 @@ export async function notifyContactReassigned({
  * Create notification when a contact's key information is updated
  */
 export async function notifyContactUpdated({
-  brokerId,
+  teamMemberId,
   customerId,
   customerName,
   updatedBy,
-  updatedByBrokerId,
+  updatedByTeamMemberId,
   changedFields,
 }: {
-  brokerId: string;
+  teamMemberId: string;
   customerId: string;
   customerName: string;
   updatedBy: string;
-  updatedByBrokerId?: string;
+  updatedByTeamMemberId?: string;
   changedFields?: string[]; // Optional: list of changed field names
 }): Promise<void> {
   try {
@@ -225,14 +225,14 @@ export async function notifyContactUpdated({
       : "";
 
     await createContactNotification({
-      brokerId,
+      teamMemberId,
       customerId,
       customerName,
       type: "contact_updated",
       title: "Contact Updated",
       message: `${customerName} was updated by ${updatedBy}${fieldsText}`,
       actionBy: updatedBy,
-      actionByBrokerId: updatedByBrokerId,
+      actionByTeamMemberId: updatedByTeamMemberId,
     });
   } catch (error) {
     console.error("Failed to notify contact updated:", error);
@@ -243,32 +243,32 @@ export async function notifyContactUpdated({
  * Create notification when a contact's status changes
  */
 export async function notifyContactStatusChange({
-  brokerId,
+  teamMemberId,
   customerId,
   customerName,
   oldStatus,
   newStatus,
   changedBy,
-  changedByBrokerId,
+  changedByTeamMemberId,
 }: {
-  brokerId: string;
+  teamMemberId: string;
   customerId: string;
   customerName: string;
   oldStatus: string;
   newStatus: string;
   changedBy: string;
-  changedByBrokerId?: string;
+  changedByTeamMemberId?: string;
 }): Promise<void> {
   try {
     await createContactNotification({
-      brokerId,
+      teamMemberId,
       customerId,
       customerName,
       type: "contact_status_change",
       title: "Contact Status Changed",
       message: `${customerName} status changed from ${oldStatus} to ${newStatus} by ${changedBy}`,
       actionBy: changedBy,
-      actionByBrokerId: changedByBrokerId,
+      actionByTeamMemberId: changedByTeamMemberId,
     });
   } catch (error) {
     console.error("Failed to notify contact status change:", error);

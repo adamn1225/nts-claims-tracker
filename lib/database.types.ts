@@ -10,3223 +10,2068 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
       ai_chat_history: {
         Row: {
-          broker_id: string
-          confidence: string | null
+          claim_id: string | null
+          completion_tokens: number | null
           content: string
           conversation_id: string
-          created_at: string | null
-          customer_id: string | null
+          created_at: string
           id: string
-          is_archived: boolean | null
-          mode: string
-          page_path: string | null
+          metadata: Json | null
+          model: string | null
+          prompt_tokens: number | null
           role: string
-          tag: string | null
-          web_search_used: boolean | null
+          user_id: string
         }
         Insert: {
-          broker_id: string
-          confidence?: string | null
+          claim_id?: string | null
+          completion_tokens?: number | null
           content: string
           conversation_id: string
-          created_at?: string | null
-          customer_id?: string | null
+          created_at?: string
           id?: string
-          is_archived?: boolean | null
-          mode: string
-          page_path?: string | null
+          metadata?: Json | null
+          model?: string | null
+          prompt_tokens?: number | null
           role: string
-          tag?: string | null
-          web_search_used?: boolean | null
+          user_id: string
         }
         Update: {
-          broker_id?: string
-          confidence?: string | null
+          claim_id?: string | null
+          completion_tokens?: number | null
           content?: string
           conversation_id?: string
-          created_at?: string | null
-          customer_id?: string | null
+          created_at?: string
           id?: string
-          is_archived?: boolean | null
-          mode?: string
-          page_path?: string | null
+          metadata?: Json | null
+          model?: string | null
+          prompt_tokens?: number | null
           role?: string
-          tag?: string | null
-          web_search_used?: boolean | null
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ai_chat_history_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "ai_chat_history_claim_id_fkey"
+            columns: ["claim_id"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "ai_chat_history_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "claims"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ai_chat_history_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "ai_chat_history_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_chat_history_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       api_tokens: {
         Row: {
-          broker_id: string
           created_at: string
+          created_by: string | null
+          description: string | null
           expires_at: string | null
           id: string
           is_active: boolean
-          last_reset_at: string | null
           last_used_at: string | null
-          last_used_endpoint: string | null
-          last_used_ip: string | null
           name: string
-          rate_limit_per_hour: number
-          requests_count: number
-          revoked_at: string | null
-          revoked_reason: string | null
-          scopes: Json
+          scopes: string[]
           token_hash: string
           token_prefix: string
-          updated_at: string
         }
         Insert: {
-          broker_id: string
           created_at?: string
+          created_by?: string | null
+          description?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean
-          last_reset_at?: string | null
           last_used_at?: string | null
-          last_used_endpoint?: string | null
-          last_used_ip?: string | null
           name: string
-          rate_limit_per_hour?: number
-          requests_count?: number
-          revoked_at?: string | null
-          revoked_reason?: string | null
-          scopes?: Json
+          scopes?: string[]
           token_hash: string
           token_prefix: string
-          updated_at?: string
         }
         Update: {
-          broker_id?: string
           created_at?: string
+          created_by?: string | null
+          description?: string | null
           expires_at?: string | null
           id?: string
           is_active?: boolean
-          last_reset_at?: string | null
           last_used_at?: string | null
-          last_used_endpoint?: string | null
-          last_used_ip?: string | null
           name?: string
-          rate_limit_per_hour?: number
-          requests_count?: number
-          revoked_at?: string | null
-          revoked_reason?: string | null
-          scopes?: Json
+          scopes?: string[]
           token_hash?: string
           token_prefix?: string
-          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "api_tokens_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "api_tokens_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "api_tokens_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "api_tokens_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       app_settings: {
         Row: {
-          id: boolean
-          maintenance_enabled: boolean
-          maintenance_ends_at: string | null
-          maintenance_message: string | null
-          maintenance_show_game: boolean
-          maintenance_starts_at: string | null
+          description: string | null
+          key: string
           updated_at: string
           updated_by: string | null
+          value: Json
         }
         Insert: {
-          id?: boolean
-          maintenance_enabled?: boolean
-          maintenance_ends_at?: string | null
-          maintenance_message?: string | null
-          maintenance_show_game?: boolean
-          maintenance_starts_at?: string | null
+          description?: string | null
+          key: string
           updated_at?: string
           updated_by?: string | null
+          value: Json
         }
         Update: {
-          id?: boolean
-          maintenance_enabled?: boolean
-          maintenance_ends_at?: string | null
-          maintenance_message?: string | null
-          maintenance_show_game?: boolean
-          maintenance_starts_at?: string | null
+          description?: string | null
+          key?: string
           updated_at?: string
           updated_by?: string | null
+          value?: Json
         }
         Relationships: [
           {
             foreignKeyName: "app_settings_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "app_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "app_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       app_updates: {
         Row: {
-          author_id: string | null
+          body: string | null
           category: string | null
-          content: string
-          created_at: string | null
-          excerpt: string | null
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          cta_url: string | null
           id: string
-          is_published: boolean | null
-          published_at: string | null
-          slug: string
+          is_published: boolean
+          published_at: string
           title: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
-          author_id?: string | null
+          body?: string | null
           category?: string | null
-          content: string
-          created_at?: string | null
-          excerpt?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
           id?: string
-          is_published?: boolean | null
-          published_at?: string | null
-          slug: string
+          is_published?: boolean
+          published_at?: string
           title: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
-          author_id?: string | null
+          body?: string | null
           category?: string | null
-          content?: string
-          created_at?: string | null
-          excerpt?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
           id?: string
-          is_published?: boolean | null
-          published_at?: string | null
-          slug?: string
+          is_published?: boolean
+          published_at?: string
           title?: string
-          updated_at?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "app_updates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
-          action: string
-          action_category: string
-          actor_email: string
-          actor_id: string
-          actor_name: string
-          actor_role: string
-          changes: Json | null
-          created_at: string | null
-          details: Json | null
-          error_message: string | null
+          action: Database["public"]["Enums"]["audit_action"]
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          entity_id: string
+          entity_type: string
           id: string
           ip_address: unknown
-          request_method: string | null
-          request_path: string | null
-          severity: string | null
-          success: boolean | null
-          target_broker_email: string | null
-          target_broker_id: string | null
-          target_broker_name: string | null
-          target_customer_id: string | null
+          metadata: Json | null
+          occurred_at: string
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["audit_action"]
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          occurred_at?: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["audit_action"]
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          occurred_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carrier_holds: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          hold_type: Database["public"]["Enums"]["carrier_hold_type"]
+          id: string
+          notes: string | null
+          reason: string
+          related_claim_id: string | null
+          release_reason: string | null
+          released_at: string | null
+          released_by: string | null
+          requested_at: string
+          requested_by: string | null
+          status: Database["public"]["Enums"]["carrier_hold_status"]
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          hold_type: Database["public"]["Enums"]["carrier_hold_type"]
+          id?: string
+          notes?: string | null
+          reason: string
+          related_claim_id?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["carrier_hold_status"]
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          hold_type?: Database["public"]["Enums"]["carrier_hold_type"]
+          id?: string
+          notes?: string | null
+          reason?: string
+          related_claim_id?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["carrier_hold_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_holds_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrier_holds_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrier_holds_related_claim_id_fkey"
+            columns: ["related_claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrier_holds_released_by_fkey"
+            columns: ["released_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrier_holds_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_documents: {
+        Row: {
+          ai_extracted_at: string | null
+          ai_extracted_fields: Json | null
+          ai_requires_review: boolean
+          ai_reviewed_at: string | null
+          ai_reviewed_by: string | null
+          claim_id: string
+          description: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          filename: string
+          id: string
+          is_required_evidence: boolean
+          mime_type: string | null
+          party_id: string | null
+          size_bytes: number | null
+          source: Database["public"]["Enums"]["document_source"]
+          storage_bucket: string
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          ai_extracted_at?: string | null
+          ai_extracted_fields?: Json | null
+          ai_requires_review?: boolean
+          ai_reviewed_at?: string | null
+          ai_reviewed_by?: string | null
+          claim_id: string
+          description?: string | null
+          document_type: Database["public"]["Enums"]["document_type"]
+          filename: string
+          id?: string
+          is_required_evidence?: boolean
+          mime_type?: string | null
+          party_id?: string | null
+          size_bytes?: number | null
+          source?: Database["public"]["Enums"]["document_source"]
+          storage_bucket?: string
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          ai_extracted_at?: string | null
+          ai_extracted_fields?: Json | null
+          ai_requires_review?: boolean
+          ai_reviewed_at?: string | null
+          ai_reviewed_by?: string | null
+          claim_id?: string
+          description?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"]
+          filename?: string
+          id?: string
+          is_required_evidence?: boolean
+          mime_type?: string | null
+          party_id?: string | null
+          size_bytes?: number | null
+          source?: Database["public"]["Enums"]["document_source"]
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_documents_ai_reviewed_by_fkey"
+            columns: ["ai_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_documents_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_documents_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "claim_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_intake_submissions: {
+        Row: {
+          attachments: Json
+          duplicate_of_id: string | null
+          id: string
+          intake_token_id: string | null
+          payload: Json
+          promoted_claim_id: string | null
+          received_at: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: Database["public"]["Enums"]["claim_intake_source"]
+          status: Database["public"]["Enums"]["intake_submission_status"]
+          submitter_email: string | null
+          submitter_ip: unknown
+          submitter_name: string | null
+          submitter_phone: string | null
           user_agent: string | null
         }
         Insert: {
-          action: string
-          action_category: string
-          actor_email: string
-          actor_id: string
-          actor_name: string
-          actor_role: string
-          changes?: Json | null
-          created_at?: string | null
-          details?: Json | null
-          error_message?: string | null
+          attachments?: Json
+          duplicate_of_id?: string | null
           id?: string
-          ip_address?: unknown
-          request_method?: string | null
-          request_path?: string | null
-          severity?: string | null
-          success?: boolean | null
-          target_broker_email?: string | null
-          target_broker_id?: string | null
-          target_broker_name?: string | null
-          target_customer_id?: string | null
+          intake_token_id?: string | null
+          payload: Json
+          promoted_claim_id?: string | null
+          received_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source: Database["public"]["Enums"]["claim_intake_source"]
+          status?: Database["public"]["Enums"]["intake_submission_status"]
+          submitter_email?: string | null
+          submitter_ip?: unknown
+          submitter_name?: string | null
+          submitter_phone?: string | null
           user_agent?: string | null
         }
         Update: {
-          action?: string
-          action_category?: string
-          actor_email?: string
-          actor_id?: string
-          actor_name?: string
-          actor_role?: string
-          changes?: Json | null
-          created_at?: string | null
-          details?: Json | null
-          error_message?: string | null
+          attachments?: Json
+          duplicate_of_id?: string | null
           id?: string
-          ip_address?: unknown
-          request_method?: string | null
-          request_path?: string | null
-          severity?: string | null
-          success?: boolean | null
-          target_broker_email?: string | null
-          target_broker_id?: string | null
-          target_broker_name?: string | null
-          target_customer_id?: string | null
+          intake_token_id?: string | null
+          payload?: Json
+          promoted_claim_id?: string | null
+          received_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: Database["public"]["Enums"]["claim_intake_source"]
+          status?: Database["public"]["Enums"]["intake_submission_status"]
+          submitter_email?: string | null
+          submitter_ip?: unknown
+          submitter_name?: string | null
+          submitter_phone?: string | null
           user_agent?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "audit_logs_target_broker_id_fkey"
-            columns: ["target_broker_id"]
+            foreignKeyName: "claim_intake_submissions_duplicate_of_id_fkey"
+            columns: ["duplicate_of_id"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "audit_logs_target_broker_id_fkey"
-            columns: ["target_broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "claim_intake_submissions"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "audit_logs_target_broker_id_fkey"
-            columns: ["target_broker_id"]
+            foreignKeyName: "claim_intake_submissions_intake_token_id_fkey"
+            columns: ["intake_token_id"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "intake_tokens"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "audit_logs_target_customer_id_fkey"
-            columns: ["target_customer_id"]
+            foreignKeyName: "claim_intake_submissions_promoted_claim_id_fkey"
+            columns: ["promoted_claim_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_intake_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      broker_call_quality_scores: {
+      claim_notes: {
         Row: {
-          broker_id: string
-          calls_analyzed: number
-          last_updated: string
-          qualifying_questions_hit: number
-        }
-        Insert: {
-          broker_id: string
-          calls_analyzed?: number
-          last_updated?: string
-          qualifying_questions_hit?: number
-        }
-        Update: {
-          broker_id?: string
-          calls_analyzed?: number
-          last_updated?: string
-          qualifying_questions_hit?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "broker_call_quality_scores_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "broker_call_quality_scores_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "broker_call_quality_scores_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      broker_permissions: {
-        Row: {
-          broker_id: string
-          can_access_power_dialer: boolean | null
-          can_edit_all_customers: boolean | null
-          can_edit_all_tasks: boolean | null
-          can_edit_office_customers: boolean | null
-          can_edit_office_tasks: boolean | null
-          can_edit_own_customers: boolean | null
-          can_edit_own_tasks: boolean | null
-          can_export_data: boolean | null
-          can_invite_any_office: boolean | null
-          can_invite_brokers: boolean | null
-          can_manage_permissions: boolean | null
-          can_manage_statuses: boolean | null
-          can_manage_users: boolean | null
-          can_use_ai_email: boolean | null
-          can_view_all_brokers: boolean | null
-          can_view_all_customers: boolean | null
-          can_view_all_tasks: boolean | null
-          can_view_analytics: boolean | null
-          can_view_office_brokers: boolean | null
-          can_view_office_customers: boolean | null
-          can_view_office_tasks: boolean | null
-          created_at: string | null
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          broker_id: string
-          can_access_power_dialer?: boolean | null
-          can_edit_all_customers?: boolean | null
-          can_edit_all_tasks?: boolean | null
-          can_edit_office_customers?: boolean | null
-          can_edit_office_tasks?: boolean | null
-          can_edit_own_customers?: boolean | null
-          can_edit_own_tasks?: boolean | null
-          can_export_data?: boolean | null
-          can_invite_any_office?: boolean | null
-          can_invite_brokers?: boolean | null
-          can_manage_permissions?: boolean | null
-          can_manage_statuses?: boolean | null
-          can_manage_users?: boolean | null
-          can_use_ai_email?: boolean | null
-          can_view_all_brokers?: boolean | null
-          can_view_all_customers?: boolean | null
-          can_view_all_tasks?: boolean | null
-          can_view_analytics?: boolean | null
-          can_view_office_brokers?: boolean | null
-          can_view_office_customers?: boolean | null
-          can_view_office_tasks?: boolean | null
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Update: {
-          broker_id?: string
-          can_access_power_dialer?: boolean | null
-          can_edit_all_customers?: boolean | null
-          can_edit_all_tasks?: boolean | null
-          can_edit_office_customers?: boolean | null
-          can_edit_office_tasks?: boolean | null
-          can_edit_own_customers?: boolean | null
-          can_edit_own_tasks?: boolean | null
-          can_export_data?: boolean | null
-          can_invite_any_office?: boolean | null
-          can_invite_brokers?: boolean | null
-          can_manage_permissions?: boolean | null
-          can_manage_statuses?: boolean | null
-          can_manage_users?: boolean | null
-          can_use_ai_email?: boolean | null
-          can_view_all_brokers?: boolean | null
-          can_view_all_customers?: boolean | null
-          can_view_all_tasks?: boolean | null
-          can_view_analytics?: boolean | null
-          can_view_office_brokers?: boolean | null
-          can_view_office_customers?: boolean | null
-          can_view_office_tasks?: boolean | null
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "broker_permissions_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "broker_permissions_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "broker_permissions_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      broker_portfolio: {
-        Row: {
-          broker_id: string
-          caption: string | null
+          author_id: string | null
+          body: string
+          claim_id: string
           created_at: string
-          destination: string | null
-          equipment_type: string | null
           id: string
-          image_path: string
-          order_ref: string | null
-          origin: string | null
-          sort_order: number | null
+          is_ai_generated: boolean
+          is_pinned: boolean
+          updated_at: string
         }
         Insert: {
-          broker_id: string
-          caption?: string | null
+          author_id?: string | null
+          body: string
+          claim_id: string
           created_at?: string
-          destination?: string | null
-          equipment_type?: string | null
           id?: string
-          image_path: string
-          order_ref?: string | null
-          origin?: string | null
-          sort_order?: number | null
+          is_ai_generated?: boolean
+          is_pinned?: boolean
+          updated_at?: string
         }
         Update: {
-          broker_id?: string
-          caption?: string | null
+          author_id?: string | null
+          body?: string
+          claim_id?: string
           created_at?: string
-          destination?: string | null
-          equipment_type?: string | null
           id?: string
-          image_path?: string
-          order_ref?: string | null
-          origin?: string | null
-          sort_order?: number | null
+          is_ai_generated?: boolean
+          is_pinned?: boolean
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "broker_portfolio_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "claim_notes_author_id_fkey"
+            columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "broker_portfolio_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "broker_portfolio_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "claim_notes_claim_id_fkey"
+            columns: ["claim_id"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "claims"
             referencedColumns: ["id"]
           },
         ]
       }
-      brokers: {
+      claim_parties: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          email: string
-          first_name: string | null
-          headline: string | null
-          help_docs_viewed: boolean
+          acknowledged_at: string | null
+          claim_id: string
+          company_id: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_response_at: string | null
+          notes: string | null
+          role: Database["public"]["Enums"]["claim_party_role"]
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          claim_id: string
+          company_id: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_response_at?: string | null
+          notes?: string | null
+          role: Database["public"]["Enums"]["claim_party_role"]
+        }
+        Update: {
+          acknowledged_at?: string | null
+          claim_id?: string
+          company_id?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_response_at?: string | null
+          notes?: string | null
+          role?: Database["public"]["Enums"]["claim_party_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_parties_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_parties_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_parties_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_pins: {
+        Row: {
+          claim_id: string
+          pinned_at: string
+          user_id: string
+        }
+        Insert: {
+          claim_id: string
+          pinned_at?: string
+          user_id: string
+        }
+        Update: {
+          claim_id?: string
+          pinned_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_pins_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_pins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_settlements: {
+        Row: {
+          amount_concession: number
+          amount_denied: number
+          amount_direct_payment: number
+          amount_paid_to_shipper: number
+          amount_recovered_from_carrier: number
+          claim_id: string
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          settled_at: string
+          settled_by: string | null
+        }
+        Insert: {
+          amount_concession?: number
+          amount_denied?: number
+          amount_direct_payment?: number
+          amount_paid_to_shipper?: number
+          amount_recovered_from_carrier?: number
+          claim_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          settled_at?: string
+          settled_by?: string | null
+        }
+        Update: {
+          amount_concession?: number
+          amount_denied?: number
+          amount_direct_payment?: number
+          amount_paid_to_shipper?: number
+          amount_recovered_from_carrier?: number
+          claim_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          settled_at?: string
+          settled_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_settlements_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_settlements_settled_by_fkey"
+            columns: ["settled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          claim_id: string
+          from_status_id: string | null
+          id: string
+          note: string | null
+          to_status_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          claim_id: string
+          from_status_id?: string | null
+          id?: string
+          note?: string | null
+          to_status_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          claim_id?: string
+          from_status_id?: string | null
+          id?: string
+          note?: string | null
+          to_status_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_status_history_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_status_history_from_status_id_fkey"
+            columns: ["from_status_id"]
+            isOneToOne: false
+            referencedRelation: "claim_statuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_status_history_to_status_id_fkey"
+            columns: ["to_status_id"]
+            isOneToOne: false
+            referencedRelation: "claim_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_statuses: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
           id: string
           is_active: boolean
-          is_admin: boolean | null
-          is_manager: boolean | null
-          is_remote: boolean | null
-          is_sales_coach: boolean | null
-          joined_date: string | null
-          landing_config: Json
-          landing_config_approved: Json | null
-          landing_review_note: string | null
-          landing_reviewed_at: string | null
-          landing_reviewed_by: string | null
-          landing_status: string
-          landing_submitted_at: string | null
-          last_name: string | null
-          linkedin_url: string | null
-          office_location: string | null
-          phone: string | null
-          profile_slug: string | null
-          show_in_directory: boolean
-          specialties: string[] | null
-          territory: string | null
-          updated_at: string | null
+          is_closed: boolean
+          is_denied: boolean
+          is_inbox: boolean
+          is_system: boolean
+          name: string
+          position: number
+          updated_at: string
         }
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          email: string
-          first_name?: string | null
-          headline?: string | null
-          help_docs_viewed?: boolean
+          color?: string
+          created_at?: string
+          description?: string | null
           id?: string
           is_active?: boolean
-          is_admin?: boolean | null
-          is_manager?: boolean | null
-          is_remote?: boolean | null
-          is_sales_coach?: boolean | null
-          joined_date?: string | null
-          landing_config?: Json
-          landing_config_approved?: Json | null
-          landing_review_note?: string | null
-          landing_reviewed_at?: string | null
-          landing_reviewed_by?: string | null
-          landing_status?: string
-          landing_submitted_at?: string | null
-          last_name?: string | null
-          linkedin_url?: string | null
-          office_location?: string | null
-          phone?: string | null
-          profile_slug?: string | null
-          show_in_directory?: boolean
-          specialties?: string[] | null
-          territory?: string | null
-          updated_at?: string | null
+          is_closed?: boolean
+          is_denied?: boolean
+          is_inbox?: boolean
+          is_system?: boolean
+          name: string
+          position: number
+          updated_at?: string
         }
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          email?: string
-          first_name?: string | null
-          headline?: string | null
-          help_docs_viewed?: boolean
+          color?: string
+          created_at?: string
+          description?: string | null
           id?: string
           is_active?: boolean
-          is_admin?: boolean | null
-          is_manager?: boolean | null
-          is_remote?: boolean | null
-          is_sales_coach?: boolean | null
-          joined_date?: string | null
-          landing_config?: Json
-          landing_config_approved?: Json | null
-          landing_review_note?: string | null
-          landing_reviewed_at?: string | null
-          landing_reviewed_by?: string | null
-          landing_status?: string
-          landing_submitted_at?: string | null
-          last_name?: string | null
-          linkedin_url?: string | null
-          office_location?: string | null
-          phone?: string | null
-          profile_slug?: string | null
-          show_in_directory?: boolean
-          specialties?: string[] | null
-          territory?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "brokers_landing_reviewed_by_fkey"
-            columns: ["landing_reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "brokers_landing_reviewed_by_fkey"
-            columns: ["landing_reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brokers_landing_reviewed_by_fkey"
-            columns: ["landing_reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      completed_orders: {
-        Row: {
-          assigned_to: string | null
-          broker_balance: string | null
-          broker_balance_numeric: number | null
-          broker_branch: string | null
-          campaign_content: string | null
-          campaign_keyword: string | null
-          campaign_medium: string | null
-          campaign_name: string | null
-          campaign_source: string | null
-          cargo: string | null
-          cargo_value: string | null
-          cargo_value_numeric: number | null
-          carrier_company_name: string | null
-          carrier_pay: string | null
-          carrier_pay_numeric: number | null
-          created_at: string | null
-          customer_type: string | null
-          delivered_date: string | null
-          destination_city: string | null
-          destination_country: string | null
-          destination_state: string | null
-          destination_zip: string | null
-          distance_miles: number | null
-          distance_text: string | null
-          duration_minutes: number | null
-          duration_text: string | null
-          equipment_type: string | null
-          est_ship_date: string | null
-          height_ft: number | null
-          height_text: string | null
-          id: string
-          is_oversize: boolean | null
-          is_overweight: boolean | null
-          is_superload: boolean | null
-          length_ft: number | null
-          length_text: string | null
-          load_name: string | null
-          load_type: string | null
-          make: string | null
-          margin_amount: number | null
-          margin_pct: number | null
-          model: string | null
-          order_created: string | null
-          order_id: string
-          order_sent: string | null
-          order_signed: string | null
-          order_status: string | null
-          order_sub_type: string | null
-          origin_city: string | null
-          origin_country: string | null
-          origin_state: string | null
-          origin_zip: string | null
-          quote_price: string | null
-          quote_price_numeric: number | null
-          quoted_date: string | null
-          rate_per_mile: number | null
-          ship_via: string | null
-          shipper_email: string | null
-          shipper_name: string | null
-          shipper_phone: string | null
-          trailer_type: string | null
-          vehicle_type: string | null
-          verified_shipper: boolean | null
-          weight_lbs: number | null
-          weight_text: string | null
-          width_ft: number | null
-          width_text: string | null
-          year: number | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          broker_balance?: string | null
-          broker_balance_numeric?: number | null
-          broker_branch?: string | null
-          campaign_content?: string | null
-          campaign_keyword?: string | null
-          campaign_medium?: string | null
-          campaign_name?: string | null
-          campaign_source?: string | null
-          cargo?: string | null
-          cargo_value?: string | null
-          cargo_value_numeric?: number | null
-          carrier_company_name?: string | null
-          carrier_pay?: string | null
-          carrier_pay_numeric?: number | null
-          created_at?: string | null
-          customer_type?: string | null
-          delivered_date?: string | null
-          destination_city?: string | null
-          destination_country?: string | null
-          destination_state?: string | null
-          destination_zip?: string | null
-          distance_miles?: number | null
-          distance_text?: string | null
-          duration_minutes?: number | null
-          duration_text?: string | null
-          equipment_type?: string | null
-          est_ship_date?: string | null
-          height_ft?: number | null
-          height_text?: string | null
-          id?: string
-          is_oversize?: boolean | null
-          is_overweight?: boolean | null
-          is_superload?: boolean | null
-          length_ft?: number | null
-          length_text?: string | null
-          load_name?: string | null
-          load_type?: string | null
-          make?: string | null
-          margin_amount?: number | null
-          margin_pct?: number | null
-          model?: string | null
-          order_created?: string | null
-          order_id: string
-          order_sent?: string | null
-          order_signed?: string | null
-          order_status?: string | null
-          order_sub_type?: string | null
-          origin_city?: string | null
-          origin_country?: string | null
-          origin_state?: string | null
-          origin_zip?: string | null
-          quote_price?: string | null
-          quote_price_numeric?: number | null
-          quoted_date?: string | null
-          rate_per_mile?: number | null
-          ship_via?: string | null
-          shipper_email?: string | null
-          shipper_name?: string | null
-          shipper_phone?: string | null
-          trailer_type?: string | null
-          vehicle_type?: string | null
-          verified_shipper?: boolean | null
-          weight_lbs?: number | null
-          weight_text?: string | null
-          width_ft?: number | null
-          width_text?: string | null
-          year?: number | null
-        }
-        Update: {
-          assigned_to?: string | null
-          broker_balance?: string | null
-          broker_balance_numeric?: number | null
-          broker_branch?: string | null
-          campaign_content?: string | null
-          campaign_keyword?: string | null
-          campaign_medium?: string | null
-          campaign_name?: string | null
-          campaign_source?: string | null
-          cargo?: string | null
-          cargo_value?: string | null
-          cargo_value_numeric?: number | null
-          carrier_company_name?: string | null
-          carrier_pay?: string | null
-          carrier_pay_numeric?: number | null
-          created_at?: string | null
-          customer_type?: string | null
-          delivered_date?: string | null
-          destination_city?: string | null
-          destination_country?: string | null
-          destination_state?: string | null
-          destination_zip?: string | null
-          distance_miles?: number | null
-          distance_text?: string | null
-          duration_minutes?: number | null
-          duration_text?: string | null
-          equipment_type?: string | null
-          est_ship_date?: string | null
-          height_ft?: number | null
-          height_text?: string | null
-          id?: string
-          is_oversize?: boolean | null
-          is_overweight?: boolean | null
-          is_superload?: boolean | null
-          length_ft?: number | null
-          length_text?: string | null
-          load_name?: string | null
-          load_type?: string | null
-          make?: string | null
-          margin_amount?: number | null
-          margin_pct?: number | null
-          model?: string | null
-          order_created?: string | null
-          order_id?: string
-          order_sent?: string | null
-          order_signed?: string | null
-          order_status?: string | null
-          order_sub_type?: string | null
-          origin_city?: string | null
-          origin_country?: string | null
-          origin_state?: string | null
-          origin_zip?: string | null
-          quote_price?: string | null
-          quote_price_numeric?: number | null
-          quoted_date?: string | null
-          rate_per_mile?: number | null
-          ship_via?: string | null
-          shipper_email?: string | null
-          shipper_name?: string | null
-          shipper_phone?: string | null
-          trailer_type?: string | null
-          vehicle_type?: string | null
-          verified_shipper?: boolean | null
-          weight_lbs?: number | null
-          weight_text?: string | null
-          width_ft?: number | null
-          width_text?: string | null
-          year?: number | null
+          is_closed?: boolean
+          is_denied?: boolean
+          is_inbox?: boolean
+          is_system?: boolean
+          name?: string
+          position?: number
+          updated_at?: string
         }
         Relationships: []
       }
-      contact_log: {
+      claims: {
         Row: {
-          broker_id: string
-          contact_date: string
-          created_at: string | null
-          customer_id: string
-          duration_seconds: number | null
+          acknowledged_at: string | null
+          bol_number: string | null
+          claim_number: string
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          damage_claim_amount: number | null
+          delivery_date: string | null
+          destination_city: string | null
+          destination_postal_code: string | null
+          destination_state: string | null
+          freight_type_id: string | null
           id: string
-          metadata: Json | null
-          notes: string | null
-          outcome: string | null
-          subject: string
-          type: string
+          incident_date: string | null
+          intake_source: Database["public"]["Enums"]["claim_intake_source"]
+          intake_submission_id: string | null
+          internal_description: string | null
+          last_activity_at: string
+          opened_at: string
+          origin_city: string | null
+          origin_postal_code: string | null
+          origin_state: string | null
+          owner_id: string | null
+          pickup_date: string | null
+          resolution: Database["public"]["Enums"]["claim_resolution"] | null
+          resolution_notes: string | null
+          shipment_value: number | null
+          status_id: string
+          summary: string | null
+          team_member_id: string | null
+          tms_order_number: string | null
+          trailer_type_id: string | null
+          updated_at: string
+          value_bucket: Database["public"]["Enums"]["claim_value_bucket"]
+          value_bucket_manual: boolean
         }
         Insert: {
-          broker_id: string
-          contact_date?: string
-          created_at?: string | null
-          customer_id: string
-          duration_seconds?: number | null
+          acknowledged_at?: string | null
+          bol_number?: string | null
+          claim_number: string
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          damage_claim_amount?: number | null
+          delivery_date?: string | null
+          destination_city?: string | null
+          destination_postal_code?: string | null
+          destination_state?: string | null
+          freight_type_id?: string | null
           id?: string
-          metadata?: Json | null
-          notes?: string | null
-          outcome?: string | null
-          subject: string
-          type: string
+          incident_date?: string | null
+          intake_source?: Database["public"]["Enums"]["claim_intake_source"]
+          intake_submission_id?: string | null
+          internal_description?: string | null
+          last_activity_at?: string
+          opened_at?: string
+          origin_city?: string | null
+          origin_postal_code?: string | null
+          origin_state?: string | null
+          owner_id?: string | null
+          pickup_date?: string | null
+          resolution?: Database["public"]["Enums"]["claim_resolution"] | null
+          resolution_notes?: string | null
+          shipment_value?: number | null
+          status_id: string
+          summary?: string | null
+          team_member_id?: string | null
+          tms_order_number?: string | null
+          trailer_type_id?: string | null
+          updated_at?: string
+          value_bucket?: Database["public"]["Enums"]["claim_value_bucket"]
+          value_bucket_manual?: boolean
         }
         Update: {
-          broker_id?: string
-          contact_date?: string
-          created_at?: string | null
-          customer_id?: string
-          duration_seconds?: number | null
+          acknowledged_at?: string | null
+          bol_number?: string | null
+          claim_number?: string
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          damage_claim_amount?: number | null
+          delivery_date?: string | null
+          destination_city?: string | null
+          destination_postal_code?: string | null
+          destination_state?: string | null
+          freight_type_id?: string | null
           id?: string
-          metadata?: Json | null
-          notes?: string | null
-          outcome?: string | null
-          subject?: string
-          type?: string
+          incident_date?: string | null
+          intake_source?: Database["public"]["Enums"]["claim_intake_source"]
+          intake_submission_id?: string | null
+          internal_description?: string | null
+          last_activity_at?: string
+          opened_at?: string
+          origin_city?: string | null
+          origin_postal_code?: string | null
+          origin_state?: string | null
+          owner_id?: string | null
+          pickup_date?: string | null
+          resolution?: Database["public"]["Enums"]["claim_resolution"] | null
+          resolution_notes?: string | null
+          shipment_value?: number | null
+          status_id?: string
+          summary?: string | null
+          team_member_id?: string | null
+          tms_order_number?: string | null
+          trailer_type_id?: string | null
+          updated_at?: string
+          value_bucket?: Database["public"]["Enums"]["claim_value_bucket"]
+          value_bucket_manual?: boolean
         }
         Relationships: [
           {
-            foreignKeyName: "contact_log_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "claims_broker_id_fkey"
+            columns: ["team_member_id"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "contact_log_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "contact_log_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "claims_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "contact_log_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: "claims_freight_type_id_fkey"
+            columns: ["freight_type_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "freight_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_intake_submission_id_fkey"
+            columns: ["intake_submission_id"]
+            isOneToOne: false
+            referencedRelation: "claim_intake_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "claim_statuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_trailer_type_id_fkey"
+            columns: ["trailer_type_id"]
+            isOneToOne: false
+            referencedRelation: "trailer_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          dba_name: string | null
+          dot_number: string | null
+          external_source: string | null
+          has_active_hold: boolean
+          id: string
+          is_active: boolean
+          kinds: Database["public"]["Enums"]["company_kind"][]
+          legal_name: string
+          mc_number: string | null
+          notes: string | null
+          postal_code: string | null
+          primary_email: string | null
+          primary_phone: string | null
+          scac: string | null
+          state: string | null
+          street_1: string | null
+          street_2: string | null
+          tms_external_id: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          dba_name?: string | null
+          dot_number?: string | null
+          external_source?: string | null
+          has_active_hold?: boolean
+          id?: string
+          is_active?: boolean
+          kinds?: Database["public"]["Enums"]["company_kind"][]
+          legal_name: string
+          mc_number?: string | null
+          notes?: string | null
+          postal_code?: string | null
+          primary_email?: string | null
+          primary_phone?: string | null
+          scac?: string | null
+          state?: string | null
+          street_1?: string | null
+          street_2?: string | null
+          tms_external_id?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          dba_name?: string | null
+          dot_number?: string | null
+          external_source?: string | null
+          has_active_hold?: boolean
+          id?: string
+          is_active?: boolean
+          kinds?: Database["public"]["Enums"]["company_kind"][]
+          legal_name?: string
+          mc_number?: string | null
+          notes?: string | null
+          postal_code?: string | null
+          primary_email?: string | null
+          primary_phone?: string | null
+          scac?: string | null
+          state?: string | null
+          street_1?: string | null
+          street_2?: string | null
+          tms_external_id?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      correspondence_log: {
+        Row: {
+          ai_action_items: Json | null
+          ai_summary: string | null
+          body: string | null
+          call_duration_seconds: number | null
+          call_recording_url: string | null
+          cc_addresses: string[] | null
+          channel: Database["public"]["Enums"]["correspondence_channel"]
+          claim_id: string
+          created_at: string
+          direction: Database["public"]["Enums"]["correspondence_direction"]
+          email_message_id: string | null
+          email_thread_id: string | null
+          goto_call_id: string | null
+          id: string
+          logged_by: string | null
+          occurred_at: string
+          party_id: string | null
+          requires_human_review: boolean
+          subject: string | null
+          to_addresses: string[] | null
+        }
+        Insert: {
+          ai_action_items?: Json | null
+          ai_summary?: string | null
+          body?: string | null
+          call_duration_seconds?: number | null
+          call_recording_url?: string | null
+          cc_addresses?: string[] | null
+          channel: Database["public"]["Enums"]["correspondence_channel"]
+          claim_id: string
+          created_at?: string
+          direction: Database["public"]["Enums"]["correspondence_direction"]
+          email_message_id?: string | null
+          email_thread_id?: string | null
+          goto_call_id?: string | null
+          id?: string
+          logged_by?: string | null
+          occurred_at?: string
+          party_id?: string | null
+          requires_human_review?: boolean
+          subject?: string | null
+          to_addresses?: string[] | null
+        }
+        Update: {
+          ai_action_items?: Json | null
+          ai_summary?: string | null
+          body?: string | null
+          call_duration_seconds?: number | null
+          call_recording_url?: string | null
+          cc_addresses?: string[] | null
+          channel?: Database["public"]["Enums"]["correspondence_channel"]
+          claim_id?: string
+          created_at?: string
+          direction?: Database["public"]["Enums"]["correspondence_direction"]
+          email_message_id?: string | null
+          email_thread_id?: string | null
+          goto_call_id?: string | null
+          id?: string
+          logged_by?: string | null
+          occurred_at?: string
+          party_id?: string | null
+          requires_human_review?: boolean
+          subject?: string | null
+          to_addresses?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "correspondence_log_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "correspondence_log_logged_by_fkey"
+            columns: ["logged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "correspondence_log_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "claim_parties"
             referencedColumns: ["id"]
           },
         ]
       }
       cron_config: {
         Row: {
-          key: string
-          updated_at: string | null
-          value: string
-        }
-        Insert: {
-          key: string
-          updated_at?: string | null
-          value: string
-        }
-        Update: {
-          key?: string
-          updated_at?: string | null
-          value?: string
-        }
-        Relationships: []
-      }
-      customer_attachments: {
-        Row: {
-          customer_id: string
-          file_name: string
-          file_path: string
-          file_size: number
-          file_type: string
-          id: string
-          notes: string | null
-          uploaded_at: string | null
-          uploaded_by: string
-        }
-        Insert: {
-          customer_id: string
-          file_name: string
-          file_path: string
-          file_size: number
-          file_type: string
-          id?: string
-          notes?: string | null
-          uploaded_at?: string | null
-          uploaded_by: string
-        }
-        Update: {
-          customer_id?: string
-          file_name?: string
-          file_path?: string
-          file_size?: number
-          file_type?: string
-          id?: string
-          notes?: string | null
-          uploaded_at?: string | null
-          uploaded_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_attachments_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_attachments_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "customer_attachments_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_attachments_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_collaborators: {
-        Row: {
-          access_level: string
-          active: boolean | null
-          broker_id: string
-          created_at: string | null
-          customer_id: string
-          id: string
-          invited_by: string | null
-          joined_at: string | null
-          role: string
-          updated_at: string | null
-        }
-        Insert: {
-          access_level?: string
-          active?: boolean | null
-          broker_id: string
-          created_at?: string | null
-          customer_id: string
-          id?: string
-          invited_by?: string | null
-          joined_at?: string | null
-          role?: string
-          updated_at?: string | null
-        }
-        Update: {
-          access_level?: string
-          active?: boolean | null
-          broker_id?: string
-          created_at?: string | null
-          customer_id?: string
-          id?: string
-          invited_by?: string | null
-          joined_at?: string | null
-          role?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_collaborators_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "customer_collaborators_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_collaborators_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_collaborators_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_collaborators_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "customer_collaborators_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_collaborators_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_statuses: {
-        Row: {
-          broker_id: string
-          color: string
-          created_at: string | null
-          created_by: string | null
-          id: string
-          is_system: boolean | null
-          name: string
-          order: number
-          updated_at: string | null
-        }
-        Insert: {
-          broker_id: string
-          color?: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          is_system?: boolean | null
-          name: string
-          order?: number
-          updated_at?: string | null
-        }
-        Update: {
-          broker_id?: string
-          color?: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          is_system?: boolean | null
-          name?: string
-          order?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_statuses_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "customer_statuses_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_statuses_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_statuses_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "customer_statuses_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_statuses_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customers: {
-        Row: {
-          address: string | null
-          address_2: string | null
-          broker_id: string | null
-          business_name: string | null
-          city: string | null
-          city_2: string | null
-          contact_name: string | null
-          created_at: string | null
-          customer_id: string
-          email: string | null
-          email2: string | null
-          estimated_value: number | null
-          facebook_url: string | null
-          first_name: string | null
-          first_name2: string | null
-          id: string
-          import_metadata: Json | null
-          import_source: string | null
-          imported_by: string | null
-          industry: string | null
-          instagram_url: string | null
-          is_pinned: boolean | null
-          job_title: string | null
-          job_title2: string | null
-          last_contact_date: string | null
-          last_name: string | null
-          last_name2: string | null
-          linkedin_url: string | null
-          next_follow_up_date: string | null
-          next_follow_up_type: string | null
-          notes: string | null
-          office_location: string | null
-          on_kanban_board: boolean | null
-          opportunity_type: string | null
-          phone: string | null
-          phone_2: string | null
-          phone_2_ext: string | null
-          phone_3: string | null
-          phone_3_ext: string | null
-          phone_ext: string | null
-          phone2: string | null
-          phone2_ext: string | null
-          pin_order: number | null
-          shipping_frequency: string | null
-          state: string | null
-          state_2: string | null
-          status: string
-          status_id: string | null
-          tms_account_id: string | null
-          twitter_url: string | null
-          updated_at: string | null
-          url: string | null
-          url_1: string | null
-          website_url: string | null
-          zip: string | null
-          zip_2: string | null
-        }
-        Insert: {
-          address?: string | null
-          address_2?: string | null
-          broker_id?: string | null
-          business_name?: string | null
-          city?: string | null
-          city_2?: string | null
-          contact_name?: string | null
-          created_at?: string | null
-          customer_id?: string
-          email?: string | null
-          email2?: string | null
-          estimated_value?: number | null
-          facebook_url?: string | null
-          first_name?: string | null
-          first_name2?: string | null
-          id?: string
-          import_metadata?: Json | null
-          import_source?: string | null
-          imported_by?: string | null
-          industry?: string | null
-          instagram_url?: string | null
-          is_pinned?: boolean | null
-          job_title?: string | null
-          job_title2?: string | null
-          last_contact_date?: string | null
-          last_name?: string | null
-          last_name2?: string | null
-          linkedin_url?: string | null
-          next_follow_up_date?: string | null
-          next_follow_up_type?: string | null
-          notes?: string | null
-          office_location?: string | null
-          on_kanban_board?: boolean | null
-          opportunity_type?: string | null
-          phone?: string | null
-          phone_2?: string | null
-          phone_2_ext?: string | null
-          phone_3?: string | null
-          phone_3_ext?: string | null
-          phone_ext?: string | null
-          phone2?: string | null
-          phone2_ext?: string | null
-          pin_order?: number | null
-          shipping_frequency?: string | null
-          state?: string | null
-          state_2?: string | null
-          status?: string
-          status_id?: string | null
-          tms_account_id?: string | null
-          twitter_url?: string | null
-          updated_at?: string | null
-          url?: string | null
-          url_1?: string | null
-          website_url?: string | null
-          zip?: string | null
-          zip_2?: string | null
-        }
-        Update: {
-          address?: string | null
-          address_2?: string | null
-          broker_id?: string | null
-          business_name?: string | null
-          city?: string | null
-          city_2?: string | null
-          contact_name?: string | null
-          created_at?: string | null
-          customer_id?: string
-          email?: string | null
-          email2?: string | null
-          estimated_value?: number | null
-          facebook_url?: string | null
-          first_name?: string | null
-          first_name2?: string | null
-          id?: string
-          import_metadata?: Json | null
-          import_source?: string | null
-          imported_by?: string | null
-          industry?: string | null
-          instagram_url?: string | null
-          is_pinned?: boolean | null
-          job_title?: string | null
-          job_title2?: string | null
-          last_contact_date?: string | null
-          last_name?: string | null
-          last_name2?: string | null
-          linkedin_url?: string | null
-          next_follow_up_date?: string | null
-          next_follow_up_type?: string | null
-          notes?: string | null
-          office_location?: string | null
-          on_kanban_board?: boolean | null
-          opportunity_type?: string | null
-          phone?: string | null
-          phone_2?: string | null
-          phone_2_ext?: string | null
-          phone_3?: string | null
-          phone_3_ext?: string | null
-          phone_ext?: string | null
-          phone2?: string | null
-          phone2_ext?: string | null
-          pin_order?: number | null
-          shipping_frequency?: string | null
-          state?: string | null
-          state_2?: string | null
-          status?: string
-          status_id?: string | null
-          tms_account_id?: string | null
-          twitter_url?: string | null
-          updated_at?: string | null
-          url?: string | null
-          url_1?: string | null
-          website_url?: string | null
-          zip?: string | null
-          zip_2?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customers_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "customers_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customers_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customers_imported_by_fkey"
-            columns: ["imported_by"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "customers_imported_by_fkey"
-            columns: ["imported_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customers_imported_by_fkey"
-            columns: ["imported_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customers_status_id_fkey"
-            columns: ["status_id"]
-            isOneToOne: false
-            referencedRelation: "customer_statuses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      dialer_ai_preferences: {
-        Row: {
-          auto_advance_delay_sec: number
-          broker_id: string
-          manual_advance: boolean
-          post_email_draft: boolean
-          post_performance: boolean
-          post_sms_draft: boolean
-          post_suggest_followup: boolean
-          post_tips: boolean
-          pre_call_brief: boolean
-          updated_at: string
-        }
-        Insert: {
-          auto_advance_delay_sec?: number
-          broker_id: string
-          manual_advance?: boolean
-          post_email_draft?: boolean
-          post_performance?: boolean
-          post_sms_draft?: boolean
-          post_suggest_followup?: boolean
-          post_tips?: boolean
-          pre_call_brief?: boolean
-          updated_at?: string
-        }
-        Update: {
-          auto_advance_delay_sec?: number
-          broker_id?: string
-          manual_advance?: boolean
-          post_email_draft?: boolean
-          post_performance?: boolean
-          post_sms_draft?: boolean
-          post_suggest_followup?: boolean
-          post_tips?: boolean
-          pre_call_brief?: boolean
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      dialer_call_logs: {
-        Row: {
-          ai_feedback: Json | null
-          broker_id: string
-          contact_id: string | null
-          contact_snapshot: Json
-          created_at: string
-          duration_seconds: number | null
-          follow_up_at: string | null
-          goto_call_id: string | null
-          id: string
-          notes: string | null
-          outcome: string | null
-          pre_call_brief: string | null
-          session_id: string
-        }
-        Insert: {
-          ai_feedback?: Json | null
-          broker_id: string
-          contact_id?: string | null
-          contact_snapshot: Json
-          created_at?: string
-          duration_seconds?: number | null
-          follow_up_at?: string | null
-          goto_call_id?: string | null
-          id?: string
-          notes?: string | null
-          outcome?: string | null
-          pre_call_brief?: string | null
-          session_id: string
-        }
-        Update: {
-          ai_feedback?: Json | null
-          broker_id?: string
-          contact_id?: string | null
-          contact_snapshot?: Json
-          created_at?: string
-          duration_seconds?: number | null
-          follow_up_at?: string | null
-          goto_call_id?: string | null
-          id?: string
-          notes?: string | null
-          outcome?: string | null
-          pre_call_brief?: string | null
-          session_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dialer_call_logs_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "dialer_contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "dialer_call_logs_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "dialer_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      dialer_contacts: {
-        Row: {
-          broker_id: string
-          city: string | null
-          company: string | null
-          created_at: string
-          email: string | null
-          id: string
-          industry: string | null
-          list_id: string
-          name: string
-          notes: string | null
-          phone: string | null
-          state: string | null
-          tags: string[] | null
-          title: string | null
-          updated_at: string
-        }
-        Insert: {
-          broker_id: string
-          city?: string | null
-          company?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          industry?: string | null
-          list_id: string
-          name: string
-          notes?: string | null
-          phone?: string | null
-          state?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string
-        }
-        Update: {
-          broker_id?: string
-          city?: string | null
-          company?: string | null
-          created_at?: string
-          email?: string | null
-          id?: string
-          industry?: string | null
-          list_id?: string
-          name?: string
-          notes?: string | null
-          phone?: string | null
-          state?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dialer_contacts_list_id_fkey"
-            columns: ["list_id"]
-            isOneToOne: false
-            referencedRelation: "dialer_lists"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      dialer_lists: {
-        Row: {
-          broker_id: string
-          created_at: string
           description: string | null
-          id: string
-          name: string
+          is_enabled: boolean
+          key: string
+          last_error: string | null
+          last_run_at: string | null
+          last_status: string | null
+          schedule: string
           updated_at: string
         }
         Insert: {
-          broker_id: string
-          created_at?: string
           description?: string | null
-          id?: string
-          name: string
+          is_enabled?: boolean
+          key: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          schedule: string
           updated_at?: string
         }
         Update: {
-          broker_id?: string
-          created_at?: string
           description?: string | null
-          id?: string
-          name?: string
+          is_enabled?: boolean
+          key?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          schedule?: string
           updated_at?: string
         }
         Relationships: []
-      }
-      dialer_sessions: {
-        Row: {
-          broker_id: string
-          contacts_snapshot: Json | null
-          ended_at: string | null
-          id: string
-          list_id: string | null
-          mode: string
-          started_at: string
-          total_calls: number
-          total_connected: number
-        }
-        Insert: {
-          broker_id: string
-          contacts_snapshot?: Json | null
-          ended_at?: string | null
-          id?: string
-          list_id?: string | null
-          mode: string
-          started_at?: string
-          total_calls?: number
-          total_connected?: number
-        }
-        Update: {
-          broker_id?: string
-          contacts_snapshot?: Json | null
-          ended_at?: string | null
-          id?: string
-          list_id?: string | null
-          mode?: string
-          started_at?: string
-          total_calls?: number
-          total_connected?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dialer_sessions_list_id_fkey"
-            columns: ["list_id"]
-            isOneToOne: false
-            referencedRelation: "dialer_lists"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       email_config: {
         Row: {
-          bcc_emails: string[] | null
-          cc_emails: string[] | null
-          created_at: string | null
           from_email: string
           from_name: string
-          id: string
-          mailjet_api_key: string | null
-          mailjet_secret_key: string | null
-          provider_priority: Json
-          sendgrid_api_key: string | null
+          id: number
+          is_active: boolean
+          provider: string
+          reply_to_email: string | null
+          sendgrid_api_key_enc: string | null
           smtp_host: string | null
-          smtp_password: string | null
+          smtp_pass_enc: string | null
           smtp_port: number | null
-          smtp_secure: boolean | null
           smtp_user: string | null
-          updated_at: string | null
+          updated_at: string
           updated_by: string | null
         }
         Insert: {
-          bcc_emails?: string[] | null
-          cc_emails?: string[] | null
-          created_at?: string | null
           from_email: string
-          from_name: string
-          id?: string
-          mailjet_api_key?: string | null
-          mailjet_secret_key?: string | null
-          provider_priority?: Json
-          sendgrid_api_key?: string | null
+          from_name?: string
+          id?: number
+          is_active?: boolean
+          provider?: string
+          reply_to_email?: string | null
+          sendgrid_api_key_enc?: string | null
           smtp_host?: string | null
-          smtp_password?: string | null
+          smtp_pass_enc?: string | null
           smtp_port?: number | null
-          smtp_secure?: boolean | null
           smtp_user?: string | null
-          updated_at?: string | null
+          updated_at?: string
           updated_by?: string | null
         }
         Update: {
-          bcc_emails?: string[] | null
-          cc_emails?: string[] | null
-          created_at?: string | null
           from_email?: string
           from_name?: string
-          id?: string
-          mailjet_api_key?: string | null
-          mailjet_secret_key?: string | null
-          provider_priority?: Json
-          sendgrid_api_key?: string | null
+          id?: number
+          is_active?: boolean
+          provider?: string
+          reply_to_email?: string | null
+          sendgrid_api_key_enc?: string | null
           smtp_host?: string | null
-          smtp_password?: string | null
+          smtp_pass_enc?: string | null
           smtp_port?: number | null
-          smtp_secure?: boolean | null
           smtp_user?: string | null
-          updated_at?: string | null
+          updated_at?: string
           updated_by?: string | null
-        }
-        Relationships: []
-      }
-      email_templates: {
-        Row: {
-          body: string
-          broker_id: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          is_system: boolean | null
-          name: string
-          subject: string
-          template_type: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          body: string
-          broker_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_system?: boolean | null
-          name: string
-          subject: string
-          template_type?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          body?: string
-          broker_id?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_system?: boolean | null
-          name?: string
-          subject?: string
-          template_type?: string | null
-          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "email_templates_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "email_config_updated_by_fkey"
+            columns: ["updated_by"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "email_templates_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body_html: string
+          body_text: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_system: boolean
+          key: string
+          name: string
+          subject: string
+          template_type: string
+          updated_at: string
+          variables: Json
+        }
+        Insert: {
+          body_html: string
+          body_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          key: string
+          name: string
+          subject: string
+          template_type: string
+          updated_at?: string
+          variables?: Json
+        }
+        Update: {
+          body_html?: string
+          body_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          key?: string
+          name?: string
+          subject?: string
+          template_type?: string
+          updated_at?: string
+          variables?: Json
+        }
+        Relationships: [
           {
-            foreignKeyName: "email_templates_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "email_templates_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       feedback: {
         Row: {
-          admin_notes: string | null
-          attachment_name: string | null
-          attachment_path: string | null
-          attachment_size: number | null
-          attachment_type: string | null
-          broker_email: string | null
-          broker_id: string | null
-          broker_name: string | null
-          category: string | null
-          created_at: string | null
-          id: string
-          is_reviewed: boolean | null
-          message: string
-          page_context: string | null
-          rating: number | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          user_agent: string | null
-        }
-        Insert: {
-          admin_notes?: string | null
-          attachment_name?: string | null
-          attachment_path?: string | null
-          attachment_size?: number | null
-          attachment_type?: string | null
-          broker_email?: string | null
-          broker_id?: string | null
-          broker_name?: string | null
-          category?: string | null
-          created_at?: string | null
-          id?: string
-          is_reviewed?: boolean | null
-          message: string
-          page_context?: string | null
-          rating?: number | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          user_agent?: string | null
-        }
-        Update: {
-          admin_notes?: string | null
-          attachment_name?: string | null
-          attachment_path?: string | null
-          attachment_size?: number | null
-          attachment_type?: string | null
-          broker_email?: string | null
-          broker_id?: string | null
-          broker_name?: string | null
-          category?: string | null
-          created_at?: string | null
-          id?: string
-          is_reviewed?: boolean | null
-          message?: string
-          page_context?: string | null
-          rating?: number | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          user_agent?: string | null
-        }
-        Relationships: []
-      }
-      game_high_scores: {
-        Row: {
-          broker_id: string | null
+          body: string
+          category: string
           created_at: string
           id: string
-          initials: string
-          score: number
+          page_url: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          screenshot_url: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
-          broker_id?: string | null
+          body: string
+          category: string
           created_at?: string
           id?: string
-          initials: string
-          score: number
+          page_url?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
-          broker_id?: string | null
+          body?: string
+          category?: string
           created_at?: string
           id?: string
-          initials?: string
-          score?: number
+          page_url?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screenshot_url?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "game_high_scores_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "feedback_resolved_by_fkey"
+            columns: ["resolved_by"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "game_high_scores_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "game_high_scores_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "feedback_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      goto_connections: {
+      freight_types: {
         Row: {
-          access_token: string
-          account_key: string | null
           created_at: string
-          expires_at: string
-          goto_user_email: string | null
-          goto_user_key: string | null
           id: string
-          is_admin_token: boolean
-          numeric_account_key: string | null
-          preferred_device_id: string | null
-          refresh_token: string
-          updated_at: string
-          user_id: string
+          is_active: boolean
+          name: string
+          position: number
         }
         Insert: {
-          access_token: string
-          account_key?: string | null
           created_at?: string
-          expires_at: string
-          goto_user_email?: string | null
-          goto_user_key?: string | null
           id?: string
-          is_admin_token?: boolean
-          numeric_account_key?: string | null
-          preferred_device_id?: string | null
-          refresh_token: string
-          updated_at?: string
-          user_id: string
+          is_active?: boolean
+          name: string
+          position?: number
         }
         Update: {
-          access_token?: string
-          account_key?: string | null
           created_at?: string
-          expires_at?: string
-          goto_user_email?: string | null
-          goto_user_key?: string | null
           id?: string
-          is_admin_token?: boolean
-          numeric_account_key?: string | null
-          preferred_device_id?: string | null
-          refresh_token?: string
-          updated_at?: string
-          user_id?: string
+          is_active?: boolean
+          name?: string
+          position?: number
         }
         Relationships: []
       }
-      lane_templates: {
+      goto_admin_token: {
         Row: {
-          broker_id: string
-          created_at: string
-          destination_zip: string
-          height_ft: number
-          id: string
-          length_ft: number
-          make_model: string | null
-          name: string
-          origin_zip: string
-          trailer_id: string
+          access_token_enc: string
+          expires_at: string | null
+          id: number
+          refresh_token_enc: string
           updated_at: string
-          weight_lbs: number
-          width_ft: number
         }
         Insert: {
-          broker_id: string
-          created_at?: string
-          destination_zip: string
-          height_ft?: number
-          id?: string
-          length_ft?: number
-          make_model?: string | null
-          name: string
-          origin_zip: string
-          trailer_id: string
+          access_token_enc: string
+          expires_at?: string | null
+          id?: number
+          refresh_token_enc: string
           updated_at?: string
-          weight_lbs?: number
-          width_ft?: number
         }
         Update: {
-          broker_id?: string
-          created_at?: string
-          destination_zip?: string
-          height_ft?: number
-          id?: string
-          length_ft?: number
-          make_model?: string | null
-          name?: string
-          origin_zip?: string
-          trailer_id?: string
+          access_token_enc?: string
+          expires_at?: string | null
+          id?: number
+          refresh_token_enc?: string
           updated_at?: string
-          weight_lbs?: number
-          width_ft?: number
+        }
+        Relationships: []
+      }
+      goto_connections: {
+        Row: {
+          access_token_enc: string
+          created_at: string
+          expires_at: string | null
+          goto_account_key: string | null
+          goto_user_email: string | null
+          id: string
+          preferred_device_id: string | null
+          refresh_token_enc: string
+          scopes: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_enc: string
+          created_at?: string
+          expires_at?: string | null
+          goto_account_key?: string | null
+          goto_user_email?: string | null
+          id?: string
+          preferred_device_id?: string | null
+          refresh_token_enc: string
+          scopes?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_enc?: string
+          created_at?: string
+          expires_at?: string | null
+          goto_account_key?: string | null
+          goto_user_email?: string | null
+          id?: string
+          preferred_device_id?: string | null
+          refresh_token_enc?: string
+          scopes?: string[] | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "lane_templates_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
+            foreignKeyName: "goto_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
+        ]
+      }
+      intake_tokens: {
+        Row: {
+          assigned_company_id: string | null
+          assigned_team_member_id: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["intake_token_kind"]
+          label: string
+          last_used_at: string | null
+          max_uses: number | null
+          token_hash: string
+          token_prefix: string
+          use_count: number
+        }
+        Insert: {
+          assigned_company_id?: string | null
+          assigned_team_member_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          kind: Database["public"]["Enums"]["intake_token_kind"]
+          label: string
+          last_used_at?: string | null
+          max_uses?: number | null
+          token_hash: string
+          token_prefix: string
+          use_count?: number
+        }
+        Update: {
+          assigned_company_id?: string | null
+          assigned_team_member_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["intake_token_kind"]
+          label?: string
+          last_used_at?: string | null
+          max_uses?: number | null
+          token_hash?: string
+          token_prefix?: string
+          use_count?: number
+        }
+        Relationships: [
           {
-            foreignKeyName: "lane_templates_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "intake_tokens_assigned_broker_id_fkey"
+            columns: ["assigned_team_member_id"]
             isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "lane_templates_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "intake_tokens_assigned_company_id_fkey"
+            columns: ["assigned_company_id"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_tokens_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
       notifications: {
         Row: {
-          broker_id: string | null
-          created_at: string | null
-          customer_id: string | null
+          body: string | null
+          channel: string
+          created_at: string
+          delivered_at: string | null
           id: string
-          is_archived: boolean | null
-          is_read: boolean | null
-          link_url: string | null
-          message: string
+          link: string | null
           read_at: string | null
-          scheduled_for: string | null
-          task_id: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
           title: string
           type: string
+          user_id: string
         }
         Insert: {
-          broker_id?: string | null
-          created_at?: string | null
-          customer_id?: string | null
+          body?: string | null
+          channel?: string
+          created_at?: string
+          delivered_at?: string | null
           id?: string
-          is_archived?: boolean | null
-          is_read?: boolean | null
-          link_url?: string | null
-          message: string
+          link?: string | null
           read_at?: string | null
-          scheduled_for?: string | null
-          task_id?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
           title: string
           type: string
+          user_id: string
         }
         Update: {
-          broker_id?: string | null
-          created_at?: string | null
-          customer_id?: string | null
+          body?: string | null
+          channel?: string
+          created_at?: string
+          delivered_at?: string | null
           id?: string
-          is_archived?: boolean | null
-          is_read?: boolean | null
-          link_url?: string | null
-          message?: string
+          link?: string | null
           read_at?: string | null
-          scheduled_for?: string | null
-          task_id?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
           title?: string
           type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "notifications_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      nts_support_history: {
-        Row: {
-          broker_id: string
-          confidence: string | null
-          content: string
-          conversation_id: string
-          created_at: string | null
-          id: string
-          is_archived: boolean | null
-          page_path: string | null
-          role: string
-          topics: string[] | null
-          web_search_used: boolean | null
-        }
-        Insert: {
-          broker_id: string
-          confidence?: string | null
-          content: string
-          conversation_id: string
-          created_at?: string | null
-          id?: string
-          is_archived?: boolean | null
-          page_path?: string | null
-          role: string
-          topics?: string[] | null
-          web_search_used?: boolean | null
-        }
-        Update: {
-          broker_id?: string
-          confidence?: string | null
-          content?: string
-          conversation_id?: string
-          created_at?: string | null
-          id?: string
-          is_archived?: boolean | null
-          page_path?: string | null
-          role?: string
-          topics?: string[] | null
-          web_search_used?: boolean | null
-        }
-        Relationships: []
-      }
-      performance_overrides: {
-        Row: {
-          created_at: string | null
-          display_name_override: string | null
-          goto_user_email: string
-          goto_user_key: string | null
-          id: string
-          is_excluded: boolean
-          notes: string | null
-          office_location: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          display_name_override?: string | null
-          goto_user_email: string
-          goto_user_key?: string | null
-          id?: string
-          is_excluded?: boolean
-          notes?: string | null
-          office_location?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          display_name_override?: string | null
-          goto_user_email?: string
-          goto_user_key?: string | null
-          id?: string
-          is_excluded?: boolean
-          notes?: string | null
-          office_location?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      permit_corrections: {
-        Row: {
-          additional_context: string | null
-          broker_email: string | null
-          broker_name: string | null
-          correction_type: string
-          id: string
-          reported_at: string
-          reported_by_broker_id: string
-          reported_cost: string | null
-          reported_notes: string | null
-          reported_time: string | null
-          review_notes: string | null
-          reviewed_at: string | null
-          reviewed_by_broker_id: string | null
-          state: string
-          status: string
-        }
-        Insert: {
-          additional_context?: string | null
-          broker_email?: string | null
-          broker_name?: string | null
-          correction_type: string
-          id?: string
-          reported_at?: string
-          reported_by_broker_id: string
-          reported_cost?: string | null
-          reported_notes?: string | null
-          reported_time?: string | null
-          review_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by_broker_id?: string | null
-          state: string
-          status?: string
-        }
-        Update: {
-          additional_context?: string | null
-          broker_email?: string | null
-          broker_name?: string | null
-          correction_type?: string
-          id?: string
-          reported_at?: string
-          reported_by_broker_id?: string
-          reported_cost?: string | null
-          reported_notes?: string | null
-          reported_time?: string | null
-          review_notes?: string | null
-          reviewed_at?: string | null
-          reviewed_by_broker_id?: string | null
-          state?: string
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "permit_corrections_reported_by_broker_id_fkey"
-            columns: ["reported_by_broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "permit_corrections_reported_by_broker_id_fkey"
-            columns: ["reported_by_broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "permit_corrections_reported_by_broker_id_fkey"
-            columns: ["reported_by_broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "permit_corrections_reviewed_by_broker_id_fkey"
-            columns: ["reviewed_by_broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "permit_corrections_reviewed_by_broker_id_fkey"
-            columns: ["reviewed_by_broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "permit_corrections_reviewed_by_broker_id_fkey"
-            columns: ["reviewed_by_broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      power_dialer_events: {
-        Row: {
-          call_id: string
-          created_at: string
-          customer_id: string | null
-          customer_phone: string | null
-          event_type: string
-          id: string
-          raw_payload: Json | null
-          user_id: string
-        }
-        Insert: {
-          call_id: string
-          created_at?: string
-          customer_id?: string | null
-          customer_phone?: string | null
-          event_type: string
-          id?: string
-          raw_payload?: Json | null
-          user_id: string
-        }
-        Update: {
-          call_id?: string
-          created_at?: string
-          customer_id?: string | null
-          customer_phone?: string | null
-          event_type?: string
-          id?: string
-          raw_payload?: Json | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "power_dialer_events_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      sales_group_members: {
+      profiles: {
         Row: {
-          added_at: string | null
-          added_by: string | null
-          broker_id: string
-          group_id: string
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          full_name: string | null
           id: string
+          is_active: boolean
+          is_remote: boolean
+          last_active_at: string | null
+          last_name: string | null
+          office_location: string | null
+          phone: string | null
+          preferences: Json
+          role: Database["public"]["Enums"]["user_role"]
+          team_member_id: string | null
+          timezone: string
+          updated_at: string
         }
         Insert: {
-          added_at?: string | null
-          added_by?: string | null
-          broker_id: string
-          group_id: string
-          id?: string
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          id: string
+          is_active?: boolean
+          is_remote?: boolean
+          last_active_at?: string | null
+          last_name?: string | null
+          office_location?: string | null
+          phone?: string | null
+          preferences?: Json
+          role?: Database["public"]["Enums"]["user_role"]
+          team_member_id?: string | null
+          timezone?: string
+          updated_at?: string
         }
         Update: {
-          added_at?: string | null
-          added_by?: string | null
-          broker_id?: string
-          group_id?: string
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          full_name?: string | null
           id?: string
+          is_active?: boolean
+          is_remote?: boolean
+          last_active_at?: string | null
+          last_name?: string | null
+          office_location?: string | null
+          phone?: string | null
+          preferences?: Json
+          role?: Database["public"]["Enums"]["user_role"]
+          team_member_id?: string | null
+          timezone?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sales_group_members_added_by_fkey"
-            columns: ["added_by"]
+            foreignKeyName: "profiles_broker_id_fkey"
+            columns: ["team_member_id"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "sales_group_members_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_group_members_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_group_members_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "sales_group_members_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_group_members_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_group_members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "sales_groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sales_groups: {
-        Row: {
-          created_at: string | null
-          created_by: string
-          description: string | null
-          group_type: string
-          id: string
-          is_active: boolean | null
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by: string
-          description?: string | null
-          group_type?: string
-          id?: string
-          is_active?: boolean | null
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string
-          description?: string | null
-          group_type?: string
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sales_groups_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "sales_groups_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sales_groups_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      task_assignments: {
-        Row: {
-          accepted_at: string | null
-          assignee_id: string
-          assigner_id: string
-          assignment_type: string
-          contribution_notes: string | null
-          contribution_value: number | null
-          created_at: string | null
-          decline_reason: string | null
-          declined_at: string | null
-          id: string
-          is_mandatory: boolean | null
-          last_contribution_at: string | null
-          status: string
-          task_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          accepted_at?: string | null
-          assignee_id: string
-          assigner_id: string
-          assignment_type: string
-          contribution_notes?: string | null
-          contribution_value?: number | null
-          created_at?: string | null
-          decline_reason?: string | null
-          declined_at?: string | null
-          id?: string
-          is_mandatory?: boolean | null
-          last_contribution_at?: string | null
-          status?: string
-          task_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          accepted_at?: string | null
-          assignee_id?: string
-          assigner_id?: string
-          assignment_type?: string
-          contribution_notes?: string | null
-          contribution_value?: number | null
-          created_at?: string | null
-          decline_reason?: string | null
-          declined_at?: string | null
-          id?: string
-          is_mandatory?: boolean | null
-          last_contribution_at?: string | null
-          status?: string
-          task_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_assignments_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assigner_id_fkey"
-            columns: ["assigner_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assigner_id_fkey"
-            columns: ["assigner_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_assigner_id_fkey"
-            columns: ["assigner_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_assignments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
         ]
       }
       task_templates: {
         Row: {
-          broker_id: string | null
-          created_at: string | null
+          created_at: string
+          default_body: string | null
+          default_due_offset: string | null
+          default_priority: Database["public"]["Enums"]["task_priority"]
+          default_title: string
           description: string | null
-          due_date_offset: string | null
-          due_time: string | null
           id: string
+          is_active: boolean
           name: string
-          priority: string | null
-          reminder_days: number[] | null
-          type: string
-          updated_at: string | null
+          task_type: Database["public"]["Enums"]["task_type"]
+          trigger_on_status: string | null
+          updated_at: string
         }
         Insert: {
-          broker_id?: string | null
-          created_at?: string | null
+          created_at?: string
+          default_body?: string | null
+          default_due_offset?: string | null
+          default_priority?: Database["public"]["Enums"]["task_priority"]
+          default_title: string
           description?: string | null
-          due_date_offset?: string | null
-          due_time?: string | null
           id?: string
+          is_active?: boolean
           name: string
-          priority?: string | null
-          reminder_days?: number[] | null
-          type: string
-          updated_at?: string | null
+          task_type: Database["public"]["Enums"]["task_type"]
+          trigger_on_status?: string | null
+          updated_at?: string
         }
         Update: {
-          broker_id?: string | null
-          created_at?: string | null
+          created_at?: string
+          default_body?: string | null
+          default_due_offset?: string | null
+          default_priority?: Database["public"]["Enums"]["task_priority"]
+          default_title?: string
           description?: string | null
-          due_date_offset?: string | null
-          due_time?: string | null
           id?: string
+          is_active?: boolean
           name?: string
-          priority?: string | null
-          reminder_days?: number[] | null
-          type?: string
-          updated_at?: string | null
+          task_type?: Database["public"]["Enums"]["task_type"]
+          trigger_on_status?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "task_templates_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "task_templates_trigger_on_status_fkey"
+            columns: ["trigger_on_status"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "task_templates_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_templates_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "claim_statuses"
             referencedColumns: ["id"]
           },
         ]
       }
       tasks: {
         Row: {
-          broker_id: string | null
+          assigned_to: string | null
+          claim_id: string
           completed_at: string | null
+          completed_by: string | null
           completion_notes: string | null
-          completion_outcome: string | null
-          created_at: string | null
+          created_at: string
           created_by: string | null
-          customer_id: string | null
           description: string | null
-          due_date: string
-          due_time: string | null
-          follow_up_task_id: string | null
+          due_at: string | null
           id: string
-          last_reminder_sent_date: string | null
-          priority: string | null
-          reminder_days: number[] | null
-          reminder_sent: boolean | null
-          reminder_sent_at: string | null
-          requires_acceptance: boolean | null
-          status: string
-          task_category: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          status: Database["public"]["Enums"]["task_status"]
+          template_id: string | null
           title: string
-          type: string
-          updated_at: string | null
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at: string
         }
         Insert: {
-          broker_id?: string | null
+          assigned_to?: string | null
+          claim_id: string
           completed_at?: string | null
+          completed_by?: string | null
           completion_notes?: string | null
-          completion_outcome?: string | null
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
-          customer_id?: string | null
           description?: string | null
-          due_date: string
-          due_time?: string | null
-          follow_up_task_id?: string | null
+          due_at?: string | null
           id?: string
-          last_reminder_sent_date?: string | null
-          priority?: string | null
-          reminder_days?: number[] | null
-          reminder_sent?: boolean | null
-          reminder_sent_at?: string | null
-          requires_acceptance?: boolean | null
-          status?: string
-          task_category?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          template_id?: string | null
           title: string
-          type: string
-          updated_at?: string | null
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
         }
         Update: {
-          broker_id?: string | null
+          assigned_to?: string | null
+          claim_id?: string
           completed_at?: string | null
+          completed_by?: string | null
           completion_notes?: string | null
-          completion_outcome?: string | null
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
-          customer_id?: string | null
           description?: string | null
-          due_date?: string
-          due_time?: string | null
-          follow_up_task_id?: string | null
+          due_at?: string | null
           id?: string
-          last_reminder_sent_date?: string | null
-          priority?: string | null
-          reminder_days?: number[] | null
-          reminder_sent?: boolean | null
-          reminder_sent_at?: string | null
-          requires_acceptance?: boolean | null
-          status?: string
-          task_category?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          template_id?: string | null
           title?: string
-          type?: string
-          updated_at?: string | null
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "tasks_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "tasks_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tasks_broker_id_fkey"
-            columns: ["broker_id"]
+            foreignKeyName: "tasks_claim_id_fkey"
+            columns: ["claim_id"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "claims"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tasks_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "tasks_completed_by_fkey"
+            columns: ["completed_by"]
             isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "brokers"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tasks_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "public_broker_pages"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tasks_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: "tasks_template_id_fkey"
+            columns: ["template_id"]
             isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tasks_follow_up_task_id_fkey"
-            columns: ["follow_up_task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
+            referencedRelation: "task_templates"
             referencedColumns: ["id"]
           },
         ]
       }
-      team_tasks: {
+      team_members: {
         Row: {
-          allow_self_join: boolean | null
-          created_at: string | null
-          current_value: number | null
-          department: string | null
-          goal_type: string
+          brand: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          external_sales_tracker_id: string | null
+          external_synced_at: string | null
+          first_name: string
           id: string
-          is_public: boolean | null
+          is_active: boolean
+          job_title: string | null
+          last_name: string
+          notes: string | null
           office_location: string | null
-          target_value: number
-          task_id: string
-          team_scope: string
-          unit: string | null
-          updated_at: string | null
+          phone: string | null
+          source: Database["public"]["Enums"]["team_member_source"]
+          updated_at: string
         }
         Insert: {
-          allow_self_join?: boolean | null
-          created_at?: string | null
-          current_value?: number | null
-          department?: string | null
-          goal_type: string
+          brand?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          external_sales_tracker_id?: string | null
+          external_synced_at?: string | null
+          first_name: string
           id?: string
-          is_public?: boolean | null
+          is_active?: boolean
+          job_title?: string | null
+          last_name: string
+          notes?: string | null
           office_location?: string | null
-          target_value: number
-          task_id: string
-          team_scope: string
-          unit?: string | null
-          updated_at?: string | null
+          phone?: string | null
+          source?: Database["public"]["Enums"]["team_member_source"]
+          updated_at?: string
         }
         Update: {
-          allow_self_join?: boolean | null
-          created_at?: string | null
-          current_value?: number | null
-          department?: string | null
-          goal_type?: string
+          brand?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          external_sales_tracker_id?: string | null
+          external_synced_at?: string | null
+          first_name?: string
           id?: string
-          is_public?: boolean | null
+          is_active?: boolean
+          job_title?: string | null
+          last_name?: string
+          notes?: string | null
           office_location?: string | null
-          target_value?: number
-          task_id?: string
-          team_scope?: string
-          unit?: string | null
-          updated_at?: string | null
+          phone?: string | null
+          source?: Database["public"]["Enums"]["team_member_source"]
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "team_tasks_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: true
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      tms_references: {
+      trailer_types: {
         Row: {
-          broker_id: string
-          created_at: string | null
-          customer_id: string
-          external_id: string
+          created_at: string
           id: string
-          label: string | null
-          type: Database["public"]["Enums"]["tms_reference_type"]
+          is_active: boolean
+          name: string
+          position: number
         }
         Insert: {
-          broker_id: string
-          created_at?: string | null
-          customer_id: string
-          external_id: string
+          created_at?: string
           id?: string
-          label?: string | null
-          type: Database["public"]["Enums"]["tms_reference_type"]
+          is_active?: boolean
+          name: string
+          position?: number
         }
         Update: {
-          broker_id?: string
-          created_at?: string | null
-          customer_id?: string
-          external_id?: string
+          created_at?: string
           id?: string
-          label?: string | null
-          type?: Database["public"]["Enums"]["tms_reference_type"]
+          is_active?: boolean
+          name?: string
+          position?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "tms_references_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "tms_references_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tms_references_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: false
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tms_references_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_preferences: {
-        Row: {
-          broker_id: string
-          created_at: string | null
-          default_view: string | null
-          digest_time: string | null
-          email_notifications_enabled: boolean | null
-          id: string
-          imports_column_order: Json | null
-          imports_visible_columns: Json | null
-          in_app_notifications_enabled: boolean | null
-          items_per_page: number | null
-          kanban_column_order: Json | null
-          kanban_visible_fields: Json | null
-          last_digest_sent_date: string | null
-          reminder_hours_before: number | null
-          show_archived: boolean | null
-          timezone: string
-          updated_at: string | null
-        }
-        Insert: {
-          broker_id: string
-          created_at?: string | null
-          default_view?: string | null
-          digest_time?: string | null
-          email_notifications_enabled?: boolean | null
-          id?: string
-          imports_column_order?: Json | null
-          imports_visible_columns?: Json | null
-          in_app_notifications_enabled?: boolean | null
-          items_per_page?: number | null
-          kanban_column_order?: Json | null
-          kanban_visible_fields?: Json | null
-          last_digest_sent_date?: string | null
-          reminder_hours_before?: number | null
-          show_archived?: boolean | null
-          timezone?: string
-          updated_at?: string | null
-        }
-        Update: {
-          broker_id?: string
-          created_at?: string | null
-          default_view?: string | null
-          digest_time?: string | null
-          email_notifications_enabled?: boolean | null
-          id?: string
-          imports_column_order?: Json | null
-          imports_visible_columns?: Json | null
-          in_app_notifications_enabled?: boolean | null
-          items_per_page?: number | null
-          kanban_column_order?: Json | null
-          kanban_visible_fields?: Json | null
-          last_digest_sent_date?: string | null
-          reminder_hours_before?: number | null
-          show_archived?: boolean | null
-          timezone?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_preferences_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "broker_customer_summary"
-            referencedColumns: ["broker_id"]
-          },
-          {
-            foreignKeyName: "user_preferences_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "brokers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_preferences_broker_id_fkey"
-            columns: ["broker_id"]
-            isOneToOne: true
-            referencedRelation: "public_broker_pages"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
-      audit_logs_readable: {
-        Row: {
-          action: string | null
-          action_category: string | null
-          actor_email: string | null
-          actor_name: string | null
-          actor_role: string | null
-          created_at: string | null
-          description: string | null
-          details: Json | null
-          id: string | null
-          ip_address: string | null
-          severity: string | null
-          success: boolean | null
-          target_broker_email: string | null
-          target_broker_name: string | null
-        }
-        Insert: {
-          action?: string | null
-          action_category?: string | null
-          actor_email?: string | null
-          actor_name?: string | null
-          actor_role?: string | null
-          created_at?: string | null
-          description?: never
-          details?: Json | null
-          id?: string | null
-          ip_address?: never
-          severity?: string | null
-          success?: boolean | null
-          target_broker_email?: string | null
-          target_broker_name?: string | null
-        }
-        Update: {
-          action?: string | null
-          action_category?: string | null
-          actor_email?: string | null
-          actor_name?: string | null
-          actor_role?: string | null
-          created_at?: string | null
-          description?: never
-          details?: Json | null
-          id?: string | null
-          ip_address?: never
-          severity?: string | null
-          success?: boolean | null
-          target_broker_email?: string | null
-          target_broker_name?: string | null
-        }
-        Relationships: []
-      }
-      broker_customer_summary: {
-        Row: {
-          active_customers: number | null
-          broker_id: string | null
-          email: string | null
-          first_name: string | null
-          full_name: string | null
-          is_admin: boolean | null
-          is_manager: boolean | null
-          last_name: string | null
-          lost_count: number | null
-          office_location: string | null
-          prospects: number | null
-          total_customers: number | null
-          win_rate_pct: number | null
-          won_count: number | null
-        }
-        Relationships: []
-      }
-      cron_job_status: {
-        Row: {
-          active: boolean | null
-          command: string | null
-          database: string | null
-          jobid: number | null
-          jobname: string | null
-          nodename: string | null
-          nodeport: number | null
-          schedule: string | null
-          username: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          command?: string | null
-          database?: string | null
-          jobid?: number | null
-          jobname?: string | null
-          nodename?: string | null
-          nodeport?: number | null
-          schedule?: string | null
-          username?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          command?: string | null
-          database?: string | null
-          jobid?: number | null
-          jobname?: string | null
-          nodename?: string | null
-          nodeport?: number | null
-          schedule?: string | null
-          username?: string | null
-        }
-        Relationships: []
-      }
-      office_customer_summary: {
-        Row: {
-          active_count: number | null
-          lost_count: number | null
-          office_location: string | null
-          prospect_count: number | null
-          total_customers: number | null
-          win_rate_pct: number | null
-          won_count: number | null
-        }
-        Relationships: []
-      }
-      public_broker_pages: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          first_name: string | null
-          headline: string | null
-          id: string | null
-          landing_config_approved: Json | null
-          landing_status: string | null
-          last_name: string | null
-          linkedin_url: string | null
-          office_location: string | null
-          phone: string | null
-          profile_slug: string | null
-          specialties: string[] | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          first_name?: string | null
-          headline?: string | null
-          id?: string | null
-          landing_config_approved?: Json | null
-          landing_status?: string | null
-          last_name?: string | null
-          linkedin_url?: string | null
-          office_location?: string | null
-          phone?: string | null
-          profile_slug?: string | null
-          specialties?: string[] | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          first_name?: string | null
-          headline?: string | null
-          id?: string | null
-          landing_config_approved?: Json | null
-          landing_status?: string | null
-          last_name?: string | null
-          linkedin_url?: string | null
-          office_location?: string | null
-          phone?: string | null
-          profile_slug?: string | null
-          specialties?: string[] | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      accept_task_assignment: {
-        Args: { assignment_id: string }
-        Returns: undefined
-      }
-      cleanup_old_audit_logs: {
-        Args: { retention_days?: number }
-        Returns: number
-      }
-      create_task_reminders: { Args: never; Returns: undefined }
-      decline_task_assignment: {
-        Args: { assignment_id: string; reason?: string }
-        Returns: undefined
-      }
-      generate_customer_id: { Args: never; Returns: string }
-      get_api_url: { Args: never; Returns: string }
-      get_my_broker_role: {
+      can_see_claim: { Args: { target_claim_id: string }; Returns: boolean }
+      can_write_claim: { Args: { target_claim_id: string }; Returns: boolean }
+      current_user_broker_id: { Args: never; Returns: string }
+      current_user_role: {
         Args: never
-        Returns: {
-          is_admin_val: boolean
-          is_manager_val: boolean
-          office_val: string
-        }[]
+        Returns: Database["public"]["Enums"]["user_role"]
       }
-      get_unread_notification_count: { Args: never; Returns: number }
-      get_user_statuses: {
-        Args: never
-        Returns: {
-          color: string
-          customer_count: number
-          id: string
-          is_system: boolean
-          name: string
-          order: number
-        }[]
+      current_user_team_member_id: { Args: never; Returns: string }
+      generate_claim_number: {
+        Args: { opened_at_in?: string }
+        Returns: string
       }
-      increment_call_quality_score: {
+      is_admin: { Args: never; Returns: boolean }
+      is_admin_or_manager: { Args: never; Returns: boolean }
+      profile_role_unchanged: {
         Args: {
-          p_broker_id: string
-          p_calls_analyzed: number
-          p_questions_hit: number
+          new_role: Database["public"]["Enums"]["user_role"]
+          target_id: string
         }
-        Returns: undefined
+        Returns: boolean
       }
-      log_team_progress: {
-        Args: { p_notes?: string; p_task_id: string; p_value: number }
-        Returns: undefined
-      }
-      mark_overdue_tasks: { Args: never; Returns: undefined }
-      set_admin_permissions: { Args: { admin_id: string }; Returns: undefined }
-      set_manager_permissions: {
-        Args: { manager_id: string }
-        Returns: undefined
-      }
-      trigger_daily_digest_check: { Args: never; Returns: undefined }
-      trigger_task_reminder_check: { Args: never; Returns: undefined }
-      trigger_task_reminders_check: { Args: never; Returns: undefined }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
-      task_type_enum:
-        | "internal_reminder"
-        | "call"
+      audit_action:
+        | "insert"
+        | "update"
+        | "delete"
+        | "status_change"
+        | "hold_requested"
+        | "hold_approved"
+        | "hold_released"
+        | "document_uploaded"
+        | "correspondence_logged"
+        | "claim_closed"
+        | "claim_reopened"
+      carrier_hold_status:
+        | "requested"
+        | "approved"
+        | "active"
+        | "released"
+        | "denied_approval"
+      carrier_hold_type:
+        | "do_not_pay"
+        | "payment_hold"
+        | "dispatch_hold"
+        | "monitoring_only"
+      claim_intake_source:
+        | "web_form"
+        | "branded_link"
+        | "api"
+        | "email"
+        | "phone"
+        | "freightclaims_legacy"
+        | "manual"
+      claim_party_role:
+        | "shipper"
+        | "customer"
+        | "consignee"
+        | "carrier"
+        | "factoring"
+        | "accounts_payable"
+        | "insurer"
+        | "broker_of_record"
+      claim_resolution:
+        | "paid_full"
+        | "paid_partial"
+        | "denied"
+        | "withdrawn"
+        | "recovered"
+        | "concession"
+      claim_value_bucket: "current" | "credit_high_value" | "legal"
+      company_kind:
+        | "shipper"
+        | "carrier"
+        | "factoring"
+        | "accounts_payable"
+        | "insurer"
+        | "broker_agency"
+        | "other"
+      correspondence_channel:
+        | "phone"
         | "email"
         | "sms"
-        | "meeting"
-        | "decision_day"
-        | "price_check_in"
-        | "rate_reevaluation"
-        | "reactivation"
-        | "linkedin_connection"
-        | "linkedin_message"
-        | "video_shoutout"
-        | "service_feedback"
-        | "follow_up"
+        | "letter"
+        | "in_person"
+        | "system"
+      correspondence_direction: "inbound" | "outbound" | "internal"
+      document_source:
+        | "intake_form"
+        | "email_attachment"
+        | "manual_upload"
+        | "goto_recording"
+        | "ai_generated"
+        | "system"
+      document_type:
+        | "bill_of_lading"
+        | "proof_of_delivery"
+        | "damage_photo"
+        | "pickup_photo"
+        | "delivery_photo"
+        | "video"
+        | "repair_estimate"
+        | "replacement_invoice"
+        | "witness_statement"
+        | "presentation_of_loss"
+        | "release"
+        | "settlement_agreement"
+        | "payment_confirmation"
+        | "insurance_doc"
+        | "claim_form"
+        | "correspondence_attachment"
         | "other"
-      tms_reference_type: "account" | "order" | "quote"
+      intake_submission_status:
+        | "pending_review"
+        | "promoted"
+        | "rejected"
+        | "duplicate"
+      intake_token_kind: "branded_link" | "api"
+      task_priority: "low" | "normal" | "high" | "critical"
+      task_status:
+        | "open"
+        | "in_progress"
+        | "blocked"
+        | "completed"
+        | "cancelled"
+      task_type:
+        | "send_acknowledgment"
+        | "request_bol"
+        | "request_pod"
+        | "request_photos"
+        | "request_repair_estimate"
+        | "request_presentation_of_loss"
+        | "request_witness_statement"
+        | "follow_up_shipper"
+        | "follow_up_customer"
+        | "follow_up_carrier"
+        | "follow_up_factoring"
+        | "follow_up_accounts_payable"
+        | "follow_up_insurer"
+        | "internal_review"
+        | "manager_approval"
+        | "place_carrier_hold"
+        | "release_carrier_hold"
+        | "prepare_settlement"
+        | "close_claim"
+        | "other"
+      team_member_source:
+        | "manual"
+        | "csv_import"
+        | "sales_tracker_sync"
+        | "sso_provisioned"
+      user_role: "admin" | "manager" | "claims_staff" | "broker"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3354,24 +2199,143 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      task_type_enum: [
-        "internal_reminder",
-        "call",
+      audit_action: [
+        "insert",
+        "update",
+        "delete",
+        "status_change",
+        "hold_requested",
+        "hold_approved",
+        "hold_released",
+        "document_uploaded",
+        "correspondence_logged",
+        "claim_closed",
+        "claim_reopened",
+      ],
+      carrier_hold_status: [
+        "requested",
+        "approved",
+        "active",
+        "released",
+        "denied_approval",
+      ],
+      carrier_hold_type: [
+        "do_not_pay",
+        "payment_hold",
+        "dispatch_hold",
+        "monitoring_only",
+      ],
+      claim_intake_source: [
+        "web_form",
+        "branded_link",
+        "api",
         "email",
-        "sms",
-        "meeting",
-        "decision_day",
-        "price_check_in",
-        "rate_reevaluation",
-        "reactivation",
-        "linkedin_connection",
-        "linkedin_message",
-        "video_shoutout",
-        "service_feedback",
-        "follow_up",
+        "phone",
+        "freightclaims_legacy",
+        "manual",
+      ],
+      claim_party_role: [
+        "shipper",
+        "customer",
+        "consignee",
+        "carrier",
+        "factoring",
+        "accounts_payable",
+        "insurer",
+        "broker_of_record",
+      ],
+      claim_resolution: [
+        "paid_full",
+        "paid_partial",
+        "denied",
+        "withdrawn",
+        "recovered",
+        "concession",
+      ],
+      claim_value_bucket: ["current", "credit_high_value", "legal"],
+      company_kind: [
+        "shipper",
+        "carrier",
+        "factoring",
+        "accounts_payable",
+        "insurer",
+        "broker_agency",
         "other",
       ],
-      tms_reference_type: ["account", "order", "quote"],
+      correspondence_channel: [
+        "phone",
+        "email",
+        "sms",
+        "letter",
+        "in_person",
+        "system",
+      ],
+      correspondence_direction: ["inbound", "outbound", "internal"],
+      document_source: [
+        "intake_form",
+        "email_attachment",
+        "manual_upload",
+        "goto_recording",
+        "ai_generated",
+        "system",
+      ],
+      document_type: [
+        "bill_of_lading",
+        "proof_of_delivery",
+        "damage_photo",
+        "pickup_photo",
+        "delivery_photo",
+        "video",
+        "repair_estimate",
+        "replacement_invoice",
+        "witness_statement",
+        "presentation_of_loss",
+        "release",
+        "settlement_agreement",
+        "payment_confirmation",
+        "insurance_doc",
+        "claim_form",
+        "correspondence_attachment",
+        "other",
+      ],
+      intake_submission_status: [
+        "pending_review",
+        "promoted",
+        "rejected",
+        "duplicate",
+      ],
+      intake_token_kind: ["branded_link", "api"],
+      task_priority: ["low", "normal", "high", "critical"],
+      task_status: ["open", "in_progress", "blocked", "completed", "cancelled"],
+      task_type: [
+        "send_acknowledgment",
+        "request_bol",
+        "request_pod",
+        "request_photos",
+        "request_repair_estimate",
+        "request_presentation_of_loss",
+        "request_witness_statement",
+        "follow_up_shipper",
+        "follow_up_customer",
+        "follow_up_carrier",
+        "follow_up_factoring",
+        "follow_up_accounts_payable",
+        "follow_up_insurer",
+        "internal_review",
+        "manager_approval",
+        "place_carrier_hold",
+        "release_carrier_hold",
+        "prepare_settlement",
+        "close_claim",
+        "other",
+      ],
+      team_member_source: [
+        "manual",
+        "csv_import",
+        "sales_tracker_sync",
+        "sso_provisioned",
+      ],
+      user_role: ["admin", "manager", "claims_staff", "broker"],
     },
   },
 } as const

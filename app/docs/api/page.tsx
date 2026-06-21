@@ -17,8 +17,8 @@ const NAV_SECTIONS = [
     { method: "PUT", path: "/api/v1/customers/:id", label: "Update Customer" },
     { method: "DELETE", path: "/api/v1/customers/:id", label: "Delete Customer" },
   ]},
-  { id: "brokers", label: "Brokers API", endpoints: [
-    { method: "GET", path: "/api/v1/brokers", label: "List Brokers" },
+  { id: "teamMembers", label: "TeamMembers API", endpoints: [
+    { method: "GET", path: "/api/v1/team-members", label: "List TeamMembers" },
   ]},
   { id: "tasks", label: "Tasks API", endpoints: [
     { method: "GET", path: "/api/v1/tasks", label: "List Tasks" },
@@ -131,7 +131,7 @@ export default function ApiDocsPage() {
             <AuthenticationSection />
             <SchemasSection />
             <CustomersSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
-            <BrokersSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
+            <TeamMembersSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
             <TasksSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
             <UnassignedSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
             <SmsCampaignSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
@@ -382,7 +382,7 @@ function PlaygroundPanel({ baseUrl, activeEndpoint }: { baseUrl: string; activeE
                   </div>
                 </>
               )}
-              {path.includes("/brokers") && (
+              {path.includes("/team-members") && (
                 <>
                   <div>
                     <label className="mb-1 block text-xs text-slate-600">office_location</label>
@@ -724,7 +724,7 @@ function SchemasSection() {
         </p>
       </div>
       <div className="mt-3 rounded-lg border border-slate-200 p-4">
-        <h3 className="mb-2 font-semibold text-slate-900">Broker Object</h3>
+        <h3 className="mb-2 font-semibold text-slate-900">TeamMember Object</h3>
         <p className="text-sm text-slate-600">
           Key fields: <code className="text-xs">id</code>, <code className="text-xs">first_name</code>, <code className="text-xs">last_name</code>, 
           <code className="text-xs">email</code>, <code className="text-xs">office_location</code>, <code className="text-xs">territory</code>, <code className="text-xs">is_active</code>
@@ -745,15 +745,15 @@ function CustomersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoin
         <CopySectionButton sectionId="customers" />
       </div>
       
-      {/* broker_id behavior explanation */}
+      {/* team_member_id behavior explanation */}
       <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <h3 className="mb-2 font-semibold text-blue-900">Assigning Customers to Brokers</h3>
+        <h3 className="mb-2 font-semibold text-blue-900">Assigning Customers to TeamMembers</h3>
         <div className="space-y-2 text-sm text-blue-800">
           <p><strong>When creating customers, you have 3 options:</strong></p>
           <ul className="ml-4 list-disc space-y-1">
-            <li><code className="rounded bg-blue-100 px-1">broker_id: null</code> - Create unassigned contact for distribution (import pool)</li>
-            <li><code className="rounded bg-blue-100 px-1">broker_id: "uuid"</code> - Assign directly to a specific broker</li>
-            <li><em>Omit broker_id</em> - Defaults to the API token owner (backward compatibility)</li>
+            <li><code className="rounded bg-blue-100 px-1">team_member_id: null</code> - Create unassigned contact for distribution (import pool)</li>
+            <li><code className="rounded bg-blue-100 px-1">team_member_id: "uuid"</code> - Assign directly to a specific teamMember</li>
+            <li><em>Omit team_member_id</em> - Defaults to the API token owner (backward compatibility)</li>
           </ul>
           <p className="mt-3 text-xs">
             💡 <strong>Tip:</strong> For bulk imports, use <code className="rounded bg-blue-100 px-1">POST /api/v1/unassigned_contacts</code> 
@@ -775,7 +775,7 @@ function CustomersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoin
         method="POST"
         path="/api/v1/customers"
         title="Create a customer"
-        description="Create a new customer. Include 'broker_id: null' for unassigned contacts, or a broker UUID to assign directly. Omit broker_id to default to token owner."
+        description="Create a new customer. Include 'team_member_id: null' for unassigned contacts, or a team member UUID to assign directly. Omit team_member_id to default to token owner."
         active={activeEndpoint === "POST /api/v1/customers"}
         onClick={() => setActiveEndpoint("POST /api/v1/customers")}
         scope="customers:create"
@@ -784,17 +784,17 @@ function CustomersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoin
   );
 }
 
-function BrokersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint: string; setActiveEndpoint: (e: string) => void }) {
+function TeamMembersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint: string; setActiveEndpoint: (e: string) => void }) {
   return (
-    <section id="brokers" className="mb-12 scroll-mt-6">
+    <section id="teamMembers" className="mb-12 scroll-mt-6">
       <div className="mb-4 flex items-start justify-between gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Brokers API</h2>
-        <CopySectionButton sectionId="brokers" />
+        <h2 className="text-2xl font-bold text-slate-900">TeamMembers API</h2>
+        <CopySectionButton sectionId="teamMembers" />
       </div>
       <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <h3 className="mb-2 font-semibold text-blue-900">Broker Assignment</h3>
+        <h3 className="mb-2 font-semibold text-blue-900">TeamMember Assignment</h3>
         <p className="text-sm text-blue-800">
-          Use this endpoint to retrieve active broker profiles for customer assignment. The broker <code className="rounded bg-blue-100 px-1">id</code> returned here is used as <code className="rounded bg-blue-100 px-1">broker_id</code> when creating or updating customers.
+          Use this endpoint to retrieve active team member profiles for customer assignment. The teamMember <code className="rounded bg-blue-100 px-1">id</code> returned here is used as <code className="rounded bg-blue-100 px-1">team_member_id</code> when creating or updating customers.
         </p>
         <p className="mt-2 text-sm text-blue-800">
           <strong>Note:</strong> Sensitive fields (is_admin, is_manager, phone) are excluded from API responses.
@@ -802,12 +802,12 @@ function BrokersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint:
       </div>
       <EndpointDoc
         method="GET"
-        path="/api/v1/brokers"
-        title="List active brokers"
-        description="Retrieve active broker profiles for customer assignment. Supports filtering by office_location, search (name/email), and include_inactive flag. Returns: id, first_name, last_name, email, office_location, territory, is_active."
-        active={activeEndpoint === "GET /api/v1/brokers"}
-        onClick={() => setActiveEndpoint("GET /api/v1/brokers")}
-        scope="brokers:read"
+        path="/api/v1/team-members"
+        title="List active team members"
+        description="Retrieve active team member profiles for customer assignment. Supports filtering by office_location, search (name/email), and include_inactive flag. Returns: id, first_name, last_name, email, office_location, territory, is_active."
+        active={activeEndpoint === "GET /api/v1/team-members"}
+        onClick={() => setActiveEndpoint("GET /api/v1/team-members")}
+        scope="team_members:read"
       />
     </section>
   );
@@ -824,7 +824,7 @@ function TasksSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint: s
         method="GET"
         path="/api/v1/tasks"
         title="List all tasks"
-        description="Retrieve a paginated list of tasks. Supports filtering by status, priority, type, customer_id, due_after, due_before. Returns tasks for the authenticated broker."
+        description="Retrieve a paginated list of tasks. Supports filtering by status, priority, type, customer_id, due_after, due_before. Returns tasks for the authenticated team member."
         active={activeEndpoint === "GET /api/v1/tasks"}
         onClick={() => setActiveEndpoint("GET /api/v1/tasks")}
         scope="tasks:read"
@@ -833,7 +833,7 @@ function TasksSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint: s
         method="GET"
         path="/api/v1/tasks/:id"
         title="Get single task"
-        description="Retrieve a specific task by ID. Returns 404 if task not found or doesn't belong to authenticated broker."
+        description="Retrieve a specific task by ID. Returns 404 if task not found or doesn't belong to authenticated team member."
         active={activeEndpoint === "GET /api/v1/tasks/:id"}
         onClick={() => setActiveEndpoint("GET /api/v1/tasks/:id")}
         scope="tasks:read"
@@ -842,7 +842,7 @@ function TasksSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint: s
         method="POST"
         path="/api/v1/tasks"
         title="Create a task"
-        description="Create a new task. Required fields: title, due_date. Task is automatically assigned to the authenticated broker."
+        description="Create a new task. Required fields: title, due_date. Task is automatically assigned to the authenticated team member."
         active={activeEndpoint === "POST /api/v1/tasks"}
         onClick={() => setActiveEndpoint("POST /api/v1/tasks")}
         scope="tasks:create"
@@ -851,7 +851,7 @@ function TasksSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint: s
         method="PUT"
         path="/api/v1/tasks/:id"
         title="Update task"
-        description="Update an existing task. Protected fields (id, broker_id, created_at) cannot be modified."
+        description="Update an existing task. Protected fields (id, team_member_id, created_at) cannot be modified."
         active={activeEndpoint === "PUT /api/v1/tasks/:id"}
         onClick={() => setActiveEndpoint("PUT /api/v1/tasks/:id")}
         scope="tasks:write"
@@ -860,7 +860,7 @@ function TasksSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoint: s
         method="DELETE"
         path="/api/v1/tasks/:id"
         title="Delete task"
-        description="Delete a task by ID. Returns 204 on success, 404 if task not found or doesn't belong to authenticated broker."
+        description="Delete a task by ID. Returns 204 on success, 404 if task not found or doesn't belong to authenticated team member."
         active={activeEndpoint === "DELETE /api/v1/tasks/:id"}
         onClick={() => setActiveEndpoint("DELETE /api/v1/tasks/:id")}
         scope="tasks:delete"
@@ -879,14 +879,14 @@ function UnassignedSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoi
       <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
         <h3 className="mb-2 font-semibold text-amber-900">Distribution Workflow</h3>
         <p className="mb-2 text-sm text-amber-800">
-          Unassigned contacts (broker_id = null) live in the import pool awaiting distribution to sales brokers.
+          Unassigned contacts (team_member_id = null) live in the import pool awaiting distribution to sales teamMembers.
         </p>
         <div className="mt-3 space-y-1 text-sm text-amber-800">
           <p><strong>Typical workflow:</strong></p>
           <ol className="ml-4 list-decimal space-y-1">
             <li>Import contacts via <code className="rounded bg-amber-100 px-1">POST /api/v1/unassigned_contacts</code></li>
             <li>View import pool via <code className="rounded bg-amber-100 px-1">GET /api/v1/unassigned_contacts</code></li>
-            <li>Assign to brokers via <code className="rounded bg-amber-100 px-1">PUT /api/v1/customers/:id</code> (set broker_id)</li>
+            <li>Assign to teamMembers via <code className="rounded bg-amber-100 px-1">PUT /api/v1/customers/:id</code> (set team_member_id)</li>
           </ol>
         </div>
       </div>
@@ -894,7 +894,7 @@ function UnassignedSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoi
         method="GET"
         path="/api/v1/unassigned_contacts"
         title="List unassigned contacts"
-        description="Retrieve all contacts from the import pool (broker_id = null). Supports filtering by import_source, city, state, industry, and search."
+        description="Retrieve all contacts from the import pool (team_member_id = null). Supports filtering by import_source, city, state, industry, and search."
         active={activeEndpoint === "GET /api/v1/unassigned_contacts"}
         onClick={() => setActiveEndpoint("GET /api/v1/unassigned_contacts")}
         scope="unassigned_contacts:read"
@@ -903,7 +903,7 @@ function UnassignedSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoi
         method="GET"
         path="/api/v1/unassigned_contacts/:id"
         title="Get unassigned contact"
-        description="Retrieve a specific unassigned contact by ID. Returns 404 if contact not found or already assigned to a broker."
+        description="Retrieve a specific unassigned contact by ID. Returns 404 if contact not found or already assigned to a team member."
         active={activeEndpoint === "GET /api/v1/unassigned_contacts/:id"}
         onClick={() => setActiveEndpoint("GET /api/v1/unassigned_contacts/:id")}
         scope="unassigned_contacts:read"
@@ -912,7 +912,7 @@ function UnassignedSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoi
         method="POST"
         path="/api/v1/unassigned_contacts"
         title="Import unassigned contact"
-        description="Create a contact in the import pool (broker_id = null). Ideal for bulk imports from external systems before distribution."
+        description="Create a contact in the import pool (team_member_id = null). Ideal for bulk imports from external systems before distribution."
         active={activeEndpoint === "POST /api/v1/unassigned_contacts"}
         onClick={() => setActiveEndpoint("POST /api/v1/unassigned_contacts")}
         scope="unassigned_contacts:create"
@@ -921,7 +921,7 @@ function UnassignedSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoi
         method="PUT"
         path="/api/v1/unassigned_contacts/:id"
         title="Update unassigned contact"
-        description="Update an unassigned contact. Can be used to assign to a broker by setting broker_id. Protected fields: id, created_at."
+        description="Update an unassigned contact. Can be used to assign to a team member by setting team_member_id. Protected fields: id, created_at."
         active={activeEndpoint === "PUT /api/v1/unassigned_contacts/:id"}
         onClick={() => setActiveEndpoint("PUT /api/v1/unassigned_contacts/:id")}
         scope="unassigned_contacts:write"
@@ -952,27 +952,27 @@ function SmsCampaignSection({ activeEndpoint, setActiveEndpoint }: { activeEndpo
         <p className="mb-3 text-sm text-purple-800">
           Use this endpoint to submit contacts and freight details gathered during SMS campaign conversations.
           The contact is automatically tagged with <code className="rounded bg-purple-100 px-1">import_source: &quot;NTS SMS Campaign&quot;</code>
-          and routed based on the <code className="rounded bg-purple-100 px-1">broker_id</code> field.
+          and routed based on the <code className="rounded bg-purple-100 px-1">team_member_id</code> field.
         </p>
         <div className="space-y-2 text-sm text-purple-800">
           <p><strong>Routing rules:</strong></p>
           <ul className="ml-4 list-disc space-y-1">
             <li>
-              <code className="rounded bg-purple-100 px-1">broker_id</code> provided →
-              assigned to that broker&apos;s <strong>Inbox</strong> on their kanban board
+              <code className="rounded bg-purple-100 px-1">team_member_id</code> provided →
+              assigned to that teamMember&apos;s <strong>Inbox</strong> on their kanban board
               (<code className="rounded bg-purple-100 px-1">status: &quot;inbox&quot;</code>,{" "}
               <code className="rounded bg-purple-100 px-1">on_kanban_board: true</code>)
             </li>
             <li>
-              <code className="rounded bg-purple-100 px-1">broker_id</code> omitted or <code className="rounded bg-purple-100 px-1">null</code> →
-              placed in <strong>Distribution Center</strong> (unassigned pool, <code className="rounded bg-purple-100 px-1">broker_id: null</code>)
+              <code className="rounded bg-purple-100 px-1">team_member_id</code> omitted or <code className="rounded bg-purple-100 px-1">null</code> →
+              placed in <strong>Distribution Center</strong> (unassigned pool, <code className="rounded bg-purple-100 px-1">team_member_id: null</code>)
             </li>
           </ul>
           <p className="mt-3">
-            <strong>Broker dropdown:</strong> Use{" "}
-            <code className="rounded bg-purple-100 px-1">GET /api/v1/brokers</code> to populate the broker
+            <strong>TeamMember dropdown:</strong> Use{" "}
+            <code className="rounded bg-purple-100 px-1">GET /api/v1/team-members</code> to populate the team member
             select list in your SMS form. The first option should be &quot;Unassigned&quot; (no{" "}
-            <code className="rounded bg-purple-100 px-1">broker_id</code>).
+            <code className="rounded bg-purple-100 px-1">team_member_id</code>).
           </p>
         </div>
       </div>
@@ -992,10 +992,10 @@ Content-Type: application/json
   "city": "Dallas",
   "state": "TX",
   "notes": "Hauls heavy equipment, needs monthly quote",
-  "broker_id": "<broker-uuid-from-GET-/api/v1/brokers>"
+  "team_member_id": "<team-member-uuid-from-GET-/api/v1/team-members>"
 }`}</pre>
         <p className="mt-3 text-xs text-slate-500">
-          Omit <code>broker_id</code> (or set to <code>null</code>) to route to the Distribution Center instead.
+          Omit <code>team_member_id</code> (or set to <code>null</code>) to route to the Distribution Center instead.
         </p>
       </div>
 
@@ -1034,7 +1034,7 @@ Content-Type: application/json
               <tr><td className="px-3 py-2 font-mono text-xs">industry</td><td className="px-3 py-2">string</td><td className="px-3 py-2">No</td><td className="px-3 py-2">Industry/commodity type</td></tr>
               <tr><td className="px-3 py-2 font-mono text-xs">shipping_frequency</td><td className="px-3 py-2">string</td><td className="px-3 py-2">No</td><td className="px-3 py-2">e.g. &quot;weekly&quot;, &quot;monthly&quot;</td></tr>
               <tr><td className="px-3 py-2 font-mono text-xs">notes</td><td className="px-3 py-2">string</td><td className="px-3 py-2">No</td><td className="px-3 py-2">Freight details / conversation notes</td></tr>
-              <tr><td className="px-3 py-2 font-mono text-xs">broker_id</td><td className="px-3 py-2">uuid | null</td><td className="px-3 py-2">No</td><td className="px-3 py-2">From GET /api/v1/brokers. Null = Distribution Center</td></tr>
+              <tr><td className="px-3 py-2 font-mono text-xs">team_member_id</td><td className="px-3 py-2">uuid | null</td><td className="px-3 py-2">No</td><td className="px-3 py-2">From GET /api/v1/team-members. Null = Distribution Center</td></tr>
             </tbody>
           </table>
         </div>
@@ -1046,7 +1046,7 @@ Content-Type: application/json
         method="POST"
         path="/api/v1/sms-campaign-contact"
         title="Submit SMS campaign contact"
-        description="Ingest a contact from an SMS campaign conversation. Automatically tags with import_source='NTS SMS Campaign' and routes to broker Inbox (if broker_id provided) or Distribution Center (if unassigned)."
+        description="Ingest a contact from an SMS campaign conversation. Automatically tags with import_source='NTS SMS Campaign' and routes to team member Inbox (if team_member_id provided) or Distribution Center (if unassigned)."
         active={activeEndpoint === "POST /api/v1/sms-campaign-contact"}
         onClick={() => setActiveEndpoint("POST /api/v1/sms-campaign-contact")}
         scope="customers:create"

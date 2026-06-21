@@ -16,26 +16,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get current broker details
-    const { data: currentBroker, error: brokerError } = await supabase
-      .from("brokers")
+    // Get current team member details
+    const { data: currentTeamMember, error: teamMemberError } = await supabase
+      .from("team_members")
       .select("*")
       .eq("id", user.id)
       .single();
 
-    if (brokerError || !currentBroker) {
+    if (teamMemberError || !currentTeamMember) {
       return NextResponse.json(
-        { error: "Broker profile not found" },
+        { error: "TeamMember profile not found" },
         { status: 404 }
       );
     }
 
     // Parse request body
-    const { customerId, customerName, brokerIds, note } = await req.json();
+    const { customerId, customerName, teamMemberIds, note } = await req.json();
 
-    if (!customerId || !brokerIds || !Array.isArray(brokerIds) || brokerIds.length === 0) {
+    if (!customerId || !teamMemberIds || !Array.isArray(teamMemberIds) || teamMemberIds.length === 0) {
       return NextResponse.json(
-        { error: "Invalid request: customerId and brokerIds are required" },
+        { error: "Invalid request: customerId and teamMemberIds are required" },
         { status: 400 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     // Verify current user has access to this customer
     const { data: customer, error: customerError } = await supabase
       .from("customers")
-      .select("id, business_name, customer_id, broker_id")
+      .select("id, business_name, customer_id, team_member_id")
       .eq("id", customerId)
       .single();
 
@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
 
     // Check if user is admin, manager, or owns the customer
     const canShare =
-      currentBroker.is_admin ||
-      currentBroker.is_manager ||
-      customer.broker_id === currentBroker.id;
+      currentTeamMember.is_admin ||
+      currentTeamMember.is_manager ||
+      customer.team_member_id === currentTeamMember.id;
 
     if (!canShare) {
       return NextResponse.json(
@@ -67,11 +67,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch recipient broker details
+    // Fetch recipient teamMember details
     const { data: recipients, error: recipientsError } = await supabase
-      .from("brokers")
+      .from("team_members")
       .select("id, first_name, last_name, email")
-      .in("id", brokerIds)
+      .in("id", teamMemberIds)
       .eq("is_active", true);
 
     if (recipientsError || !recipients || recipients.length === 0) {
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     // Send email to each recipient
     const emailPromises = recipients.map(async (recipient) => {
       const recipientFullName = `${recipient.first_name} ${recipient.last_name || ''}`.trim();
-      const senderFullName = `${currentBroker.first_name} ${currentBroker.last_name || ''}`.trim();
+      const senderFullName = `${currentTeamMember.first_name} ${currentTeamMember.last_name || ''}`.trim();
       const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -195,9 +195,9 @@ export async function POST(req: NextRequest) {
     try {
       await supabase.from("contact_log").insert({
         customer_id: customer.id,
-        broker_id: currentBroker.id,
+        team_member_id: currentTeamMember.id,
         type: "other",
-        subject: `Shared with ${recipients.length} broker(s)`,
+        subject: `Shared with ${recipients.length} team member(s)`,
         notes: note
           ? `${note}\n\nShared with: ${recipients.map((r) => `${r.first_name} ${r.last_name || ''}`.trim()).join(", ")}`
           : `Shared with: ${recipients.map((r) => `${r.first_name} ${r.last_name || ''}`.trim()).join(", ")}`,

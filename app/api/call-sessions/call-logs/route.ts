@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const row: Record<string, unknown> = {
-        broker_id: user.id,
+        team_member_id: user.id,
         session_id: body.session_id,
         contact_id: body.contact_id ?? null,
         contact_snapshot: body.contact_snapshot,

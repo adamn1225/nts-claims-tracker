@@ -79,7 +79,7 @@ export default function ApiTokenManagement() {
       : null;
 
     const { error } = await supabase.from("api_tokens").insert({
-      broker_id: user.id,
+      team_member_id: user.id,
       name,
       token_hash: tokenHash,
       token_prefix: tokenPrefix,

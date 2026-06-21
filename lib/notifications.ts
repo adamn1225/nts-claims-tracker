@@ -10,7 +10,7 @@ export interface OverdueTask {
   due_date: string;
   due_time?: string;
   customer_id?: string;
-  broker_id: string;
+  team_member_id: string;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface OverdueTask {
  * Creates a new notification each day for tasks that remain overdue
  * This should be called periodically (e.g., daily cron job, on page load)
  */
-export async function generateOverdueNotifications(brokerId: string) {
+export async function generateOverdueNotifications(teamMemberId: string) {
   const supabase = createClient();
 
   try {
@@ -29,8 +29,8 @@ export async function generateOverdueNotifications(brokerId: string) {
     // Find tasks that are overdue and not cancelled/completed
     const { data: overdueTasks, error: tasksError } = await supabase
       .from("tasks")
-      .select("id, title, due_date, due_time, customer_id, broker_id")
-      .eq("broker_id", brokerId)
+      .select("id, title, due_date, due_time, customer_id, team_member_id")
+      .eq("team_member_id", teamMemberId)
       .in("status", ["pending", "overdue"])
       .or(
         `due_date.lt.${today},and(due_date.eq.${today},due_time.lt.${currentTime})`,
@@ -50,7 +50,7 @@ export async function generateOverdueNotifications(brokerId: string) {
     const { data: todaysNotifications, error: notifError } = await supabase
       .from("notifications")
       .select("task_id")
-      .eq("broker_id", brokerId)
+      .eq("team_member_id", teamMemberId)
       .eq("type", "task_reminder")
       .in(
         "task_id",
@@ -78,7 +78,7 @@ export async function generateOverdueNotifications(brokerId: string) {
         );
 
         return {
-          broker_id: task.broker_id,
+          team_member_id: task.team_member_id,
           task_id: task.id,
           customer_id: task.customer_id || null,
           type: "task_reminder",
@@ -134,7 +134,7 @@ export async function checkAndNotifyOverdueFollowUp(
   customerId: string,
   customerName: string,
   followUpDate: string,
-  brokerId: string,
+  teamMemberId: string,
 ) {
   const supabase = createClient();
 
@@ -147,7 +147,7 @@ export async function checkAndNotifyOverdueFollowUp(
 
   // Create overdue follow-up notification
   const { error } = await supabase.from("notifications").insert({
-    broker_id: brokerId,
+    team_member_id: teamMemberId,
     customer_id: customerId,
     type: "customer_update",
     title: "Overdue Follow-Up",

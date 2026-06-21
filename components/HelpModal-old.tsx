@@ -123,7 +123,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 Welcome to NTS Claims Tracker!
               </strong>
               <br />
-              This CRM helps freight brokers manage customer relationships,
+              This CRM helps freight team members manage customer relationships,
               track tasks, and never miss a follow-up. Here are some quick tips
               to get started.
             </p>

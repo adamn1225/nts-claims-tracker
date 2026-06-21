@@ -83,10 +83,10 @@ const ADMIN_ACTIONS: QuickAction[] = [
     prompt: "How do I schedule and enable maintenance mode, and notify users?",
   },
   {
-    id: "brokers",
-    label: "Manage brokers",
+    id: "teamMembers",
+    label: "Manage team members",
     icon: Users,
-    prompt: "How do I add, deactivate, or change roles/permissions for brokers?",
+    prompt: "How do I add, deactivate, or change roles/permissions for team members?",
   },
   {
     id: "email",
@@ -104,7 +104,7 @@ const ADMIN_ACTIONS: QuickAction[] = [
     id: "analytics",
     label: "Read analytics",
     icon: BarChart3,
-    prompt: "Help me interpret the company and broker activity analytics.",
+    prompt: "Help me interpret the company and team member activity analytics.",
   },
 ];
 

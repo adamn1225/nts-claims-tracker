@@ -57,16 +57,16 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Check broker account status and profile completeness
+  // Check profile completeness + account status
   if (user) {
-    const { data: broker } = await supabase
-      .from("brokers")
+    const { data: profile } = await supabase
+      .from("profiles")
       .select("is_active, first_name, last_name, office_location")
       .eq("id", user.id)
       .single();
 
     // If account is deactivated, sign them out immediately
-    if (broker && broker.is_active === false) {
+    if (profile && profile.is_active === false) {
       console.log(`Deactivated account attempted login: ${user.email}`);
       await supabase.auth.signOut();
       const url = request.nextUrl.clone();
@@ -77,15 +77,15 @@ export async function updateSession(request: NextRequest) {
       return response;
     }
 
-    // If broker profile is incomplete OR missing entirely, force them to complete it
-    // before accessing dashboard. A missing broker row (broker === null) means the
-    // user authenticated (e.g. via SSO) but their brokers record was never created;
-    // they must go through complete-profile to create it themselves.
+    // If the profile is missing required employee fields, force complete-profile.
+    // A missing profile row (profile === null) shouldn't happen in normal flow
+    // because handle_new_auth_user auto-creates it, but we handle it defensively
+    // so SSO users always end up with a complete record.
     const profileIncomplete =
-      !broker ||
-      !broker.first_name ||
-      !broker.last_name ||
-      !broker.office_location;
+      !profile ||
+      !profile.first_name ||
+      !profile.last_name ||
+      !profile.office_location;
 
     const onCompleteProfilePage = request.nextUrl.pathname.startsWith("/auth/complete-profile");
     const onDashboard = request.nextUrl.pathname.startsWith("/dashboard");

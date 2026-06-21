@@ -123,7 +123,7 @@ export default function IndustryCombobox({
           type="button"
           id={inputId}
           onClick={handleOpen}
-          className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition-colors hover:border-slate-300 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+          className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm transition-colors hover:border-slate-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           aria-haspopup="listbox"
           aria-expanded={false}
         >
@@ -148,7 +148,7 @@ export default function IndustryCombobox({
         </button>
       ) : (
         /* Search input — shown while dropdown is open */
-        <div className="flex h-11 items-center gap-2 rounded-lg border border-orange-500 bg-white px-3 ring-2 ring-orange-500/20">
+        <div className="flex h-11 items-center gap-2 rounded-lg border border-primary bg-white px-3 ring-2 ring-primary/20">
           <Search className="h-4 w-4 shrink-0 text-slate-400" />
           <input
             ref={inputRef}
@@ -195,7 +195,7 @@ export default function IndustryCombobox({
                   <button
                     type="button"
                     onClick={() => handleSelect(query.trim())}
-                    className="font-medium text-orange-600 underline-offset-2 hover:underline"
+                    className="font-medium text-primary-text underline-offset-2 hover:underline"
                   >
                     Use &ldquo;{query.trim()}&rdquo;
                   </button>
@@ -215,7 +215,7 @@ export default function IndustryCombobox({
                   onMouseEnter={() => setActiveIndex(i)}
                   className={`cursor-pointer px-4 py-2.5 text-sm transition-colors ${
                     i === activeIndex
-                      ? "bg-orange-50 text-orange-700"
+                      ? "bg-primary/10 text-primary-text"
                       : opt === value
                         ? "bg-slate-50 font-medium text-slate-900"
                         : "text-slate-700 hover:bg-slate-50"

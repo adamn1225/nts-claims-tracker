@@ -27,7 +27,7 @@ type CommandResponse = {
   confirmation?: string;
   error?: string;
   revertData?: RevertData;
-  brokerInfo?: {
+  teamMemberInfo?: {
     name: string;
     office: string;
     activeCustomers: number;
@@ -48,59 +48,59 @@ export default function AiCommandAssistant() {
   
   // Form states
   const [formAction, setFormAction] = useState<"distribute" | "create_tasks">("distribute");
-  const [formBroker, setFormBroker] = useState("");
+  const [formTeamMember, setFormTeamMember] = useState("");
   const [formQuantity, setFormQuantity] = useState("");
   const [formIndustry, setFormIndustry] = useState("");
   const [formState, setFormState] = useState("");
   const [formSource, setFormSource] = useState("");
   
-  // Broker search/autocomplete states
-  const [brokers, setBrokers] = useState<Array<{id: string; name: string; office: string; customers: number}>>([]);
-  const [brokerSearch, setBrokerSearch] = useState("");
-  const [showBrokerDropdown, setShowBrokerDropdown] = useState(false);
-  const [loadingBrokers, setLoadingBrokers] = useState(false);
-  const brokerDropdownRef = useRef<HTMLDivElement>(null);
+  // TeamMember search/autocomplete states
+  const [teamMembers, setTeamMembers] = useState<Array<{id: string; name: string; office: string; customers: number}>>([]);
+  const [teamMemberSearch, setTeamMemberSearch] = useState("");
+  const [showTeamMemberDropdown, setShowTeamMemberDropdown] = useState(false);
+  const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
+  const teamMemberDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (brokerDropdownRef.current && !brokerDropdownRef.current.contains(event.target as Node)) {
-        setShowBrokerDropdown(false);
+      if (teamMemberDropdownRef.current && !teamMemberDropdownRef.current.contains(event.target as Node)) {
+        setShowTeamMemberDropdown(false);
       }
     };
 
-    if (showBrokerDropdown) {
+    if (showTeamMemberDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [showBrokerDropdown]);
+  }, [showTeamMemberDropdown]);
 
   const exampleCommands = [
-    "Give [broker name] 100 random truck dealers to call",
-    "Distribute 50 manufacturing leads in Texas to [broker name]",
-    "Assign all construction companies in California to [broker name]",
-    "Create follow-up tasks for all [broker name]'s inactive customers",
+    "Give [teamMember name] 100 random truck dealers to call",
+    "Distribute 50 manufacturing leads in Texas to [teamMember name]",
+    "Assign all construction companies in California to [teamMember name]",
+    "Create follow-up tasks for all [teamMember name]'s inactive customers",
   ];
 
-  // Fetch brokers for autocomplete
-  const fetchBrokers = async () => {
-    if (brokers.length > 0) return; // Already loaded
-    setLoadingBrokers(true);
+  // Fetch teamMembers for autocomplete
+  const fetchTeamMembers = async () => {
+    if (teamMembers.length > 0) return; // Already loaded
+    setLoadingTeamMembers(true);
     try {
-      const res = await fetch('/api/brokers/list');
+      const res = await fetch('/api/team-members/list');
       const data = await res.json();
-      setBrokers(data.brokers || []);
+      setTeamMembers(data.teamMembers || []);
     } catch (error) {
-      console.error('Failed to fetch brokers:', error);
+      console.error('Failed to fetch team members:', error);
     } finally {
-      setLoadingBrokers(false);
+      setLoadingTeamMembers(false);
     }
   };
 
-  // Filter brokers based on search
-  const filteredBrokers = brokers.filter(b => 
-    b.name.toLowerCase().includes(brokerSearch.toLowerCase()) ||
-    b.office.toLowerCase().includes(brokerSearch.toLowerCase())
+  // Filter teamMembers based on search
+  const filteredTeamMembers = teamMembers.filter(b => 
+    b.name.toLowerCase().includes(teamMemberSearch.toLowerCase()) ||
+    b.office.toLowerCase().includes(teamMemberSearch.toLowerCase())
   );
 
   const handleSendCommand = async (execute: boolean = false) => {
@@ -185,8 +185,8 @@ export default function AiCommandAssistant() {
     setResponse(null);
     setLastRevertData(null);
     setFormAction("distribute");
-    setFormBroker("");
-    setBrokerSearch("");
+    setFormTeamMember("");
+    setTeamMemberSearch("");
     setFormQuantity("");
     setFormIndustry("");
     setFormState("");
@@ -198,7 +198,7 @@ export default function AiCommandAssistant() {
     let commandText = "";
     
     if (formAction === "distribute") {
-      commandText = `Give ${formBroker || "[broker]"} ${formQuantity || "50"} contacts`;
+      commandText = `Give ${formTeamMember || "[teamMember]"} ${formQuantity || "50"} contacts`;
       const filters = [];
       // Skip empty values and "any" keyword (treat "any" as no filter)
       if (formIndustry && formIndustry.toLowerCase() !== "any") {
@@ -214,7 +214,7 @@ export default function AiCommandAssistant() {
         commandText += ` (${filters.join(", ")})`;
       }
     } else if (formAction === "create_tasks") {
-      commandText = `Create follow-up tasks for ${formBroker || "[broker]"}'s customers`;
+      commandText = `Create follow-up tasks for ${formTeamMember || "[teamMember]"}'s customers`;
     }
     
     setCommand(commandText);
@@ -277,39 +277,39 @@ export default function AiCommandAssistant() {
               </select>
             </div>
 
-            {/* Broker Name - Searchable Select */}
-            <div className="relative" ref={brokerDropdownRef}>
+            {/* TeamMember Name - Searchable Select */}
+            <div className="relative" ref={teamMemberDropdownRef}>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Broker Name <span className="text-red-500">*</span>
+                TeamMember Name <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <div 
                   className="w-full rounded-lg border border-slate-200 p-2 text-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 bg-white cursor-text"
                   onClick={() => {
-                    fetchBrokers();
-                    setShowBrokerDropdown(true);
+                    fetchTeamMembers();
+                    setShowTeamMemberDropdown(true);
                   }}
                 >
                   <div className="flex items-center gap-2">
                     <Search className="h-4 w-4 text-slate-400" />
                     <input
                       type="text"
-                      value={brokerSearch}
+                      value={teamMemberSearch}
                       onChange={(e) => {
-                        setBrokerSearch(e.target.value);
-                        setShowBrokerDropdown(true);
-                        fetchBrokers();
+                        setTeamMemberSearch(e.target.value);
+                        setShowTeamMemberDropdown(true);
+                        fetchTeamMembers();
                       }}
                       onFocus={() => {
-                        fetchBrokers();
-                        setShowBrokerDropdown(true);
+                        fetchTeamMembers();
+                        setShowTeamMemberDropdown(true);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') {
-                          setShowBrokerDropdown(false);
+                          setShowTeamMemberDropdown(false);
                         }
                       }}
-                      placeholder={formBroker || "Search for a broker..."}
+                      placeholder={formTeamMember || "Search for a team member..."}
                       className="flex-1 outline-none bg-transparent"
                     />
                     <ChevronDown className="h-4 w-4 text-slate-400" />
@@ -317,34 +317,34 @@ export default function AiCommandAssistant() {
                 </div>
                 
                 {/* Dropdown */}
-                {showBrokerDropdown && (
+                {showTeamMemberDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {loadingBrokers ? (
+                    {loadingTeamMembers ? (
                       <div className="p-3 text-sm text-slate-500 text-center">
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1" />
-                        Loading brokers...
+                        Loading team members...
                       </div>
-                    ) : filteredBrokers.length === 0 ? (
+                    ) : filteredTeamMembers.length === 0 ? (
                       <div className="p-3 text-sm text-slate-500 text-center">
-                        No brokers found
+                        No team members found
                       </div>
                     ) : (
-                      filteredBrokers.map((broker) => (
+                      filteredTeamMembers.map((teamMember) => (
                         <button
-                          key={broker.id}
+                          key={teamMember.id}
                           onClick={() => {
-                            setFormBroker(broker.name);
-                            setBrokerSearch(broker.name);
-                            setShowBrokerDropdown(false);
+                            setFormTeamMember(teamMember.name);
+                            setTeamMemberSearch(teamMember.name);
+                            setShowTeamMemberDropdown(false);
                           }}
                           className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b border-slate-100 last:border-b-0 transition-colors"
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm font-medium text-slate-900">{broker.name}</p>
-                              <p className="text-xs text-slate-500">{broker.office}</p>
+                              <p className="text-sm font-medium text-slate-900">{teamMember.name}</p>
+                              <p className="text-xs text-slate-500">{teamMember.office}</p>
                             </div>
-                            <span className="text-xs text-slate-400">{broker.customers} customers</span>
+                            <span className="text-xs text-slate-400">{teamMember.customers} customers</span>
                           </div>
                         </button>
                       ))
@@ -352,8 +352,8 @@ export default function AiCommandAssistant() {
                   </div>
                 )}
               </div>
-              {formBroker && (
-                <p className="text-xs text-green-600 mt-1">✓ Selected: {formBroker}</p>
+              {formTeamMember && (
+                <p className="text-xs text-green-600 mt-1">✓ Selected: {formTeamMember}</p>
               )}
             </div>
 
@@ -456,12 +456,12 @@ export default function AiCommandAssistant() {
                       {response.action === 'distribute' && (
                         <>
                           Assign <span className="text-yellow-300">{response.parameters?.quantity || '?'} contacts</span> to{' '}
-                          <span className="text-yellow-300">{response.brokerInfo?.name || response.parameters?.broker_name || 'broker'}</span>
+                          <span className="text-yellow-300">{response.teamMemberInfo?.name || response.parameters?.team_member_name || 'teamMember'}</span>
                         </>
                       )}
                       {response.action === 'create_tasks' && (
                         <>
-                          Create follow-up tasks for <span className="text-yellow-300">{response.brokerInfo?.name || 'broker'}</span>'s customers
+                          Create follow-up tasks for <span className="text-yellow-300">{response.teamMemberInfo?.name || 'teamMember'}</span>'s customers
                         </>
                       )}
                     </p>
@@ -476,22 +476,22 @@ export default function AiCommandAssistant() {
                   </div>
                   <p className="text-xs text-blue-100 mt-3 flex items-center gap-1">
                     <span>💾</span>
-                    <span>Database Update: <code className="bg-blue-700 px-1.5 py-0.5 rounded font-mono">customers.broker_id</code> field will be changed</span>
+                    <span>Database Update: <code className="bg-blue-700 px-1.5 py-0.5 rounded font-mono">customers.team_member_id</code> field will be changed</span>
                   </p>
                 </div>
 
-                {/* Broker Info Header */}
-                {response.brokerInfo && (
+                {/* TeamMember Info Header */}
+                {response.teamMemberInfo && (
                   <div className="bg-white border-2 border-blue-300 rounded-lg p-4 shadow-sm">
-                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">📌 Target Broker</p>
+                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">📌 Target TeamMember</p>
                     <p className="text-base font-bold text-slate-900">
-                      {response.brokerInfo.name}
+                      {response.teamMemberInfo.name}
                     </p>
                     <p className="text-sm text-slate-600 mt-1">
-                      Office: <strong>{response.brokerInfo.office}</strong>
+                      Office: <strong>{response.teamMemberInfo.office}</strong>
                     </p>
                     <p className="text-sm text-slate-600">
-                      Current Load: <strong>{response.brokerInfo.activeCustomers} active customers</strong>
+                      Current Load: <strong>{response.teamMemberInfo.activeCustomers} active customers</strong>
                     </p>
                   </div>
                 )}
@@ -581,7 +581,7 @@ export default function AiCommandAssistant() {
             <>
               <button
                 onClick={handleReset}
-                disabled={!command && !formBroker}
+                disabled={!command && !formTeamMember}
                 className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Clear
@@ -590,11 +590,11 @@ export default function AiCommandAssistant() {
                 onClick={() => {
                   if (command.trim()) {
                     handleSendCommand(false);
-                  } else if (formBroker) {
+                  } else if (formTeamMember) {
                     handleFormSubmit(true);
                   }
                 }}
-                disabled={loading || (!command.trim() && !formBroker.trim())}
+                disabled={loading || (!command.trim() && !formTeamMember.trim())}
                 className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
@@ -707,14 +707,14 @@ export default function AiCommandAssistant() {
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4">
-              {response.brokerInfo && (
+              {response.teamMemberInfo && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm font-semibold text-blue-900">📌 Target Broker</p>
+                  <p className="text-sm font-semibold text-blue-900">📌 Target TeamMember</p>
                   <p className="text-sm text-blue-800 mt-1">
-                    <strong>{response.brokerInfo.name}</strong> ({response.brokerInfo.office})
+                    <strong>{response.teamMemberInfo.name}</strong> ({response.teamMemberInfo.office})
                   </p>
                   <p className="text-xs text-blue-700 mt-1">
-                    Currently managing {response.brokerInfo.activeCustomers} active customers
+                    Currently managing {response.teamMemberInfo.activeCustomers} active customers
                   </p>
                 </div>
               )}

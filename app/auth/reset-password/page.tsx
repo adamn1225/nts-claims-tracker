@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading || success}
                   className="block w-full rounded-lg border border-slate-300 py-3 pl-10 pr-3 text-slate-900 placeholder-slate-400 focus:border-[#E85D04] focus:outline-none focus:ring-2 focus:ring-[#E85D04] focus:ring-offset-0 disabled:bg-slate-50 disabled:text-slate-500 sm:text-sm"
-                  placeholder="broker@ntsconnect.com"
+                  placeholder="teammember@ntsconnect.com"
                 />
               </div>
             </div>

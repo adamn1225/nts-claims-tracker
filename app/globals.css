@@ -4,6 +4,37 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* NTS Claims Tracker semantic palette.
+   * Documented in .github/copilot-instructions.md → Design System.
+   * Prefer semantic tokens (bg-primary, text-accent, border-danger) over
+   * raw Tailwind color utilities so palette changes propagate cleanly. */
+  --color-primary: #e85d04;        /* NTS Orange — primary CTAs, active states */
+  --color-primary-text: #c2410c;   /* AA-safe orange for small text on white */
+  --color-secondary: #1a1a1a;      /* Headings, body text, dark surfaces */
+  --color-accent: #2563eb;         /* Steel blue — links, secondary CTAs, info highlights */
+  --color-success: #059669;        /* Resolved / paid / closed-with-recovery */
+  --color-warning: #f59e0b;        /* Pending, missing docs, approaching deadlines (fill/icon) */
+  --color-warning-text: #b45309;   /* AA-safe amber for text on white */
+  --color-danger: #dc2626;         /* Do Not Pay, denied, missed deadlines, overdue */
+  --color-info: #0ea5e9;           /* Neutral status info (fill/icon) */
+  --color-info-text: #0369a1;      /* AA-safe info-blue for text on white */
+  --color-critical: #7c3aed;       /* Legal-bucket claims, high-value escalations */
+
+  /* Dark navigation surface family — used by the sidebar, mobile header,
+   * floating AI button, notifications panel header, and any other element
+   * that should sit on the same dark navy chrome. Adjust here to retint the
+   * entire app navigation. */
+  --color-surface-nav: #030303;          /* Primary nav surface */
+  --color-surface-nav-elevated: #f8fafc; /* Raised controls on the nav surface */
+  --color-surface-nav-hover: #f8fafc;    /* Deeper navy for hover states */
+
+  /* Ops-console canvas family — used for dashboard / board / list page
+   * backgrounds. Cards live on `bg-surface-card` (white) and float above
+   * the slightly cooler `bg-surface-canvas` so they have visual depth. */
+  --color-surface-canvas: #f8fafc;  /* Cool slate canvas behind cards */
+  --color-surface-card: #07111a;    /* Card surface */
+  --color-surface-muted: #0f1011;   /* Subtle alt surface (table rows, etc.) */
 }
 
 @theme inline {
@@ -11,6 +42,31 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Semantic color tokens — generates bg-*, text-*, border-*, ring-*, etc. */
+  --color-primary: var(--color-primary);
+  --color-primary-text: var(--color-primary-text);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-warning-text: var(--color-warning-text);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
+  --color-info-text: var(--color-info-text);
+  --color-critical: var(--color-critical);
+
+  /* Dark navigation surface tokens — generates bg-surface-nav,
+   * bg-surface-nav-elevated, bg-surface-nav-hover utility classes. */
+  --color-surface-nav: var(--color-surface-nav);
+  --color-surface-nav-elevated: var(--color-surface-nav-elevated);
+  --color-surface-nav-hover: var(--color-surface-nav-hover);
+
+  /* Canvas/card surface tokens — generates bg-surface-canvas,
+   * bg-surface-card, bg-surface-muted utility classes. */
+  --color-surface-canvas: var(--color-surface-canvas);
+  --color-surface-card: var(--color-surface-card);
+  --color-surface-muted: var(--color-surface-muted);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -66,4 +122,33 @@ select.bg-white::placeholder,
 
 button {
   cursor: pointer !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Ops-console canvas texture
+ * Subtle dot-grid background for dashboard / list / board pages. Inspired by
+ * Linear, Plain, Cal.com. Pair with `bg-surface-canvas` to give the page a
+ * cool slate canvas that cards visually float above.
+ * ------------------------------------------------------------------------- */
+.bg-dot-grid {
+  background-image: radial-gradient(
+    circle,
+    rgba(15, 23, 42, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  background-position: 0 0;
+}
+
+/* Same dot grid but anchored to a `bg-surface-canvas` base so the two
+ * always travel together. */
+.bg-canvas-grid {
+  background-color: var(--color-surface-canvas);
+  background-image: radial-gradient(
+    circle,
+    rgba(15, 23, 42, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  background-position: 0 0;
 }

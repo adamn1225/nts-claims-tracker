@@ -156,7 +156,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full rounded-lg border border-white/10 bg-white/5 py-3 pl-10 pr-3 text-white placeholder-slate-400 backdrop-blur-sm focus:border-[#E85D04] focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#E85D04] focus:ring-offset-0 sm:text-sm"
-                  placeholder="broker@ntsconnect.com"
+                  placeholder="teammember@ntsconnect.com"
                 />
               </div>
             </div>

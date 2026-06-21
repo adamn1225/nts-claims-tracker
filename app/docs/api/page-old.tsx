@@ -26,15 +26,15 @@ export default function ApiDocsPage() {
           router.push("/auth/login");
           return;
         }
-        // Check if user is admin via brokers table
-        const { data: broker, error: brokerError } = await supabase
-          .from("brokers")
+        // Check if user is admin via team_members table
+        const { data: teamMember, error: teamMemberError } = await supabase
+          .from("team_members")
           .select("is_admin")
           .eq("id", user.id)
           .single();
 
-        setIsAdmin(Boolean(broker?.is_admin));
-        if (brokerError) console.warn("Broker lookup error", brokerError.message);
+        setIsAdmin(Boolean(teamMember?.is_admin));
+        if (teamMemberError) console.warn("TeamMember lookup error", teamMemberError.message);
       } finally {
         setLoading(false);
       }
@@ -217,7 +217,7 @@ export default function ApiDocsPage() {
                 <tbody className="divide-y divide-slate-100">
                   <tr><td className="px-3 py-2 font-mono text-xs">id</td><td className="px-3 py-2 text-slate-600">string (uuid)</td><td className="px-3 py-2 text-slate-600">Unique identifier</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">customer_id</td><td className="px-3 py-2 text-slate-600">string</td><td className="px-3 py-2 text-slate-600">Human-readable ID (e.g., NS-0001)</td></tr>
-                  <tr><td className="px-3 py-2 font-mono text-xs">broker_id</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Assigned broker (null = unassigned)</td></tr>
+                  <tr><td className="px-3 py-2 font-mono text-xs">team_member_id</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Assigned team member (null = unassigned)</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">first_name</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Contact first name</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">last_name</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Contact last name</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">contact_name</td><td className="px-3 py-2 text-slate-600">string</td><td className="px-3 py-2 text-slate-600">Full contact name (required)</td></tr>
@@ -249,7 +249,7 @@ export default function ApiDocsPage() {
                   <tr><td className="px-3 py-2 font-mono text-xs">next_follow_up_type</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Type of next follow-up</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">import_source</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Source of import (CSV, API, etc.)</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">import_metadata</td><td className="px-3 py-2 text-slate-600">JSON | null</td><td className="px-3 py-2 text-slate-600">Additional import metadata</td></tr>
-                  <tr><td className="px-3 py-2 font-mono text-xs">imported_by</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Broker who imported</td></tr>
+                  <tr><td className="px-3 py-2 font-mono text-xs">imported_by</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">TeamMember who imported</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">created_at</td><td className="px-3 py-2 text-slate-600">string</td><td className="px-3 py-2 text-slate-600">Creation timestamp (ISO 8601)</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">updated_at</td><td className="px-3 py-2 text-slate-600">string</td><td className="px-3 py-2 text-slate-600">Last update timestamp (ISO 8601)</td></tr>
                 </tbody>
@@ -271,7 +271,7 @@ export default function ApiDocsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   <tr><td className="px-3 py-2 font-mono text-xs">id</td><td className="px-3 py-2 text-slate-600">string (uuid)</td><td className="px-3 py-2 text-slate-600">Unique identifier</td></tr>
-                  <tr><td className="px-3 py-2 font-mono text-xs">broker_id</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Assigned broker</td></tr>
+                  <tr><td className="px-3 py-2 font-mono text-xs">team_member_id</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Assigned team member</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">customer_id</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Related customer ID</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">title</td><td className="px-3 py-2 text-slate-600">string</td><td className="px-3 py-2 text-slate-600">Task title (required)</td></tr>
                   <tr><td className="px-3 py-2 font-mono text-xs">description</td><td className="px-3 py-2 text-slate-600">string | null</td><td className="px-3 py-2 text-slate-600">Task description/notes</td></tr>
@@ -299,8 +299,8 @@ export default function ApiDocsPage() {
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <h3 className="mb-2 font-semibold text-blue-900">Unassigned Contacts</h3>
             <p className="text-sm text-blue-800">
-              Unassigned contacts use the same <strong>Customer Object</strong> schema above, but with <code className="rounded bg-blue-100 px-1">broker_id</code> set to <code className="rounded bg-blue-100 px-1">null</code>.
-              These represent contacts in the import pool waiting to be assigned to brokers.
+              Unassigned contacts use the same <strong>Customer Object</strong> schema above, but with <code className="rounded bg-blue-100 px-1">team_member_id</code> set to <code className="rounded bg-blue-100 px-1">null</code>.
+              These represent contacts in the import pool waiting to be assigned to teamMembers.
             </p>
           </div>
         </section>
@@ -421,7 +421,7 @@ export default function ApiDocsPage() {
               {
                 method: "PUT",
                 path: "/api/v1/unassigned_contacts/:id",
-                description: "Update unassigned contact (e.g., assign to broker)",
+                description: "Update unassigned contact (e.g., assign to team member)",
                 scope: "unassigned_contacts:write",
               },
               {

@@ -69,10 +69,10 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
         {
           icon: <CheckSquare className="h-5 w-5 text-orange-500" />,
           title: "Distributing Leads",
-          description: "Assign imported contacts to brokers",
+          description: "Assign imported contacts to team members",
           tips: [
-            "Select contacts → Choose broker → Distribute",
-            "Use 'Even Distribution' to auto-balance across brokers",
+            "Select contacts → Choose team member → Distribute",
+            "Use 'Even Distribution' to auto-balance across team members",
             "Filter by industry, state, or source before distributing",
           ],
         },
@@ -274,7 +274,7 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
                     Welcome to NTS Claims Tracker!
                   </strong>
                   <br />
-                  This CRM helps freight brokers manage customer relationships,
+                  This CRM helps freight team members manage customer relationships,
                   track tasks, and never miss a follow-up. Here are some quick tips
                   to get started.
                 </p>

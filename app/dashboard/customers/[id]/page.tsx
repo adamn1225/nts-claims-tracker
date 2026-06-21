@@ -43,7 +43,7 @@ import { useClickToCall } from "@/contexts/ClickToCallContext";
 type ContactLogEntry = {
   id: string;
   customer_id: string;
-  broker_id: string;
+  team_member_id: string;
   type: "call" | "email" | "meeting" | "note" | "sms" | "other";
   subject: string;
   notes: string | null;
@@ -113,8 +113,8 @@ export default function CustomerProfilePage({
   const [showShareModal, setShowShareModal] = useState(false);
   const [showAiEmailModal, setShowAiEmailModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [currentBrokerId, setCurrentBrokerId] = useState<string>("");
-  const [assignedBrokerName, setAssignedBrokerName] = useState<string>("");
+  const [currentTeamMemberId, setCurrentTeamMemberId] = useState<string>("");
+  const [assignedTeamMemberName, setAssignedTeamMemberName] = useState<string>("");
   const [briefText, setBriefText] = useState<string | null>(null);
   const [briefLoading, setBriefLoading] = useState(false);
   const [briefSources, setBriefSources] = useState<{ crm: boolean; goto: boolean } | null>(null);
@@ -185,16 +185,16 @@ export default function CustomerProfilePage({
           setAttachments(attachmentData || []);
         }
 
-        // Fetch assigned broker name
-        if (customerData.broker_id) {
-          const { data: brokerData } = await supabase
-            .from("brokers")
+        // Fetch assigned team member name
+        if (customerData.team_member_id) {
+          const { data: teamMemberData } = await supabase
+            .from("team_members")
             .select("first_name, last_name")
-            .eq("id", customerData.broker_id)
+            .eq("id", customerData.team_member_id)
             .single();
 
-          if (brokerData) {
-            setAssignedBrokerName(`${brokerData.first_name} ${brokerData.last_name || ''}`.trim());
+          if (teamMemberData) {
+            setAssignedTeamMemberName(`${teamMemberData.first_name} ${teamMemberData.last_name || ''}`.trim());
           }
         }
       }
@@ -290,24 +290,24 @@ export default function CustomerProfilePage({
     };
   }, [customer?.id]);
 
-  // Fetch current broker ID
+  // Fetch current team member ID
   useEffect(() => {
-    const fetchBrokerId = async () => {
+    const fetchTeamMemberId = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: broker } = await supabase
-          .from("brokers")
+        const { data: teamMember } = await supabase
+          .from("team_members")
           .select("id, is_admin")
           .eq("id", user.id)
           .single();
-        if (broker) {
-          setCurrentBrokerId(broker.id);
-          setIsAdmin(broker.is_admin ?? false);
+        if (teamMember) {
+          setCurrentTeamMemberId(teamMember.id);
+          setIsAdmin(teamMember.is_admin ?? false);
         }
       }
     };
-    fetchBrokerId();
+    fetchTeamMemberId();
   }, []);
 
   const handleSaveCustomer = async (customerData: Partial<Customer>): Promise<Customer> => {
@@ -383,15 +383,15 @@ export default function CustomerProfilePage({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get current broker info for notification
-      const { data: brokerData } = await supabase
-        .from("brokers")
+      // Get current team member info for notification
+      const { data: teamMemberData } = await supabase
+        .from("team_members")
         .select("first_name, last_name")
         .eq("id", user.id)
         .single();
 
-      const brokerName = brokerData
-        ? `${brokerData.first_name} ${brokerData.last_name || ""}`.trim()
+      const teamMemberName = teamMemberData
+        ? `${teamMemberData.first_name} ${teamMemberData.last_name || ""}`.trim()
         : "A team member";
 
       // Determine the log type and subject
@@ -406,7 +406,7 @@ export default function CustomerProfilePage({
         .from("contact_log")
         .insert({
           customer_id: customer.id,
-          broker_id: user.id,
+          team_member_id: user.id,
           type: logType,
           subject: noteSubject.trim() || defaultSubject,
           notes: noteContent.trim() || null,
@@ -424,7 +424,7 @@ export default function CustomerProfilePage({
       if (customer.collaborators && customer.collaborators.length > 0) {
         const collaboratorIds = customer.collaborators
           .filter((c) => c.active)
-          .map((c) => c.broker_id);
+          .map((c) => c.team_member_id);
 
         if (collaboratorIds.length > 0) {
           try {
@@ -432,13 +432,13 @@ export default function CustomerProfilePage({
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                collaboratorBrokerIds: collaboratorIds,
+                collaboratorTeamMemberIds: collaboratorIds,
                 customerId: customer.id,
                 customerName: customer.business_name,
                 activityType: logType,
                 activityMessage: noteContent.trim() || defaultSubject,
-                activityByBrokerId: user.id,
-                activityByBrokerName: brokerName,
+                activityByTeamMemberId: user.id,
+                activityByTeamMemberName: teamMemberName,
               }),
             });
           } catch (notificationError) {
@@ -588,7 +588,7 @@ export default function CustomerProfilePage({
 
       const { data, error } = await supabase.from("tasks").insert({
         ...taskData,
-        broker_id: user.id,
+        team_member_id: user.id,
         customer_id: customer?.id,
       }).select().single();
 
@@ -782,7 +782,7 @@ export default function CustomerProfilePage({
             <button
               onClick={() => setShowShareModal(true)}
               className="flex h-11 items-center justify-center gap-2 rounded-lg bg-orange-100 text-orange-700 transition-colors hover:bg-orange-200"
-              title="Share this contact with other brokers"
+              title="Share this contact with other team members"
             >
               <Share2 className="h-4 w-4" />
               <span className="text-sm font-medium">Share Contact</span>
@@ -1211,11 +1211,11 @@ export default function CustomerProfilePage({
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-orange-500 to-orange-600 text-white font-semibold">
-                          {collab.broker_name.charAt(0).toUpperCase()}
+                          {collab.team_member_name.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div className="font-medium text-slate-900">
-                            {collab.broker_name}
+                            {collab.team_member_name}
                           </div>
                           <div className="text-xs text-slate-600">
                             {collab.role === "partner" ? "🤝 Partner" : "👤 Owner"} •{" "}
@@ -1225,11 +1225,11 @@ export default function CustomerProfilePage({
                           </div>
                         </div>
                       </div>
-                      {currentBrokerId === customer.broker_id && (
+                      {currentTeamMemberId === customer.team_member_id && (
                         <button
                           onClick={async () => {
                             const confirmed = confirm(
-                              `Remove ${collab.broker_name} from this opportunity?`
+                              `Remove ${collab.team_member_name} from this opportunity?`
                             );
                             if (!confirmed) return;
 
@@ -1579,12 +1579,12 @@ export default function CustomerProfilePage({
 
             {/* Timestamps */}
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500">
-              {/* Assigned Broker */}
-              {customer.broker_id && assignedBrokerName && (
+              {/* Assigned TeamMember */}
+              {customer.team_member_id && assignedTeamMemberName && (
                 <div className="flex items-center gap-1 text-slate-700">
                   <User className="h-3 w-3 text-orange-500" />
                   <div>
-                    <div className="text-sm text-slate-700">Assigned to: <span className="text-sm font-medium">{assignedBrokerName}</span></div>
+                    <div className="text-sm text-slate-700">Assigned to: <span className="text-sm font-medium">{assignedTeamMemberName}</span></div>
 
                   </div>
                 </div>
@@ -1606,7 +1606,7 @@ export default function CustomerProfilePage({
         onClose={() => setShowEditModal(false)}
         onSave={handleSaveCustomer}
         customer={customer}
-        brokerId={customer.broker_id}
+        teamMemberId={customer.team_member_id}
       />
 
       {/* Task/Schedule Modal */}
@@ -1614,7 +1614,7 @@ export default function CustomerProfilePage({
         isOpen={showTaskModal}
         onClose={() => setShowTaskModal(false)}
         onSave={handleSaveTask}
-        brokerId={customer.broker_id}
+        teamMemberId={customer.team_member_id}
         customers={[customer]}
       />
 
@@ -1758,7 +1758,7 @@ export default function CustomerProfilePage({
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
           customer={customer}
-          currentBrokerId={currentBrokerId || ""}
+          currentTeamMemberId={currentTeamMemberId || ""}
         />
       )}
 

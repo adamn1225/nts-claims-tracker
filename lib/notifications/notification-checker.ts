@@ -32,8 +32,8 @@ function canShowNotification(): boolean {
  * Check for due notifications and show browser notifications
  * Rate limited to one notification per 30 minutes
  */
-export async function checkAndShowDueNotifications(brokerId: string) {
-  if (!brokerId || !areNotificationsEnabled()) {
+export async function checkAndShowDueNotifications(teamMemberId: string) {
+  if (!teamMemberId || !areNotificationsEnabled()) {
     return;
   }
 
@@ -49,7 +49,7 @@ export async function checkAndShowDueNotifications(brokerId: string) {
     const { data: notifications, error } = await supabase
       .from("notifications")
       .select("*")
-      .eq("broker_id", brokerId)
+      .eq("team_member_id", teamMemberId)
       .eq("is_read", false)
       .eq("is_archived", false)
       .or(`scheduled_for.is.null,scheduled_for.lte.${now}`)
@@ -124,17 +124,17 @@ export async function checkAndShowDueNotifications(brokerId: string) {
  * Start polling for due notifications
  * Returns a cleanup function to stop polling
  */
-export function startNotificationPolling(brokerId: string): () => void {
-  if (!brokerId) {
+export function startNotificationPolling(teamMemberId: string): () => void {
+  if (!teamMemberId) {
     return () => {};
   }
 
   // Check immediately
-  checkAndShowDueNotifications(brokerId);
+  checkAndShowDueNotifications(teamMemberId);
 
   // Then check every minute
   const intervalId = setInterval(() => {
-    checkAndShowDueNotifications(brokerId);
+    checkAndShowDueNotifications(teamMemberId);
   }, 60 * 1000); // Every 60 seconds
 
   // Return cleanup function

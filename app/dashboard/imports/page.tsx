@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useBrokerView } from "@/contexts/BrokerViewContext";
+import { useTeamMemberView } from "@/contexts/TeamMemberViewContext";
 import DesktopOnlyView from "@/components/DesktopOnlyView";
 import { useIsMobileOrTablet } from "@/lib/hooks/useMediaQuery";
 import { Info, GripVertical } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import UserEmailTemplateEditor from "@/components/UserEmailTemplateEditor";
 import AiCommandAssistant from "@/components/admin/AiCommandAssistant";
-import { canExportData, type BrokerPermissions } from "@/lib/permissions";
+import { canExportData, type TeamMemberPermissions } from "@/lib/permissions";
 // Notification API routes (server-side only for security)
 import {
   DndContext,
@@ -67,7 +67,7 @@ type UnassignedContact = {
   shipping_frequency: string | null;
   linkedin_url: string | null;
   website_url: string | null;
-  broker_id: string | null;
+  team_member_id: string | null;
   on_kanban_board: boolean | null;
   import_source: string | null;
   notes: string | null;
@@ -77,7 +77,7 @@ type UnassignedContact = {
   status?: string;
 };
 
-type Broker = {
+type TeamMember = {
   id: string;
   first_name: string;
   last_name?: string;
@@ -90,12 +90,12 @@ type Broker = {
 };
 
 export default function ToolsPage() {
-  const { viewingBroker } = useBrokerView();
+  const { viewingTeamMember } = useTeamMemberView();
   const isMobileOrTablet = useIsMobileOrTablet();
   const [activeTab, setActiveTab] = useState<
     "import" | "distribute" | "distributed" | "reassign" | "limbo" | "ai-distribute"
   >("import");
-  const [currentUser, setCurrentUser] = useState<Broker | null>(null);
+  const [currentUser, setCurrentUser] = useState<TeamMember | null>(null);
   const [unassignedContacts, setUnassignedContacts] = useState<
     UnassignedContact[]
   >([]);
@@ -108,8 +108,8 @@ export default function ToolsPage() {
   const [reassignContacts, setReassignContacts] = useState<
     UnassignedContact[]
   >([]);
-  const [selectedReassignBroker, setSelectedReassignBroker] = useState<string>("");
-  const [brokers, setBrokers] = useState<Broker[]>([]);
+  const [selectedReassignTeamMember, setSelectedReassignTeamMember] = useState<string>("");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(
     new Set(),
   );
@@ -163,7 +163,7 @@ export default function ToolsPage() {
   const [bulkSourceValue, setBulkSourceValue] = useState<string>("");
   const [showDistributeModal, setShowDistributeModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [permissions, setPermissions] = useState<BrokerPermissions | null>(null);
+  const [permissions, setPermissions] = useState<TeamMemberPermissions | null>(null);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [visibleColumns, setVisibleColumns] = useState({
@@ -199,12 +199,12 @@ export default function ToolsPage() {
     loadData();
   }, []);
 
-  // Reload data when viewing broker changes
+  // Reload data when viewing team member changes
   useEffect(() => {
-    if (viewingBroker) {
+    if (viewingTeamMember) {
       loadData();
     }
-  }, [viewingBroker]);
+  }, [viewingTeamMember]);
 
   // Load user column preferences
   useEffect(() => {
@@ -216,7 +216,7 @@ export default function ToolsPage() {
       const { data: prefs } = await supabase
         .from("user_preferences")
         .select("imports_column_order, imports_visible_columns")
-        .eq("broker_id", user.id)
+        .eq("team_member_id", user.id)
         .single();
 
       if (prefs) {
@@ -245,7 +245,7 @@ export default function ToolsPage() {
           imports_column_order: columnOrder,
           updated_at: new Date().toISOString()
         })
-        .eq("broker_id", user.id);
+        .eq("team_member_id", user.id);
     };
 
     // Only save if columnOrder has been modified (not initial load)
@@ -267,7 +267,7 @@ export default function ToolsPage() {
           imports_visible_columns: visibleColumns,
           updated_at: new Date().toISOString()
         })
-        .eq("broker_id", user.id);
+        .eq("team_member_id", user.id);
     };
 
     saveVisibleColumns();
@@ -286,7 +286,7 @@ export default function ToolsPage() {
 
     const supabase = createClient();
 
-    // Subscribe to unassigned contacts (broker_id is null)
+    // Subscribe to unassigned contacts (team_member_id is null)
     const unassignedChannel = supabase
       .channel('unassigned-contacts')
       .on(
@@ -295,7 +295,7 @@ export default function ToolsPage() {
           event: "*",
           schema: "public",
           table: "customers",
-          filter: "broker_id=is.null",
+          filter: "team_member_id=is.null",
         },
         async (payload) => {
           console.log("Real-time unassigned contact change:", payload);
@@ -306,17 +306,17 @@ export default function ToolsPage() {
       )
       .subscribe();
 
-    // Subscribe to distributed contacts (assigned to viewing broker)
-    const brokerId = viewingBroker?.id || currentUser.id;
+    // Subscribe to distributed contacts (assigned to viewing team member)
+    const teamMemberId = viewingTeamMember?.id || currentUser.id;
     const distributedChannel = supabase
-      .channel(`distributed-contacts:${brokerId}`)
+      .channel(`distributed-contacts:${teamMemberId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "customers",
-          filter: `broker_id=eq.${brokerId}`,
+          filter: `team_member_id=eq.${teamMemberId}`,
         },
         async (payload) => {
           console.log("Real-time distributed contact change:", payload);
@@ -331,18 +331,18 @@ export default function ToolsPage() {
       supabase.removeChannel(unassignedChannel);
       supabase.removeChannel(distributedChannel);
     };
-  }, [currentUser, viewingBroker, activeTab]);
+  }, [currentUser, viewingTeamMember, activeTab]);
 
 
-  const loadReassignData = async (brokerId: string) => {
-    if (!brokerId) {
+  const loadReassignData = async (teamMemberId: string) => {
+    if (!teamMemberId) {
       setReassignContacts([]);
       return;
     }
 
     const supabase = createClient();
 
-    // Fetch ALL contacts for the broker with pagination
+    // Fetch ALL contacts for the team member with pagination
     let reassignData: any[] = [];
     let page = 0;
     const pageSize = 1000;
@@ -352,7 +352,7 @@ export default function ToolsPage() {
       const { data, error } = await supabase
         .from("customers")
         .select("*")
-        .eq("broker_id", brokerId)
+        .eq("team_member_id", teamMemberId)
         .order("updated_at", { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
@@ -377,41 +377,78 @@ export default function ToolsPage() {
   const loadData = async () => {
     const supabase = createClient();
 
-    // ── Step 1: auth + broker details (must be serial — everything depends on user) ──
+    // ── Step 1: auth + teamMember details (must be serial — everything depends on user) ──
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const [{ data: brokerData }, { data: permsData }] = await Promise.all([
-      supabase.from("brokers").select("*").eq("id", user.id).single(),
-      supabase.from("broker_permissions").select("*").eq("broker_id", user.id).single(),
+    // Role/identity lives on profiles in the claims schema. Map the role
+    // enum back to the legacy is_admin/is_manager booleans for the rest of
+    // this page's logic. team_member_permissions is legacy and may not exist;
+    // a silent failure is fine here.
+    const [{ data: profileData }, { data: permsData }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, email, first_name, last_name, role, office_location, is_remote, is_active")
+        .eq("id", user.id)
+        .single(),
+      supabase.from("team_member_permissions").select("*").eq("team_member_id", user.id).single(),
     ]);
 
-    if (brokerData) {
-      setCurrentUser(brokerData);
+    const teamMemberData = profileData
+      ? {
+          ...profileData,
+          is_admin: profileData.role === "admin",
+          is_manager: profileData.role === "manager",
+        }
+      : null;
+
+    if (teamMemberData) {
+      setCurrentUser(teamMemberData);
     }
     if (permsData) {
       setPermissions(permsData);
     }
 
-    // Load brokers list based on role (needed for distribution UI)
-    if (brokerData?.is_admin) {
-      const { data: allBrokers } = await supabase
-        .from("brokers").select("*").eq("is_active", true).order("first_name");
-      setBrokers(allBrokers || []);
-    } else if (brokerData?.is_manager) {
-      const { data: officeBrokers } = await supabase
-        .from("brokers").select("*").eq("is_active", true)
-        .eq("office_location", brokerData.office_location).order("first_name");
-      setBrokers(officeBrokers || []);
+    // Load teamMembers list based on role (needed for distribution UI).
+    // We list all users from `profiles` rather than the `team_members` entity
+    // table because the legacy "distribute customers to brokers" feature was
+    // really about distributing to users.
+    if (teamMemberData?.is_admin) {
+      const { data: allUsers } = await supabase
+        .from("profiles")
+        .select("id, email, first_name, last_name, role, office_location, is_remote, is_active")
+        .eq("is_active", true)
+        .order("first_name");
+      setTeamMembers(
+        (allUsers || []).map((u) => ({
+          ...u,
+          is_admin: u.role === "admin",
+          is_manager: u.role === "manager",
+        })),
+      );
+    } else if (teamMemberData?.is_manager) {
+      const { data: officeUsers } = await supabase
+        .from("profiles")
+        .select("id, email, first_name, last_name, role, office_location, is_remote, is_active")
+        .eq("is_active", true)
+        .eq("office_location", teamMemberData.office_location)
+        .order("first_name");
+      setTeamMembers(
+        (officeUsers || []).map((u) => ({
+          ...u,
+          is_admin: u.role === "admin",
+          is_manager: u.role === "manager",
+        })),
+      );
     }
 
     // ── Step 2: fetch all three contact lists in parallel ──
     const pageSize = 1000;
-    const limboUserId = viewingBroker?.id || user.id;
-    const distributedUserId = viewingBroker?.id || user.id;
+    const limboUserId = viewingTeamMember?.id || user.id;
+    const distributedUserId = viewingTeamMember?.id || user.id;
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const isAdminOwnView = brokerData?.is_admin && (!viewingBroker || viewingBroker.id === user.id);
+    const isAdminOwnView = teamMemberData?.is_admin && (!viewingTeamMember || viewingTeamMember.id === user.id);
 
     const fetchAllPages = async (buildQuery: (range: [number, number]) => any): Promise<any[]> => {
       let results: any[] = [];
@@ -428,10 +465,10 @@ export default function ToolsPage() {
     };
 
     const [unassigned, limbo, distributedData] = await Promise.all([
-      // Unassigned contacts (broker_id is null)
+      // Unassigned contacts (team_member_id is null)
       fetchAllPages((range) =>
         supabase.from("customers").select("*")
-          .is("broker_id", null)
+          .is("team_member_id", null)
           .order("created_at", { ascending: false })
           .range(range[0], range[1])
       ),
@@ -439,7 +476,7 @@ export default function ToolsPage() {
       // Limbo contacts (assigned but not on kanban)
       fetchAllPages((range) =>
         supabase.from("customers").select("*")
-          .eq("broker_id", limboUserId)
+          .eq("team_member_id", limboUserId)
           .eq("on_kanban_board", false)
           .order("created_at", { ascending: false })
           .range(range[0], range[1])
@@ -449,8 +486,8 @@ export default function ToolsPage() {
       fetchAllPages((range) => {
         let q = supabase
           .from("customers")
-          .select("*, assigned_broker:brokers!customers_broker_id_fkey(first_name, last_name, email)")
-          .not("broker_id", "is", null)
+          .select("*, assigned_team_member:team_members!customers_broker_id_fkey(first_name, last_name, email)")
+          .not("team_member_id", "is", null)
           .gte("created_at", thirtyDaysAgo.toISOString())
           .order("updated_at", { ascending: false })
           .range(range[0], range[1]);
@@ -596,7 +633,7 @@ export default function ToolsPage() {
       if (contact.city || contact.state) columnDataCount.location++;
       if (contact.linkedin_url || contact.website_url) columnDataCount.links++;
       if (contact.import_source) columnDataCount.source++;
-      if (contact.broker_id) columnDataCount.assignedTo++;
+      if (contact.team_member_id) columnDataCount.assignedTo++;
 
       // Check for dispatch data in metadata
       const hasDispatches = contact.import_metadata?.dispatched ||
@@ -885,7 +922,7 @@ export default function ToolsPage() {
     }
   };
 
-  const handleDistribute = async (brokerId: string) => {
+  const handleDistribute = async (teamMemberId: string) => {
     const supabase = createClient();
 
     const contactIds = Array.from(selectedContacts);
@@ -896,7 +933,7 @@ export default function ToolsPage() {
     const { error } = await supabase
       .from("customers")
       .update({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         status: "inbox", // New contacts go to inbox status
         on_kanban_board: true, // Show on kanban board immediately in inbox column
         updated_at: new Date().toISOString()
@@ -908,17 +945,17 @@ export default function ToolsPage() {
       return;
     }
 
-    // Create notifications for assigned broker (API handles security)
+    // Create notifications for assigned team member (API handles security)
     if (currentUser) {
       fetch('/api/notifications/contact-assigned', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          brokerId,
+          teamMemberId,
           customerIds: contactIds,
           customerNames: contactsToAssign.map(c => c.business_name || 'Unknown'),
           assignedBy: `${currentUser.first_name} ${currentUser.last_name || ''}`.trim(),
-          assignedByBrokerId: currentUser.id,
+          assignedByTeamMemberId: currentUser.id,
         }),
       }).catch((err: Error) => console.error('Failed to send assignment notification:', err));
     }
@@ -935,51 +972,51 @@ export default function ToolsPage() {
 
     const contactIds = Array.from(selectedContacts);
     const contactsToAssign = activeContacts.filter(c => contactIds.includes(c.id));
-    const availableBrokers = brokers.filter((b) => !b.is_admin);
+    const availableTeamMembers = teamMembers.filter((b) => !b.is_admin);
 
-    if (availableBrokers.length === 0) {
-      alert("No brokers available for distribution");
+    if (availableTeamMembers.length === 0) {
+      alert("No team members available for distribution");
       return;
     }
 
     // Distribute evenly
-    const contactsPerBroker = Math.ceil(
-      contactIds.length / availableBrokers.length,
+    const contactsPerTeamMember = Math.ceil(
+      contactIds.length / availableTeamMembers.length,
     );
     let currentIndex = 0;
 
-    for (const broker of availableBrokers) {
+    for (const teamMember of availableTeamMembers) {
       const assignmentIds = contactIds.slice(
         currentIndex,
-        currentIndex + contactsPerBroker,
+        currentIndex + contactsPerTeamMember,
       );
       if (assignmentIds.length === 0) break;
 
       await supabase
         .from("customers")
         .update({
-          broker_id: broker.id,
+          team_member_id: teamMember.id,
           status: "inbox", // New contacts go to inbox status
           on_kanban_board: true, // Show on kanban board immediately in inbox column
           updated_at: new Date().toISOString()
         })
         .in("id", assignmentIds);
 
-      // Create notifications for this broker (API handles security)
+      // Create notifications for this teamMember (API handles security)
       const assignedContacts = contactsToAssign.filter(c => assignmentIds.includes(c.id));
       fetch('/api/notifications/contact-assigned', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          brokerId: broker.id,
+          teamMemberId: teamMember.id,
           customerIds: assignmentIds,
           customerNames: assignedContacts.map(c => c.business_name || 'Unknown'),
           assignedBy: `${currentUser.first_name} ${currentUser.last_name || ''}`.trim(),
-          assignedByBrokerId: currentUser.id,
+          assignedByTeamMemberId: currentUser.id,
         }),
       }).catch(err => console.error('Failed to send assignment notification:', err));
 
-      currentIndex += contactsPerBroker;
+      currentIndex += contactsPerTeamMember;
     }
 
     alert(`Distributed ${contactIds.length} contacts evenly!`);
@@ -1034,7 +1071,7 @@ export default function ToolsPage() {
     const { error } = await supabase
       .from("customers")
       .update({
-        broker_id: currentUser.id,
+        team_member_id: currentUser.id,
         status: "inbox", // New contacts go to inbox status
         on_kanban_board: true, // Show on kanban board immediately in inbox column
         updated_at: new Date().toISOString()
@@ -1558,13 +1595,13 @@ export default function ToolsPage() {
         return (
           <td key={columnKey} className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap" style={widthStyle}>
             {(() => {
-              if (!contact.broker_id) return <span className="text-slate-400">Unassigned</span>;
-              const broker = brokers.find(b => b.id === contact.broker_id);
-              if (!broker) return <span className="text-slate-400">Unknown</span>;
+              if (!contact.team_member_id) return <span className="text-slate-400">Unassigned</span>;
+              const teamMember = teamMembers.find(b => b.id === contact.team_member_id);
+              if (!teamMember) return <span className="text-slate-400">Unknown</span>;
               return (
                 <span className="inline-flex items-center gap-1.5">
                   <User className="h-3.5 w-3.5 text-slate-500" />
-                  {broker.first_name} {broker.last_name || ''}
+                  {teamMember.first_name} {teamMember.last_name || ''}
                 </span>
               );
             })()}
@@ -1738,28 +1775,28 @@ export default function ToolsPage() {
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Select Broker to Reassign Contacts From:
+                  Select TeamMember to Reassign Contacts From:
                 </label>
                 <select
-                  value={selectedReassignBroker}
+                  value={selectedReassignTeamMember}
                   onChange={(e) => {
-                    setSelectedReassignBroker(e.target.value);
+                    setSelectedReassignTeamMember(e.target.value);
                     loadReassignData(e.target.value);
                     setSelectedContacts(new Set());
                   }}
                   className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                 >
-                  <option value="">Choose a broker...</option>
-                  {brokers.map((broker) => (
-                    <option key={broker.id} value={broker.id}>
-                      {broker.first_name} {broker.last_name || ""} - {broker.office_location || "No Office"}
-                      {broker.is_manager && " (Manager)"}
+                  <option value="">Choose a team member...</option>
+                  {teamMembers.map((teamMember) => (
+                    <option key={teamMember.id} value={teamMember.id}>
+                      {teamMember.first_name} {teamMember.last_name || ""} - {teamMember.office_location || "No Office"}
+                      {teamMember.is_manager && " (Manager)"}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {selectedReassignBroker && (
+              {selectedReassignTeamMember && (
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-4 w-4 text-slate-400" />
                   <span className="font-medium text-slate-900">
@@ -1782,18 +1819,18 @@ export default function ToolsPage() {
           </div>
 
           <div className="p-4 sm:p-6">
-            {!selectedReassignBroker ? (
+            {!selectedReassignTeamMember ? (
               <div className="rounded-lg border border-slate-200 bg-white py-12 text-center">
                 <Users className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-                <p className="text-slate-600">Select a broker above to view their contacts</p>
+                <p className="text-slate-600">Select a team member above to view their contacts</p>
                 <p className="text-sm text-slate-500">
-                  You can reassign contacts when a broker leaves or changes roles
+                  You can reassign contacts when a team member leaves or changes roles
                 </p>
               </div>
             ) : reassignContacts.length === 0 ? (
               <div className="rounded-lg border border-slate-200 bg-white py-12 text-center">
                 <FileSpreadsheet className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-                <p className="text-slate-600">This broker has no contacts</p>
+                <p className="text-slate-600">This teamMember has no contacts</p>
               </div>
             ) : (
               <>
@@ -2292,7 +2329,7 @@ export default function ToolsPage() {
                         </button>
                       </>
                     )}
-                    {/* Broker-level bulk actions */}
+                    {/* TeamMember-level bulk actions */}
                     {!canDistribute && selectedContacts.size > 0 && (
                       <>
                         <button
@@ -2406,7 +2443,7 @@ export default function ToolsPage() {
                               tooltip: 'Lead quality score (0-100) based on available data: business email (25pts), complete contact info (15pts), shipping frequency (20pts), industry relevance (20pts), web/social presence (15pts), dispatch history (20pts). Adapts to whatever data your import includes.'
                             },
                             added: { label: 'Added', sortKey: 'created_at' },
-                            assignedTo: { label: 'Assigned To', tooltip: 'Broker assigned to this contact' },
+                            assignedTo: { label: 'Assigned To', tooltip: 'TeamMember assigned to this contact' },
                           };
 
                           const config = columnConfig[columnKey];
@@ -2625,7 +2662,7 @@ export default function ToolsPage() {
           {/* Distribution Modal */}
           {showDistributeModal && (
             <DistributeModal
-              brokers={brokers}
+              teamMembers={teamMembers}
               selectedCount={selectAllFiltered ? filteredContacts.length : selectedContacts.size}
               onDistribute={handleDistribute}
               onEvenDistribute={handleEvenDistribution}
@@ -2683,7 +2720,7 @@ export default function ToolsPage() {
                     This tag will be applied to {selectAllFiltered ? filteredContacts.length : selectedContacts.size} selected contact{(selectAllFiltered ? filteredContacts.length : selectedContacts.size) === 1 ? '' : 's'}
                   </p>
                   <p className="mt-1 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
-                    💡 <strong>Note:</strong> Source tags will appear in the Kanban source filter once contacts are distributed to a broker
+                    💡 <strong>Note:</strong> Source tags will appear in the Kanban source filter once contacts are distributed to a team member
                   </p>
 
                   {/* Existing unique sources for suggestions */}
@@ -3356,7 +3393,7 @@ function ImportModal({
       // Transform data based on mapping
       const customersToInsert = csvData.map((row) => {
         const customer: any = {
-          broker_id: null, // Leave unassigned for distribution to team
+          team_member_id: null, // Leave unassigned for distribution to team
           imported_by: currentUserId, // Track who imported this contact
           business_name: "",
           contact_name: "",
@@ -3698,7 +3735,7 @@ function ImportModal({
                               📞 {dup.existing.phone} {getMatchIcon('phone')}
                             </span>
                           )}
-                          {dup.existing.broker_id && <span className="text-blue-600">✓ Assigned</span>}
+                          {dup.existing.team_member_id && <span className="text-blue-600">✓ Assigned</span>}
                         </div>
                       </div>
 
@@ -4394,37 +4431,37 @@ function ExportModal({
 
 // Distribution Modal Component
 function DistributeModal({
-  brokers,
+  teamMembers,
   selectedCount,
   onDistribute,
   onEvenDistribute,
   onClose,
   currentUser,
 }: {
-  brokers: Broker[];
+  teamMembers: TeamMember[];
   selectedCount: number;
-  onDistribute: (brokerId: string) => void;
+  onDistribute: (teamMemberId: string) => void;
   onEvenDistribute: () => void;
   onClose: () => void;
-  currentUser: Broker | null;
+  currentUser: TeamMember | null;
 }) {
-  const [selectedBroker, setSelectedBroker] = useState<string>("");
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string>("");
   const [showConfirmEven, setShowConfirmEven] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedOffices, setSelectedOffices] = useState<string[]>([]);
-  const [selectedBrokersForAdvanced, setSelectedBrokersForAdvanced] = useState<Set<string>>(new Set());
+  const [selectedTeamMembersForAdvanced, setSelectedTeamMembersForAdvanced] = useState<Set<string>>(new Set());
   const [distributionMode, setDistributionMode] = useState<'even' | 'ratio'>('even');
-  const [brokerRatios, setBrokerRatios] = useState<Map<string, number>>(new Map());
+  const [teamMemberRatios, setTeamMemberRatios] = useState<Map<string, number>>(new Map());
 
   // Get unique office locations
-  const uniqueOffices = Array.from(new Set(brokers.map(b => b.office_location).filter(Boolean))) as string[];
+  const uniqueOffices = Array.from(new Set(teamMembers.map(b => b.office_location).filter(Boolean))) as string[];
 
-  // Filter brokers based on selected offices
-  const getFilteredBrokers = () => {
+  // Filter teamMembers based on selected offices
+  const getFilteredTeamMembers = () => {
     if (selectedOffices.length === 0) {
-      return brokers.filter((b) => !b.is_admin);
+      return teamMembers.filter((b) => !b.is_admin);
     }
-    return brokers.filter((b) => !b.is_admin && selectedOffices.includes(b.office_location || ''));
+    return teamMembers.filter((b) => !b.is_admin && selectedOffices.includes(b.office_location || ''));
   };
 
   const handleOfficeToggle = (office: string) => {
@@ -4435,56 +4472,56 @@ function DistributeModal({
     }
   };
 
-  const handleBrokerToggle = (brokerId: string) => {
-    const newSet = new Set(selectedBrokersForAdvanced);
-    if (newSet.has(brokerId)) {
-      newSet.delete(brokerId);
+  const handleTeamMemberToggle = (teamMemberId: string) => {
+    const newSet = new Set(selectedTeamMembersForAdvanced);
+    if (newSet.has(teamMemberId)) {
+      newSet.delete(teamMemberId);
       // Remove ratio when unchecking
-      const newRatios = new Map(brokerRatios);
-      newRatios.delete(brokerId);
-      setBrokerRatios(newRatios);
+      const newRatios = new Map(teamMemberRatios);
+      newRatios.delete(teamMemberId);
+      setTeamMemberRatios(newRatios);
     } else {
-      newSet.add(brokerId);
+      newSet.add(teamMemberId);
       // Set default ratio of 1 when checking
-      const newRatios = new Map(brokerRatios);
-      newRatios.set(brokerId, 1);
-      setBrokerRatios(newRatios);
+      const newRatios = new Map(teamMemberRatios);
+      newRatios.set(teamMemberId, 1);
+      setTeamMemberRatios(newRatios);
     }
-    setSelectedBrokersForAdvanced(newSet);
+    setSelectedTeamMembersForAdvanced(newSet);
   };
 
-  const handleRatioChange = (brokerId: string, value: string) => {
+  const handleRatioChange = (teamMemberId: string, value: string) => {
     const numValue = parseInt(value) || 1;
-    const newRatios = new Map(brokerRatios);
-    newRatios.set(brokerId, Math.max(1, numValue)); // Minimum ratio of 1
-    setBrokerRatios(newRatios);
+    const newRatios = new Map(teamMemberRatios);
+    newRatios.set(teamMemberId, Math.max(1, numValue)); // Minimum ratio of 1
+    setTeamMemberRatios(newRatios);
   };
 
   // Calculate distribution based on ratios
   const calculateRatioDistribution = () => {
-    const selectedBrokers = Array.from(selectedBrokersForAdvanced);
+    const selectedTeamMembers = Array.from(selectedTeamMembersForAdvanced);
     const distribution = new Map<string, number>();
 
-    if (selectedBrokers.length === 0) return distribution;
+    if (selectedTeamMembers.length === 0) return distribution;
 
     // Calculate total ratio points
-    const totalRatio = selectedBrokers.reduce((sum, brokerId) => {
-      return sum + (brokerRatios.get(brokerId) || 1);
+    const totalRatio = selectedTeamMembers.reduce((sum, teamMemberId) => {
+      return sum + (teamMemberRatios.get(teamMemberId) || 1);
     }, 0);
 
     // Initial distribution using floor
     let assigned = 0;
-    const allocations: { brokerId: string; ratio: number; count: number }[] = [];
+    const allocations: { teamMemberId: string; ratio: number; count: number }[] = [];
 
-    selectedBrokers.forEach(brokerId => {
-      const ratio = brokerRatios.get(brokerId) || 1;
+    selectedTeamMembers.forEach(teamMemberId => {
+      const ratio = teamMemberRatios.get(teamMemberId) || 1;
       const count = Math.floor(selectedCount * (ratio / totalRatio));
-      distribution.set(brokerId, count);
+      distribution.set(teamMemberId, count);
       assigned += count;
-      allocations.push({ brokerId, ratio, count });
+      allocations.push({ teamMemberId, ratio, count });
     });
 
-    // Distribute remainder to brokers with highest ratios
+    // Distribute remainder to teamMembers with highest ratios
     let remainder = selectedCount - assigned;
     if (remainder > 0) {
       // Sort by ratio descending, then by current count ascending
@@ -4494,8 +4531,8 @@ function DistributeModal({
       });
 
       for (let i = 0; i < remainder; i++) {
-        const { brokerId } = allocations[i % allocations.length];
-        distribution.set(brokerId, (distribution.get(brokerId) || 0) + 1);
+        const { teamMemberId } = allocations[i % allocations.length];
+        distribution.set(teamMemberId, (distribution.get(teamMemberId) || 0) + 1);
       }
     }
 
@@ -4504,16 +4541,16 @@ function DistributeModal({
 
   const getDistributionPreview = () => {
     if (distributionMode === 'even') {
-      const perBroker = Math.ceil(selectedCount / selectedBrokersForAdvanced.size);
-      return `~${perBroker} each`;
+      const perTeamMember = Math.ceil(selectedCount / selectedTeamMembersForAdvanced.size);
+      return `~${perTeamMember} each`;
     } else {
       const distribution = calculateRatioDistribution();
-      const preview = Array.from(selectedBrokersForAdvanced)
-        .map(brokerId => {
-          const broker = brokers.find(b => b.id === brokerId);
-          const count = distribution.get(brokerId) || 0;
-          const ratio = brokerRatios.get(brokerId) || 1;
-          return `${broker?.first_name}: ${count} (${ratio}×)`;
+      const preview = Array.from(selectedTeamMembersForAdvanced)
+        .map(teamMemberId => {
+          const teamMember = teamMembers.find(b => b.id === teamMemberId);
+          const count = distribution.get(teamMemberId) || 0;
+          const ratio = teamMemberRatios.get(teamMemberId) || 1;
+          return `${teamMember?.first_name}: ${count} (${ratio}×)`;
         })
         .join(', ');
       return preview;
@@ -4521,8 +4558,8 @@ function DistributeModal({
   };
 
   const handleAdvancedDistribute = () => {
-    if (selectedBrokersForAdvanced.size === 0) {
-      alert('Please select at least one broker');
+    if (selectedTeamMembersForAdvanced.size === 0) {
+      alert('Please select at least one team member');
       return;
     }
 
@@ -4534,8 +4571,8 @@ function DistributeModal({
       console.log('Ratio Distribution:', Object.fromEntries(distribution));
       // TODO: Add onRatioDistribute prop to handle custom distribution
       alert(`Ratio distribution calculated. You'll need to implement the backend handler for this feature.\n\nDistribution:\n${Array.from(distribution.entries()).map(([id, count]) => {
-        const broker = brokers.find(b => b.id === id);
-        return `${broker?.first_name}: ${count} contacts`;
+        const teamMember = teamMembers.find(b => b.id === id);
+        return `${teamMember?.first_name}: ${count} contacts`;
       }).join('\n')}`);
     } else {
       // Even distribution
@@ -4558,15 +4595,15 @@ function DistributeModal({
             <div className="mb-6 space-y-3">
               <p className="text-sm text-slate-700">
                 You are about to distribute <strong>{selectedCount} contacts</strong> evenly across{' '}
-                <strong>{getFilteredBrokers().length} brokers</strong>
+                <strong>{getFilteredTeamMembers().length} teamMembers</strong>
                 {selectedOffices.length > 0 && (
                   <span> in {selectedOffices.length === 1 ? selectedOffices[0] : `${selectedOffices.length} offices`}</span>
                 )}.
               </p>
               <div className="rounded-lg bg-blue-50 p-3">
                 <p className="text-xs text-blue-900">
-                  Each broker will receive approximately{' '}
-                  <strong>{Math.ceil(selectedCount / getFilteredBrokers().length)}</strong> contacts.
+                  Each teamMember will receive approximately{' '}
+                  <strong>{Math.ceil(selectedCount / getFilteredTeamMembers().length)}</strong> contacts.
                   This action cannot be easily undone.
                 </p>
               </div>
@@ -4625,7 +4662,7 @@ function DistributeModal({
                   className="flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-blue-600 bg-white px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
                 >
                   <ArrowRight className="h-4 w-4" />
-                  Distribute Evenly ({brokers.filter((b) => !b.is_admin).length} Brokers)
+                  Distribute Evenly ({teamMembers.filter((b) => !b.is_admin).length} TeamMembers)
                 </button>
               </div>
             </div>
@@ -4639,29 +4676,29 @@ function DistributeModal({
               </div>
             </div>
 
-            {/* Assign to Specific Broker */}
+            {/* Assign to Specific TeamMember */}
             <div className="rounded-lg border border-slate-200 p-4">
               <label className="mb-2 block text-sm font-medium text-slate-700">
-                Assign to Specific Broker
+                Assign to Specific TeamMember
               </label>
               <div className="flex gap-2">
                 <select
-                  value={selectedBroker}
-                  onChange={(e) => setSelectedBroker(e.target.value)}
+                  value={selectedTeamMember}
+                  onChange={(e) => setSelectedTeamMember(e.target.value)}
                   className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
                 >
-                  <option value="">Select a broker...</option>
-                  {brokers.map((broker) => (
-                    <option key={broker.id} value={broker.id}>
-                      {broker.first_name} {broker.last_name || ""} -{" "}
-                      {broker.office_location || "No Office"}
-                      {broker.is_manager && " (Manager)"}
+                  <option value="">Select a team member...</option>
+                  {teamMembers.map((teamMember) => (
+                    <option key={teamMember.id} value={teamMember.id}>
+                      {teamMember.first_name} {teamMember.last_name || ""} -{" "}
+                      {teamMember.office_location || "No Office"}
+                      {teamMember.is_manager && " (Manager)"}
                     </option>
                   ))}
                 </select>
                 <button
-                  onClick={() => selectedBroker && onDistribute(selectedBroker)}
-                  disabled={!selectedBroker}
+                  onClick={() => selectedTeamMember && onDistribute(selectedTeamMember)}
+                  disabled={!selectedTeamMember}
                   className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Assign
@@ -4679,13 +4716,13 @@ function DistributeModal({
             </div>
 
             {/* Advanced Distribution Options */}
-            <div className={`rounded-lg border p-4 ${distributionMode === 'ratio' && selectedBrokersForAdvanced.size > 0
+            <div className={`rounded-lg border p-4 ${distributionMode === 'ratio' && selectedTeamMembersForAdvanced.size > 0
               ? 'border-purple-200 bg-purple-50'
               : 'border-blue-200 bg-blue-50'
               }`}>
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className={`flex w-full items-center justify-between text-sm font-semibold ${distributionMode === 'ratio' && selectedBrokersForAdvanced.size > 0
+                className={`flex w-full items-center justify-between text-sm font-semibold ${distributionMode === 'ratio' && selectedTeamMembersForAdvanced.size > 0
                   ? 'text-purple-900'
                   : 'text-blue-900'
                   }`}
@@ -4719,18 +4756,18 @@ function DistributeModal({
                     </div>
                   )}
 
-                  {/* Broker Selection */}
+                  {/* TeamMember Selection */}
                   <div>
                     <div className="mb-2 flex items-center justify-between">
                       <label className="block text-sm font-medium text-slate-700">
-                        Select Specific Brokers
+                        Select Specific TeamMembers
                         {selectedOffices.length > 0 && (
                           <span className="ml-2 text-xs text-slate-500">
                             (filtered by {selectedOffices.length} office{selectedOffices.length > 1 ? 's' : ''})
                           </span>
                         )}
                       </label>
-                      {selectedBrokersForAdvanced.size > 0 && (
+                      {selectedTeamMembersForAdvanced.size > 0 && (
                         <div className="flex gap-1 rounded-lg bg-white p-1 border border-slate-200">
                           <button
                             onClick={() => setDistributionMode('even')}
@@ -4754,30 +4791,30 @@ function DistributeModal({
                       )}
                     </div>
                     <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2">
-                      {getFilteredBrokers().map((broker) => (
+                      {getFilteredTeamMembers().map((teamMember) => (
                         <div
-                          key={broker.id}
+                          key={teamMember.id}
                           className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50"
                         >
                           <label className="flex flex-1 items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={selectedBrokersForAdvanced.has(broker.id)}
-                              onChange={() => handleBrokerToggle(broker.id)}
+                              checked={selectedTeamMembersForAdvanced.has(teamMember.id)}
+                              onChange={() => handleTeamMemberToggle(teamMember.id)}
                               className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                             />
                             <span className="text-sm text-slate-900 flex-1">
-                              {broker.first_name} {broker.last_name || ""} -{" "}
-                              {broker.office_location || "No Office"}
+                              {teamMember.first_name} {teamMember.last_name || ""} -{" "}
+                              {teamMember.office_location || "No Office"}
                             </span>
                           </label>
-                          {distributionMode === 'ratio' && selectedBrokersForAdvanced.has(broker.id) && (
+                          {distributionMode === 'ratio' && selectedTeamMembersForAdvanced.has(teamMember.id) && (
                             <div className="flex items-center gap-1">
                               <input
                                 type="number"
                                 min="1"
-                                value={brokerRatios.get(broker.id) || 1}
-                                onChange={(e) => handleRatioChange(broker.id, e.target.value)}
+                                value={teamMemberRatios.get(teamMember.id) || 1}
+                                onChange={(e) => handleRatioChange(teamMember.id, e.target.value)}
                                 className="w-16 rounded border border-slate-300 px-2 py-1 text-xs text-center"
                                 placeholder="1"
                               />
@@ -4789,31 +4826,31 @@ function DistributeModal({
                     </div>
                   </div>
 
-                  {selectedBrokersForAdvanced.size > 0 && (
+                  {selectedTeamMembersForAdvanced.size > 0 && (
                     <div className={`rounded-lg p-3 ${distributionMode === 'ratio' ? 'bg-purple-50 border border-purple-200' : 'bg-white'}`}>
                       {distributionMode === 'even' ? (
                         <p className="text-xs text-slate-600">
                           Will distribute <strong>{selectedCount} contacts</strong> evenly across{' '}
-                          <strong>{selectedBrokersForAdvanced.size} selected broker{selectedBrokersForAdvanced.size > 1 ? 's' : ''}</strong>
-                          {' '}(~{Math.ceil(selectedCount / selectedBrokersForAdvanced.size)} each)
+                          <strong>{selectedTeamMembersForAdvanced.size} selected team member{selectedTeamMembersForAdvanced.size > 1 ? 's' : ''}</strong>
+                          {' '}(~{Math.ceil(selectedCount / selectedTeamMembersForAdvanced.size)} each)
                         </p>
                       ) : (
                         <div className="space-y-2">
                           <p className="text-xs font-semibold text-purple-900 mb-2">
                             Distribution Preview (Ratio-Based):
                           </p>
-                          {Array.from(selectedBrokersForAdvanced).map(brokerId => {
-                            const broker = brokers.find(b => b.id === brokerId);
+                          {Array.from(selectedTeamMembersForAdvanced).map(teamMemberId => {
+                            const teamMember = teamMembers.find(b => b.id === teamMemberId);
                             const distribution = calculateRatioDistribution();
-                            const count = distribution.get(brokerId) || 0;
-                            const ratio = brokerRatios.get(brokerId) || 1;
-                            const totalRatio = Array.from(selectedBrokersForAdvanced).reduce((sum, id) => sum + (brokerRatios.get(id) || 1), 0);
+                            const count = distribution.get(teamMemberId) || 0;
+                            const ratio = teamMemberRatios.get(teamMemberId) || 1;
+                            const totalRatio = Array.from(selectedTeamMembersForAdvanced).reduce((sum, id) => sum + (teamMemberRatios.get(id) || 1), 0);
                             const percentage = ((ratio / totalRatio) * 100).toFixed(1);
 
                             return (
-                              <div key={brokerId} className="flex items-center justify-between text-xs">
+                              <div key={teamMemberId} className="flex items-center justify-between text-xs">
                                 <span className="text-slate-700">
-                                  {broker?.first_name} {broker?.last_name}
+                                  {teamMember?.first_name} {teamMember?.last_name}
                                 </span>
                                 <div className="flex items-center gap-2">
                                   <span className="text-slate-500">Ratio: {ratio}×</span>
@@ -4842,11 +4879,11 @@ function DistributeModal({
 
                   <button
                     onClick={handleAdvancedDistribute}
-                    disabled={selectedBrokersForAdvanced.size === 0}
+                    disabled={selectedTeamMembersForAdvanced.size === 0}
                     className={`w-full rounded-lg px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 ${distributionMode === 'ratio' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700'
                       }`}
                   >
-                    {distributionMode === 'ratio' ? 'Distribute by Ratio' : 'Distribute Evenly'} ({selectedBrokersForAdvanced.size})
+                    {distributionMode === 'ratio' ? 'Distribute by Ratio' : 'Distribute Evenly'} ({selectedTeamMembersForAdvanced.size})
                   </button>
                 </div>
               )}
@@ -4952,7 +4989,7 @@ function SimpleImportModal({
 
     const records = rows.map((row) => {
       const rec: Record<string, string | null> = {
-        broker_id: null,
+        team_member_id: null,
         imported_by: currentUserId,
         status: "prospect",
         on_kanban_board: "false",

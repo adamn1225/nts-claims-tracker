@@ -16,7 +16,7 @@ import type { Task } from '@/lib/types';
  */
 export async function createTaskWithOptionalSync(
   taskData: Partial<Task>,
-  brokerId: string,
+  teamMemberId: string,
   customerName?: string
 ): Promise<{ task: Task; calendarSynced: boolean; calendarError?: string }> {
   const supabase = createClient();
@@ -26,7 +26,7 @@ export async function createTaskWithOptionalSync(
     .from('tasks')
     .insert({
       ...taskData,
-      broker_id: brokerId,
+      team_member_id: teamMemberId,
     })
     .select()
     .single();
@@ -39,7 +39,7 @@ export async function createTaskWithOptionalSync(
   const { data: preferences } = await supabase
     .from('user_preferences')
     .select('microsoft_integration_enabled')
-    .eq('user_id', brokerId)
+    .eq('user_id', teamMemberId)
     .single();
   
   const integrationEnabled = preferences?.microsoft_integration_enabled ?? false;
@@ -49,10 +49,10 @@ export async function createTaskWithOptionalSync(
   let calendarError: string | undefined;
   
   if (integrationEnabled) {
-    const connected = await isMicrosoftConnected(brokerId);
+    const connected = await isMicrosoftConnected(teamMemberId);
     
     if (connected && task.due_date) {
-      const syncResult = await syncTaskToOutlookCalendar(brokerId, {
+      const syncResult = await syncTaskToOutlookCalendar(teamMemberId, {
         title: task.title,
         description: task.description || undefined,
         due_date: task.due_date,
@@ -92,7 +92,7 @@ export const exampleTaskFormModalUsage = `
 // Before:
 const { data, error } = await supabase.from("tasks").insert({
   ...taskData,
-  broker_id: currentBrokerId,
+  team_member_id: currentTeamMemberId,
 }).select().single();
 
 if (error || !data) throw error;
@@ -100,7 +100,7 @@ if (error || !data) throw error;
 // After:
 const result = await createTaskWithOptionalSync(
   taskData,
-  currentBrokerId,
+  currentTeamMemberId,
   customerName // Pass customer name if available
 );
 
@@ -131,7 +131,7 @@ if (scheduleNext && currentTask.customer_id && nextTaskDate && nextTaskTitle.tri
       status: "pending" as TaskStatus,
       description: \`Scheduled from completed task: \${currentTask.title}\`,
     },
-    viewingBroker?.id,
+    viewingTeamMember?.id,
     currentTask.customer?.business_name
   );
   
@@ -159,7 +159,7 @@ const handleGenerateTeamsMeeting = async () => {
   const startTime = new Date(\`\${dueDate}T\${dueTime}\`).toISOString();
   const endTime = new Date(new Date(startTime).getTime() + 60 * 60 * 1000).toISOString(); // +1 hour
   
-  const result = await generateTeamsMeetingLink(brokerId, {
+  const result = await generateTeamsMeetingLink(teamMemberId, {
     title: taskTitle,
     start_time: startTime,
     end_time: endTime,

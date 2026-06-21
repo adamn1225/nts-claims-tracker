@@ -1,5 +1,5 @@
 /**
- * MJML Component Library for Freight Broker Email Templates
+ * MJML Component Library for Freight TeamMember Email Templates
  * Pre-built components that can be inserted into email templates
  */
 
@@ -41,7 +41,7 @@ export function getBaseUrl(): string {
 }
 
 /**
- * Freight broker-specific email components
+ * Freight teamMember-specific email components
  * Uses NTS brand colors and freight industry terminology
  */
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'https://sales.ntsconnect.com');
@@ -107,7 +107,7 @@ export const EMAIL_COMPONENTS: EmailComponent[] = [
     mjml: `    <mj-section background-color="#1A1A1A" padding="30px 20px">
       <mj-column>
         <mj-text align="center" color="#ffffff" font-size="16px" font-weight="bold">
-          {{broker_name}}
+          {{team_member_name}}
         </mj-text>
         <mj-text align="center" color="#FFA726" font-size="14px">
           Nationwide Transport Services
@@ -248,18 +248,18 @@ export const EMAIL_COMPONENTS: EmailComponent[] = [
     </mj-section>`,
   },
   {
-    id: "contact-broker",
+    id: "contact-teamMember",
     icon: Mail,
-    label: "Broker Contact",
+    label: "TeamMember Contact",
     category: "freight",
-    description: "Broker contact card",
+    description: "TeamMember contact card",
     mjml: `    <mj-section background-color="#ffffff" border="1px solid #e5e7eb" padding="20px">
       <mj-column>
         <mj-text color="#E85D04" font-size="16px" font-weight="bold" padding-bottom="10px">
-          👤 Your Dedicated Broker
+          👤 Your Dedicated TeamMember
         </mj-text>
         <mj-text color="#333333" font-size="14px" line-height="22px">
-          <strong>{{broker_name}}</strong><br/>
+          <strong>{{team_member_name}}</strong><br/>
           📞 {{broker_phone}}<br/>
           ✉️ {{broker_email}}<br/>
           🏢 Nationwide Transport Services
@@ -352,7 +352,7 @@ export const STARTER_TEMPLATE = getMJMLWrapper(`    <mj-section background-color
     <mj-section background-color="#1A1A1A" padding="30px 20px">
       <mj-column>
         <mj-text align="center" color="#ffffff" font-size="16px" font-weight="bold">
-          {{broker_name}}
+          {{team_member_name}}
         </mj-text>
         <mj-text align="center" color="#FFA726" font-size="14px">
           Nationwide Transport Services

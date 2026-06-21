@@ -69,7 +69,7 @@ export default function QuickNoteInput({
 
       const { error } = await supabase.from("contact_log").insert({
         customer_id: customerId,
-        broker_id: user.id,
+        team_member_id: user.id,
         type: "note",
         subject: "Quick Note",
         notes: noteText.trim(),

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type BrokerActivity = {
+type TeamMemberActivity = {
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -24,11 +24,11 @@ type BrokerActivity = {
 };
 
 type ActivityStats = {
-  totalBrokers: number;
+  totalTeamMembers: number;
   activeToday: number;
   activeThisWeek: number;
   activeThisMonth: number;
-  inactiveBrokers: number;
+  inactiveTeamMembers: number;
 };
 
 type ActivityAnalyticsProps = {
@@ -40,13 +40,13 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<ActivityStats>({
-    totalBrokers: 0,
+    totalTeamMembers: 0,
     activeToday: 0,
     activeThisWeek: 0,
     activeThisMonth: 0,
-    inactiveBrokers: 0,
+    inactiveTeamMembers: 0,
   });
-  const [brokerActivity, setBrokerActivity] = useState<BrokerActivity[]>([]);
+  const [teamMemberActivity, setTeamMemberActivity] = useState<TeamMemberActivity[]>([]);
   const [timeframe, setTimeframe] = useState<"today" | "week" | "month">(
     "week",
   );
@@ -70,59 +70,59 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
       const monthStart = new Date(now);
       monthStart.setDate(now.getDate() - 30);
 
-      // Fetch all brokers with their details (filter by office if provided)
-      let brokersQuery = supabase
-        .from("brokers")
+      // Fetch all team members with their details (filter by office if provided)
+      let teamMembersQuery = supabase
+        .from("team_members")
         .select("id, first_name, last_name, email, office_location, updated_at");
       
       // Apply office filter if provided
       if (officeFilter) {
-        brokersQuery = brokersQuery.eq("office_location", officeFilter);
+        teamMembersQuery = teamMembersQuery.eq("office_location", officeFilter);
       }
       
-      const { data: brokersData, error: brokersError } = await brokersQuery;
+      const { data: teamMembersData, error: teamMembersError } = await teamMembersQuery;
 
-      if (brokersError) {
-        console.error("Brokers error:", brokersError);
-        throw new Error(`Failed to fetch brokers: ${brokersError.message}`);
+      if (teamMembersError) {
+        console.error("TeamMembers error:", teamMembersError);
+        throw new Error(`Failed to fetch team members: ${teamMembersError.message}`);
       }
 
-      // Fetch all tasks to track broker activity
+      // Fetch all tasks to track teamMember activity
       const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
-        .select("broker_id, created_at");
+        .select("team_member_id, created_at");
 
       if (tasksError) {
         console.error("Tasks error:", tasksError);
         // Don't throw - tasks might not exist yet
       }
 
-      // Fetch all customers to track broker activity
+      // Fetch all customers to track teamMember activity
       const { data: customersData, error: customersError } = await supabase
         .from("customers")
-        .select("broker_id, updated_at");
+        .select("team_member_id, updated_at");
 
       if (customersError) {
         console.error("Customers error:", customersError);
         // Don't throw - customers might not exist yet
       }
 
-      // Process broker activity
-      const processedActivity: BrokerActivity[] =
-        brokersData?.map((broker) => {
-          // Aggregate all broker activities (task creation, customer updates)
-          const brokerTaskActivities = (tasksData || [])
-            .filter((t) => t.broker_id === broker.id)
+      // Process teamMember activity
+      const processedActivity: TeamMemberActivity[] =
+        teamMembersData?.map((teamMember) => {
+          // Aggregate all teamMember activities (task creation, customer updates)
+          const teamMemberTaskActivities = (tasksData || [])
+            .filter((t) => t.team_member_id === teamMember.id)
             .map((t) => new Date(t.created_at));
 
-          const brokerCustomerActivities = (customersData || [])
-            .filter((c) => c.broker_id === broker.id)
+          const teamMemberCustomerActivities = (customersData || [])
+            .filter((c) => c.team_member_id === teamMember.id)
             .map((c) => new Date(c.updated_at));
 
           const allActivities = [
-            ...brokerTaskActivities,
-            ...brokerCustomerActivities,
-            new Date(broker.updated_at),
+            ...teamMemberTaskActivities,
+            ...teamMemberCustomerActivities,
+            new Date(teamMember.updated_at),
           ];
 
           // Find most recent activity
@@ -139,8 +139,8 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
           else if (timeframe === "month") startDate = monthStart;
 
           const recentActions = [
-            ...brokerTaskActivities,
-            ...brokerCustomerActivities,
+            ...teamMemberTaskActivities,
+            ...teamMemberCustomerActivities,
           ].filter((date) => date >= startDate).length;
 
           // Calculate days since last activity
@@ -152,11 +152,11 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
             : null;
 
           return {
-            id: broker.id,
-            first_name: broker.first_name,
-            last_name: broker.last_name,
-            email: broker.email,
-            office_location: broker.office_location,
+            id: teamMember.id,
+            first_name: teamMember.first_name,
+            last_name: teamMember.last_name,
+            email: teamMember.email,
+            office_location: teamMember.office_location,
             last_login: lastActivity ? lastActivity.toISOString() : null,
             recent_actions: recentActions,
             days_since_last_activity: daysSinceActivity,
@@ -186,21 +186,21 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
         (b) => b.last_login && new Date(b.last_login) >= monthStart,
       ).length;
 
-      const inactiveBrokers = processedActivity.filter(
+      const inactiveTeamMembers = processedActivity.filter(
         (b) =>
           !b.last_login ||
           (b.days_since_last_activity && b.days_since_last_activity > 30),
       ).length;
 
       setStats({
-        totalBrokers: brokersData?.length || 0,
+        totalTeamMembers: teamMembersData?.length || 0,
         activeToday,
         activeThisWeek,
         activeThisMonth,
-        inactiveBrokers,
+        inactiveTeamMembers,
       });
 
-      setBrokerActivity(processedActivity);
+      setTeamMemberActivity(processedActivity);
     } catch (err) {
       console.error("Error loading analytics:", err);
 
@@ -252,7 +252,7 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            Broker Usage Analytics
+            TeamMember Usage Analytics
           </h2>
           <p className="text-sm text-slate-600">
             Track who's using the application and how often
@@ -308,13 +308,13 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
         <>
           {/* Stats Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {/* Total Brokers */}
+            {/* Total TeamMembers */}
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Total Brokers</p>
+                  <p className="text-sm text-slate-600">Total TeamMembers</p>
                   <p className="mt-1 text-2xl font-semibold text-slate-900">
-                    {stats.totalBrokers}
+                    {stats.totalTeamMembers}
                   </p>
                 </div>
                 <div className="rounded-full bg-slate-100 p-3">
@@ -368,13 +368,13 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
               </div>
             </div>
 
-            {/* Inactive Brokers */}
+            {/* Inactive TeamMembers */}
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600">Inactive (30d+)</p>
                   <p className="mt-1 text-2xl font-semibold text-amber-600">
-                    {stats.inactiveBrokers}
+                    {stats.inactiveTeamMembers}
                   </p>
                 </div>
                 <div className="rounded-full bg-amber-100 p-3">
@@ -384,14 +384,14 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
             </div>
           </div>
 
-          {/* Broker Activity Table */}
+          {/* TeamMember Activity Table */}
           <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 p-4">
               <h3 className="font-semibold text-slate-900">
-                Individual Broker Activity
+                Individual TeamMember Activity
               </h3>
               <p className="text-sm text-slate-600">
-                Recent application usage by broker ({getTimeframeLabel()})
+                Recent application usage by teamMember ({getTimeframeLabel()})
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -399,7 +399,7 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
                 <thead className="border-b border-slate-200 bg-slate-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">
-                      Broker
+                      TeamMember
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700">
                       Office
@@ -416,7 +416,7 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {brokerActivity.length === 0 ? (
+                  {teamMemberActivity.length === 0 ? (
                     <tr>
                       <td
                         colSpan={5}
@@ -426,36 +426,36 @@ export default function ActivityAnalytics({ officeFilter }: ActivityAnalyticsPro
                       </td>
                     </tr>
                   ) : (
-                    brokerActivity.map((broker) => {
+                    teamMemberActivity.map((teamMember) => {
                       const isActive =
-                        broker.days_since_last_activity !== null &&
-                        broker.days_since_last_activity < 7;
+                        teamMember.days_since_last_activity !== null &&
+                        teamMember.days_since_last_activity < 7;
                       const isInactive =
-                        broker.days_since_last_activity !== null &&
-                        broker.days_since_last_activity > 30;
+                        teamMember.days_since_last_activity !== null &&
+                        teamMember.days_since_last_activity > 30;
 
                       return (
-                        <tr key={broker.id} className="hover:bg-slate-50">
+                        <tr key={teamMember.id} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-sm">
                             <div>
                               <p className="font-medium text-slate-900">
-                                {broker.first_name} {broker.last_name || ""}
+                                {teamMember.first_name} {teamMember.last_name || ""}
                               </p>
                               <p className="text-xs text-slate-500">
-                                {broker.email}
+                                {teamMember.email}
                               </p>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-700">
-                            {broker.office_location || "—"}
+                            {teamMember.office_location || "—"}
                           </td>
                           <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                            {broker.recent_actions}
+                            {teamMember.recent_actions}
                           </td>
                           <td className="px-4 py-3 text-sm text-slate-600">
                             {formatLastActivity(
-                              broker.last_login,
-                              broker.days_since_last_activity,
+                              teamMember.last_login,
+                              teamMember.days_since_last_activity,
                             )}
                           </td>
                           <td className="px-4 py-3 text-sm">

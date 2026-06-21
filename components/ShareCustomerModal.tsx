@@ -6,24 +6,24 @@ import { createClient } from "@/lib/supabase/client";
 import { Customer } from "@/lib/types";
 import type { Database } from "@/lib/database.types";
 
-type Broker = Database["public"]["Tables"]["brokers"]["Row"];
+type TeamMember = Database["public"]["Tables"]["team_members"]["Row"];
 type CollaborationMode = "team_up" | "notify_only";
 
 interface ShareCustomerModalProps {
   isOpen: boolean;
   onClose: () => void;
   customer: Customer;
-  currentBrokerId: string;
+  currentTeamMemberId: string;
 }
 
 export default function ShareCustomerModal({
   isOpen,
   onClose,
   customer,
-  currentBrokerId,
+  currentTeamMemberId,
 }: ShareCustomerModalProps) {
-  const [brokers, setBrokers] = useState<Broker[]>([]);
-  const [selectedBrokerIds, setSelectedBrokerIds] = useState<string[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [selectedTeamMemberIds, setSelectedTeamMemberIds] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export default function ShareCustomerModal({
 
   useEffect(() => {
     if (isOpen) {
-      fetchBrokers();
+      fetchTeamMembers();
     }
   }, [isOpen]);
 
@@ -55,7 +55,7 @@ export default function ShareCustomerModal({
     };
   }, [isDropdownOpen]);
 
-  const fetchBrokers = async () => {
+  const fetchTeamMembers = async () => {
     setLoading(true);
     const supabase = createClient();
 
@@ -67,64 +67,64 @@ export default function ShareCustomerModal({
         throw new Error("Not authenticated");
       }
 
-      // Fetch all active brokers except current user
+      // Fetch all active team members except current user
       let query = supabase
-        .from("brokers")
+        .from("team_members")
         .select("*")
         .eq("is_active", true)
         .order("first_name", { ascending: true });
 
-      // Only exclude current broker if we have the ID
-      if (currentBrokerId) {
-        query = query.neq("id", currentBrokerId);
+      // Only exclude current team member if we have the ID
+      if (currentTeamMemberId) {
+        query = query.neq("id", currentTeamMemberId);
       }
 
       const { data, error } = await query;
 
       if (error) {
-        console.error("Supabase error fetching brokers:", error);
+        console.error("Supabase error fetching team members:", error);
         throw error;
       }
 
-      console.log("Fetched brokers:", data?.length || 0);
-      setBrokers(data || []);
+      console.log("Fetched team members:", data?.length || 0);
+      setTeamMembers(data || []);
     } catch (error) {
-      console.error("Error fetching brokers:", error);
-      alert("Unable to load broker list. Please try again.");
+      console.error("Error fetching team members:", error);
+      alert("Unable to load team member list. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleBroker = (brokerId: string) => {
-    setSelectedBrokerIds((prev) =>
-      prev.includes(brokerId)
-        ? prev.filter((id) => id !== brokerId)
-        : [...prev, brokerId]
+  const handleToggleTeamMember = (teamMemberId: string) => {
+    setSelectedTeamMemberIds((prev) =>
+      prev.includes(teamMemberId)
+        ? prev.filter((id) => id !== teamMemberId)
+        : [...prev, teamMemberId]
     );
   };
 
-  // Filter brokers based on search query
-  const filteredBrokers = brokers.filter((broker) => {
+  // Filter teamMembers based on search query
+  const filteredTeamMembers = teamMembers.filter((teamMember) => {
     const searchLower = searchQuery.toLowerCase();
-    const fullName = `${broker.first_name} ${broker.last_name || ''}`.toLowerCase();
-    const email = broker.email.toLowerCase();
-    const office = broker.office_location?.toLowerCase() || '';
+    const fullName = `${teamMember.first_name} ${teamMember.last_name || ''}`.toLowerCase();
+    const email = teamMember.email.toLowerCase();
+    const office = teamMember.office_location?.toLowerCase() || '';
 
     return fullName.includes(searchLower) || email.includes(searchLower) || office.includes(searchLower);
   });
 
   const handleSelectAll = () => {
-    if (selectedBrokerIds.length === filteredBrokers.length) {
-      setSelectedBrokerIds([]);
+    if (selectedTeamMemberIds.length === filteredTeamMembers.length) {
+      setSelectedTeamMemberIds([]);
     } else {
-      setSelectedBrokerIds(filteredBrokers.map((b) => b.id));
+      setSelectedTeamMemberIds(filteredTeamMembers.map((b) => b.id));
     }
   };
 
   const handleShare = async () => {
-    if (selectedBrokerIds.length === 0) {
-      alert("Please select at least one broker.");
+    if (selectedTeamMemberIds.length === 0) {
+      alert("Please select at least one team member.");
       return;
     }
 
@@ -137,7 +137,7 @@ export default function ShareCustomerModal({
         body: JSON.stringify({
           customerId: customer.id,
           customerName: customer.business_name,
-          brokerIds: selectedBrokerIds,
+          teamMemberIds: selectedTeamMemberIds,
           mode,
           message: note.trim() || null,
         }),
@@ -150,7 +150,7 @@ export default function ShareCustomerModal({
       }
 
       const modeLabel = mode === "team_up" ? "teamed up on" : "shared";
-      alert(`Customer ${modeLabel} successfully with ${selectedBrokerIds.length} broker(s)!`);
+      alert(`Customer ${modeLabel} successfully with ${selectedTeamMemberIds.length} team member(s)!`);
       handleClose();
     } catch (error: any) {
       console.error("Error sharing customer:", error);
@@ -161,7 +161,7 @@ export default function ShareCustomerModal({
   };
 
   const handleClose = () => {
-    setSelectedBrokerIds([]);
+    setSelectedTeamMemberIds([]);
     setNote("");
     setMode("team_up");
     setIsDropdownOpen(false);
@@ -255,15 +255,15 @@ export default function ShareCustomerModal({
                 </div>
               </div>
 
-              {/* Broker Selection */}
+              {/* TeamMember Selection */}
               <div className="mb-6">
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Share With <span className="text-red-500">*</span>
                 </label>
 
-                {brokers.length === 0 ? (
+                {teamMembers.length === 0 ? (
                   <p className="text-sm text-slate-500">
-                    No other brokers available to share with.
+                    No other team members available to share with.
                   </p>
                 ) : (
                   <div ref={dropdownRef} className="relative">
@@ -273,12 +273,12 @@ export default function ShareCustomerModal({
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       className="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-left text-sm transition-colors hover:border-slate-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     >
-                      <span className={selectedBrokerIds.length === 0 ? "text-slate-400" : "text-slate-900"}>
-                        {selectedBrokerIds.length === 0
-                          ? "Select brokers..."
-                          : selectedBrokerIds.length === 1
-                            ? `${brokers.find((b) => b.id === selectedBrokerIds[0])?.first_name} ${brokers.find((b) => b.id === selectedBrokerIds[0])?.last_name || ''}`
-                            : `${selectedBrokerIds.length} brokers selected`}
+                      <span className={selectedTeamMemberIds.length === 0 ? "text-slate-400" : "text-slate-900"}>
+                        {selectedTeamMemberIds.length === 0
+                          ? "Select team members..."
+                          : selectedTeamMemberIds.length === 1
+                            ? `${teamMembers.find((b) => b.id === selectedTeamMemberIds[0])?.first_name} ${teamMembers.find((b) => b.id === selectedTeamMemberIds[0])?.last_name || ''}`
+                            : `${selectedTeamMemberIds.length} team members selected`}
                       </span>
                       <ChevronDown
                         className={`h-4 w-4 text-slate-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""
@@ -297,7 +297,7 @@ export default function ShareCustomerModal({
                               type="text"
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
-                              placeholder="Search brokers..."
+                              placeholder="Search team members..."
                               className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                             />
                           </div>
@@ -310,39 +310,39 @@ export default function ShareCustomerModal({
                             onClick={handleSelectAll}
                             className="text-sm text-orange-600 hover:text-orange-700 hover:underline"
                           >
-                            {selectedBrokerIds.length === filteredBrokers.length && filteredBrokers.length > 0
+                            {selectedTeamMemberIds.length === filteredTeamMembers.length && filteredTeamMembers.length > 0
                               ? "Deselect All"
                               : "Select All"}
                           </button>
                         </div>
 
-                        {/* Broker List */}
+                        {/* TeamMember List */}
                         <div className="max-h-60 overflow-y-auto p-2">
-                          {filteredBrokers.length === 0 ? (
+                          {filteredTeamMembers.length === 0 ? (
                             <p className="px-3 py-4 text-center text-sm text-slate-500">
-                              No brokers found
+                              No team members found
                             </p>
                           ) : (
-                            filteredBrokers.map((broker) => (
+                            filteredTeamMembers.map((teamMember) => (
                               <label
-                                key={broker.id}
+                                key={teamMember.id}
                                 className="flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-slate-50"
                               >
                                 <input
                                   type="checkbox"
-                                  checked={selectedBrokerIds.includes(broker.id)}
-                                  onChange={() => handleToggleBroker(broker.id)}
+                                  checked={selectedTeamMemberIds.includes(teamMember.id)}
+                                  onChange={() => handleToggleTeamMember(teamMember.id)}
                                   className="h-4 w-4 rounded border-slate-300 text-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-0"
                                 />
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-slate-900">
-                                    {`${broker.first_name} ${broker.last_name || ''}`.trim()}
+                                    {`${teamMember.first_name} ${teamMember.last_name || ''}`.trim()}
                                   </p>
                                   <p className="text-xs text-slate-500">
-                                    {broker.email}
-                                    {broker.office_location && (
+                                    {teamMember.email}
+                                    {teamMember.office_location && (
                                       <span className="ml-2">
-                                        • {broker.office_location}
+                                        • {teamMember.office_location}
                                       </span>
                                     )}
                                   </p>
@@ -356,9 +356,9 @@ export default function ShareCustomerModal({
                   </div>
                 )}
 
-                {selectedBrokerIds.length > 0 && (
+                {selectedTeamMemberIds.length > 0 && (
                   <p className="mt-2 text-xs text-slate-600">
-                    {selectedBrokerIds.length} broker(s) selected
+                    {selectedTeamMemberIds.length} teamMember(s) selected
                   </p>
                 )}
               </div>
@@ -395,7 +395,7 @@ export default function ShareCustomerModal({
           </button>
           <button
             onClick={handleShare}
-            disabled={isSending || selectedBrokerIds.length === 0 || loading}
+            disabled={isSending || selectedTeamMemberIds.length === 0 || loading}
             className="flex items-center gap-2 rounded-lg bg-linear-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSending ? (

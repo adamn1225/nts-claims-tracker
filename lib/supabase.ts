@@ -14,7 +14,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // Types from schema
 export type {
-  Broker,
+  TeamMember,
   Customer,
   Task,
   ContactLog,

@@ -294,18 +294,18 @@ export default function EmailTesting() {
             </div>
           </div>
 
-          {/* Broker Info */}
-          {result.broker && (
+          {/* TeamMember Info */}
+          {result.teamMember && (
             <div className="rounded-lg border border-slate-200 bg-white p-4">
               <h4 className="mb-3 font-semibold text-slate-900">Your Info</h4>
               <div className="space-y-1 text-sm">
                 <p>
                   <span className="text-slate-600">Name:</span>{" "}
-                  <span className="font-medium">{result.broker.name}</span>
+                  <span className="font-medium">{result.teamMember.name}</span>
                 </p>
                 <p>
                   <span className="text-slate-600">Email:</span>{" "}
-                  <span className="font-medium">{result.broker.email}</span>
+                  <span className="font-medium">{result.teamMember.email}</span>
                 </p>
               </div>
             </div>

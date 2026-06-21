@@ -20,7 +20,7 @@ const supabaseAdmin = createClient(
  * POST /api/admin/update-user-email
  * 
  * Change a user's email address (admin only)
- * Updates both Supabase Auth and broker record
+ * Updates both Supabase Auth and teamMember record
  * 
  * Body: { 
  *   oldEmail: string, 
@@ -38,13 +38,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if user is admin
-        const { data: broker } = await supabase
-            .from("brokers")
+        const { data: teamMember } = await supabase
+            .from("team_members")
             .select("is_admin")
             .eq("id", session.user.id)
             .single();
 
-        if (!broker?.is_admin) {
+        if (!teamMember?.is_admin) {
             return NextResponse.json(
                 { error: "Admin access required" },
                 { status: 403 }
@@ -117,19 +117,19 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Update email in brokers table (using admin client to bypass RLS)
-        const { error: brokerUpdateError } = await supabaseAdmin
-            .from("brokers")
+        // Update email in team_members table (using admin client to bypass RLS)
+        const { error: teamMemberUpdateError } = await supabaseAdmin
+            .from("team_members")
             .update({ email: newEmail })
             .eq("id", user.id);
 
-        if (brokerUpdateError) {
-            console.error("Error updating broker email:", brokerUpdateError);
-            // Auth email is updated, but broker table failed
+        if (teamMemberUpdateError) {
+            console.error("Error updating team member email:", teamMemberUpdateError);
+            // Auth email is updated, but teamMember table failed
             return NextResponse.json(
                 {
                     success: true,
-                    warning: "Email updated in Auth but failed to update brokers table",
+                    warning: "Email updated in Auth but failed to update team_members table",
                     message: `Email changed from ${oldEmail} to ${newEmail}`,
                     user: {
                         id: updatedUser.user.id,

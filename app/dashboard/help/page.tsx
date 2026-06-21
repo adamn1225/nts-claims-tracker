@@ -57,7 +57,7 @@ const helpSections: HelpSection[] = [
       {
         subtitle: "Welcome to NTS Claims Tracker",
         description:
-          "This CRM helps you manage customer relationships, track tasks, and never miss a follow-up. It's designed specifically for freight brokers and sales teams.",
+          "This CRM helps you manage customer relationships, track tasks, and never miss a follow-up. It's designed specifically for freight team members and sales teams.",
       },
       {
         subtitle: "Dashboard Overview",
@@ -355,7 +355,7 @@ const helpSections: HelpSection[] = [
     icon: <Lightbulb className="h-5 w-5" />,
     content: [
       {
-        subtitle: "For New Brokers",
+        subtitle: "For New TeamMembers",
         tips: [
           "Start by adding all your current customers (they go to List View)",
           "Classify them by status (Prospect vs Active)",
@@ -447,7 +447,7 @@ const helpSections: HelpSection[] = [
           "Q: Can I delete a task? A: Tasks are archived (cancelled), not deleted",
           "Q: How do I stop daily overdue notifications? A: Complete or archive the task",
           "Q: Can I change the customer ID format? A: No, it's auto-generated (NS-XXXX)",
-          "Q: Can other brokers see my customers? A: No, you only see your own data",
+          "Q: Can other team members see my customers? A: No, you only see your own data",
           "Q: Can I export my data? A: Contact support for data export",
         ],
       },

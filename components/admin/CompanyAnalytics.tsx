@@ -6,10 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 type CustomerRow = {
   status: string;
   next_follow_up_date: string | null;
-  broker_id: string | null;
+  team_member_id: string | null;
 };
 
-type BrokerRow = {
+type TeamMemberRow = {
   id: string;
   office_location: string | null;
 };
@@ -21,7 +21,7 @@ type CompanyAnalyticsProps = {
 export default function CompanyAnalytics({ officeFilter }: CompanyAnalyticsProps = {}) {
   const supabase = createClient();
   const [rows, setRows] = useState<CustomerRow[]>([]);
-  const [brokers, setBrokers] = useState<BrokerRow[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +33,7 @@ export default function CompanyAnalytics({ officeFilter }: CompanyAnalyticsProps
       // Load customers
       const { data: customersData, error: customersError } = await supabase
         .from("customers")
-        .select("status, next_follow_up_date, broker_id");
+        .select("status, next_follow_up_date, team_member_id");
       
       if (customersError) {
         setError(customersError.message);
@@ -41,19 +41,19 @@ export default function CompanyAnalytics({ officeFilter }: CompanyAnalyticsProps
         return;
       }
       
-      // Load brokers if we need to filter by office
+      // Load teamMembers if we need to filter by office
       if (officeFilter) {
-        const { data: brokersData, error: brokersError } = await supabase
-          .from("brokers")
+        const { data: teamMembersData, error: teamMembersError } = await supabase
+          .from("team_members")
           .select("id, office_location");
         
-        if (brokersError) {
-          setError(brokersError.message);
+        if (teamMembersError) {
+          setError(teamMembersError.message);
           setLoading(false);
           return;
         }
         
-        setBrokers(brokersData || []);
+        setTeamMembers(teamMembersData || []);
       }
       
       setRows(customersData || []);
@@ -66,16 +66,16 @@ export default function CompanyAnalytics({ officeFilter }: CompanyAnalyticsProps
   const filteredRows = useMemo(() => {
     if (!officeFilter) return rows;
     
-    // Get broker IDs for the target office
-    const officeBrokerIds = new Set(
-      brokers
+    // Get teamMember IDs for the target office
+    const officeTeamMemberIds = new Set(
+      teamMembers
         .filter((b) => b.office_location === officeFilter)
         .map((b) => b.id)
     );
     
-    // Filter customers to only those assigned to brokers in the office
-    return rows.filter((c) => c.broker_id && officeBrokerIds.has(c.broker_id));
-  }, [rows, brokers, officeFilter]);
+    // Filter customers to only those assigned to teamMembers in the office
+    return rows.filter((c) => c.team_member_id && officeTeamMemberIds.has(c.team_member_id));
+  }, [rows, teamMembers, officeFilter]);
 
   const stats = useMemo(() => {
     const total = filteredRows.length;
@@ -172,7 +172,7 @@ export default function CompanyAnalytics({ officeFilter }: CompanyAnalyticsProps
       {!loading && !error && filteredRows.length === 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           {officeFilter 
-            ? `No customers assigned to brokers in the ${officeFilter} office yet.`
+            ? `No customers assigned to team members in the ${officeFilter} office yet.`
             : "No customers yet. Add customers to see analytics populate."
           }
         </div>

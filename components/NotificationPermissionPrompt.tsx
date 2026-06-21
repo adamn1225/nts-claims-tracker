@@ -72,10 +72,10 @@ export default function NotificationPermissionPrompt() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm animate-in slide-in-from-bottom-4 fade-in">
-      <div className="rounded-lg border border-orange-200 bg-white p-4 shadow-lg">
+      <div className="rounded-lg border border-primary/30 bg-white p-4 shadow-lg">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100">
-            <Bell className="h-5 w-5 text-orange-600" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <Bell className="h-5 w-5 text-primary-text" />
           </div>
 
           <div className="flex-1">
@@ -91,7 +91,7 @@ export default function NotificationPermissionPrompt() {
               <button
                 onClick={handleEnable}
                 disabled={isRequesting}
-                className="flex-1 rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-text disabled:opacity-50"
               >
                 {isRequesting ? "Requesting..." : "Enable"}
               </button>

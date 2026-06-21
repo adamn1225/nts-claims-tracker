@@ -9,14 +9,14 @@ import { getCustomerDisplayName } from "@/lib/customer-utils";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import HelpModal from "@/components/HelpModal";
-import BrokerSelector from "@/components/BrokerSelector";
+import TeamMemberSelector from "@/components/TeamMemberSelector";
 import RoleViewSwitcher from "@/components/RoleViewSwitcher";
 
 interface TopNavProps {
   onNotificationClick?: () => void;
   unreadCount?: number;
   searchPlaceholder?: string;
-  brokerId: string;
+  teamMemberId: string;
   notificationsPanelOpen: boolean;
   setNotificationsPanelOpen: (open: boolean) => void;
 }
@@ -24,8 +24,8 @@ interface TopNavProps {
 export default function TopNav({
   onNotificationClick,
   unreadCount = 0,
-  searchPlaceholder = "Search customers, tasks, contacts...",
-  brokerId,
+  searchPlaceholder = "Search claims, parties, tasks...",
+  teamMemberId,
   notificationsPanelOpen,
   setNotificationsPanelOpen,
 }: TopNavProps) {
@@ -114,8 +114,8 @@ export default function TopNav({
           case "phone":
             searchCondition = `phone.ilike.%${searchQuery}%`;
             break;
-          case "broker":
-            searchCondition = `brokers.first_name.ilike.%${searchQuery}%,brokers.last_name.ilike.%${searchQuery}%`;
+          case "teamMember":
+            searchCondition = `teamMembers.first_name.ilike.%${searchQuery}%,teamMembers.last_name.ilike.%${searchQuery}%`;
             break;
           default:
             searchCondition = `business_name.ilike.%${searchQuery}%,contact_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`;
@@ -134,8 +134,8 @@ export default function TopNav({
             city,
             state,
             status,
-            broker_id,
-            brokers:broker_id (first_name, last_name, office_location)
+            team_member_id,
+            teamMembers:team_member_id (first_name, last_name, office_location)
           `,
           )
           .or(searchCondition)
@@ -201,7 +201,7 @@ export default function TopNav({
             <select
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="h-9 inline-flex self-center shrink-0 rounded-lg border border-[#28323d]/20 bg-white px-1 text-sm text-[#28323d] focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20"
+              className="h-9 inline-flex self-center shrink-0 rounded-lg border border-[#28323d]/20 bg-white px-1 text-sm text-[#28323d] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="all">Any Field</option>
               <option value="contact">Customer Name</option>
@@ -237,7 +237,7 @@ export default function TopNav({
                       }
                     }
                   }}
-                  className="h-9 self-center w-full rounded-lg border border-[#28323d]/20 py-2 pl-10 pr-10 text-sm text-[#28323d] placeholder-[#28323d]/50 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20"
+                  className="h-9 self-center w-full rounded-lg border border-[#28323d]/20 py-2 pl-10 pr-10 text-sm text-[#28323d] placeholder-[#28323d]/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
                 {searchQuery && (
                   <button
@@ -258,7 +258,7 @@ export default function TopNav({
                     onClick={handleTmsSearch}
                     disabled={!searchQuery.trim()}
                     className={`flex h-8 self-center shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${searchFilter === "order_id" || searchFilter === "quote_id"
-                      ? "bg-orange-500 hover:bg-orange-600"
+                      ? "bg-primary hover:bg-primary-text"
                       : "bg-blue-600 hover:bg-blue-700"
                       }`}
                     title={
@@ -281,7 +281,7 @@ export default function TopNav({
                   <button
                     onClick={() => setShowResults(true)}
                     disabled={!searchQuery.trim()}
-                    className="flex h-8 self-center shrink-0 items-center gap-2 rounded-lg bg-orange-500 px-3 text-xs font-medium text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-8 self-center shrink-0 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-medium text-white transition-colors hover:bg-primary-text disabled:cursor-not-allowed disabled:opacity-50"
                     title="Search Claims Tracker (Press Enter)"
                   >
                     <Search className="h-3 w-3" />
@@ -367,16 +367,16 @@ export default function TopNav({
                               {customer.email || customer.phone}
                             </p>
                           )}
-                          {customer.brokers && (
+                          {customer.teamMembers && (
                             <p className="mt-1 truncate text-xs text-slate-400">
-                              Broker: {customer.brokers.first_name}{" "}
-                              {customer.brokers.last_name || ""}
-                              {customer.brokers.office_location &&
-                                ` • ${customer.brokers.office_location}`}
+                              TeamMember: {customer.teamMembers.first_name}{" "}
+                              {customer.teamMembers.last_name || ""}
+                              {customer.teamMembers.office_location &&
+                                ` • ${customer.teamMembers.office_location}`}
                             </p>
                           )}
                         </div>
-                        <span className="shrink-0 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                        <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary-text">
                           {customer.status}
                         </span>
                       </div>
@@ -408,8 +408,8 @@ export default function TopNav({
             {/* Admin-only demo role view switcher */}
             <RoleViewSwitcher />
 
-            {/* Broker Selector */}
-            <BrokerSelector />
+            {/* TeamMember Selector */}
+            <TeamMemberSelector />
 
             {/* Help Button */}
             <button
@@ -445,10 +445,10 @@ export default function TopNav({
                 <>
                   {/* Pulsing ring animation */}
                   <span className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                   </span>
                   {/* Badge with count */}
-                  <span className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-bold text-white shadow-lg ring-2 ring-white">
+                  <span className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-white shadow-lg ring-2 ring-white">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 </>
@@ -462,7 +462,7 @@ export default function TopNav({
       <NotificationsPanel
         isOpen={notificationsPanelOpen}
         onClose={() => setNotificationsPanelOpen(false)}
-        brokerId={brokerId}
+        teamMemberId={teamMemberId}
         onUnreadCountChange={(count) => {
           // This is a workaround - ideally the count would be managed in layout.tsx
           // For now, we'll dispatch a custom event that layout.tsx can listen to

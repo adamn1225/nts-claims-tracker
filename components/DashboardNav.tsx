@@ -1,11 +1,11 @@
 /**
- * DashboardNav Component - NTS SalesTrack Navigation
+ * DashboardNav Component - NTS Claims Tracker Navigation
  *
  * DESIGN PATTERN: Responsive navigation with mobile drawer
  *
  * Navigation Structure:
  * - Dashboard: Overview & KPIs
- * - Customers: Book of Business (Kanban view)
+ * - Claims Track: Active claims pipeline (Kanban view)
  * - Tasks: Follow-ups & reminders
  * - Reports: Analytics & performance
  *
@@ -62,10 +62,10 @@ type NavigationItem = {
   icon: React.ComponentType<{ className?: string }>;
   description: string;
   children?: NavigationItem[];
-  requiresRole?: readonly ("manager" | "admin" | "sales_coach")[];
+  requiresRole?: readonly ("manager" | "admin" | "sales_coach" | "claims_staff")[];
 };
 
-type RoleViewMode = "admin" | "broker" | "manager" | "sales_coach";
+type RoleViewMode = "admin" | "teamMember" | "manager" | "sales_coach";
 
 const ROLE_VIEW_STORAGE_KEY = "app:role-view-mode";
 
@@ -77,21 +77,28 @@ const navigation: NavigationItem[] = [
     description: "Overview & key metrics",
   },
   {
-    name: "Sales Track",
+    name: "Claims Track",
     href: "/dashboard/customers/kanban",
     icon: LayoutGrid,
-    description: "Drag-and-drop sales pipeline",
+    description: "Drag-and-drop claims pipeline",
+  },
+  {
+    name: "Claim Intake",
+    href: "/dashboard/claims/intake",
+    icon: FolderInput,
+    description: "Review new claim submissions",
+    requiresRole: ["claims_staff", "manager", "admin"] as const,
   },
   {
     name: "My Profile",
-    href: "/dashboard/brokers/me",
+    href: "/dashboard/team-members/me",
     icon: UserCircle2,
     description: "Your profile & portfolio",
     requiresRole: ["manager", "admin"] as const,
   },
   {
     name: "Team Directory",
-    href: "/dashboard/brokers",
+    href: "/dashboard/team-members",
     icon: Users,
     description: "Browse all team members",
     requiresRole: ["manager", "admin"] as const,
@@ -168,6 +175,7 @@ export default function DashboardNav() {
   const [isManager, setIsManager] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSalesCoach, setIsSalesCoach] = useState(false);
+  const [isClaimsStaff, setIsClaimsStaff] = useState(false);
   const [roleViewMode, setRoleViewMode] = useState<RoleViewMode>("admin");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
@@ -193,23 +201,28 @@ export default function DashboardNav() {
         setUserId(user.id);
         setEmail(user.email || "");
 
-        const brokerRes = await supabase
-          .from("brokers")
+        // Source of truth for role/identity is `profiles` (1:1 with auth.users).
+        // `team_members` is a separate entity table and not every signed-in user
+        // has a row there.
+        const profileRes = await supabase
+          .from("profiles")
           .select(
-            "is_manager, is_admin, is_sales_coach, first_name, last_name, office_location",
+            "role, first_name, last_name, office_location",
           )
           .eq("id", user.id)
           .single();
 
-        if (brokerRes.error) {
-          console.error("Failed to fetch user role:", brokerRes.error);
-        } else if (brokerRes.data) {
-          setIsManager(brokerRes.data.is_manager ?? false);
-          setIsAdmin(brokerRes.data.is_admin ?? false);
-          setIsSalesCoach((brokerRes.data as { is_sales_coach?: boolean }).is_sales_coach ?? false);
-          setFirstName(brokerRes.data.first_name || "");
-          setLastName(brokerRes.data.last_name || "");
-          setOfficeLocation(brokerRes.data.office_location || "");
+        if (profileRes.error) {
+          console.error("Failed to fetch user profile:", profileRes.error);
+        } else if (profileRes.data) {
+          const role = profileRes.data.role;
+          setIsAdmin(role === "admin");
+          setIsManager(role === "manager");
+          setIsClaimsStaff(role === "claims_staff");
+          setIsSalesCoach(false); // Not represented in the claims-tracker user_role enum
+          setFirstName(profileRes.data.first_name || "");
+          setLastName(profileRes.data.last_name || "");
+          setOfficeLocation(profileRes.data.office_location || "");
         }
       } catch (err) {
         console.error("Error fetching user role:", err);
@@ -258,6 +271,9 @@ export default function DashboardNav() {
   const effectiveIsSalesCoach = isAdmin
     ? roleViewMode === "sales_coach"
     : isSalesCoach;
+  // Admins always have an effective claims_staff capability so role-view
+  // switching reveals claims-staff-only items when the admin previews them.
+  const effectiveIsClaimsStaff = isAdmin || isManager || isClaimsStaff;
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -314,7 +330,7 @@ export default function DashboardNav() {
               </button>
               <button
                 onClick={handleLogout}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90"
               >
                 Sign Out
               </button>
@@ -324,7 +340,7 @@ export default function DashboardNav() {
       )}
 
       {/* Mobile Header Bar */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-slate-700/50 bg-[#28323d] px-4 lg:hidden">
+      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-slate-700/50 bg-surface-nav px-4 lg:hidden">
         <button
           onClick={() => setMobileMenuOpen(true)}
           className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-slate-600/50"
@@ -336,7 +352,7 @@ export default function DashboardNav() {
           <img src="/NTS-logo.svg" alt="NTS Logo" className="h-8 w-8" />
           <div>
             <h1 className="text-sm font-bold leading-none text-white">
-              NTS SalesTrack
+              NTS Claims Tracker
             </h1>
             {firstName && (
               <p className="text-xs text-slate-300 mt-0.5">
@@ -358,7 +374,7 @@ export default function DashboardNav() {
 
       {/* Navigation Sidebar/Drawer */}
       <nav
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-700/30 bg-[#28323d] transition-all duration-300 lg:static lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-700/30 bg-surface-nav transition-all duration-300 lg:static lg:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           } ${isCollapsed ? "w-16" : "w-52"}`}
       >
         {/* Logo & Mobile Close Button */}
@@ -381,7 +397,7 @@ export default function DashboardNav() {
           {/* Collapse Toggle Button - Desktop Only (Top Right) */}
           <button
             onClick={toggleSidebar}
-            className="absolute -right-5 top-12 hidden h-9 w-9 items-center justify-center rounded-md border border-slate-700/30 bg-[#2f4054] text-slate-400 shadow-2xl drop-shadow-2xl transition-all hover:bg-slate-600/50 hover:text-white lg:flex"
+            className="absolute -right-5 top-12 hidden h-9 w-9 items-center justify-center rounded-md border border-slate-700/30 bg-surface-nav-elevated text-slate-400 shadow-2xl drop-shadow-2xl transition-all hover:bg-slate-600/50 hover:text-white lg:flex"
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
@@ -429,7 +445,8 @@ export default function DashboardNav() {
                   const hasRequiredRole =
                     (item.requiresRole.includes("manager") && effectiveIsManager) ||
                     (item.requiresRole.includes("admin") && effectiveIsAdmin) ||
-                    (item.requiresRole.includes("sales_coach") && effectiveIsSalesCoach);
+                    (item.requiresRole.includes("sales_coach") && effectiveIsSalesCoach) ||
+                    (item.requiresRole.includes("claims_staff") && effectiveIsClaimsStaff);
 
                   if (!hasRequiredRole) {
                     return null;
@@ -438,7 +455,7 @@ export default function DashboardNav() {
               }
 
               const active = isActive(item.href);
-              const isPipeline = item.name === "SalesTrack";
+              const isPipeline = item.name === "Claims Track";
               const isRaceTrack = item.name === "Race Track";
 
               // Data tour attributes
@@ -447,7 +464,7 @@ export default function DashboardNav() {
                   ? "nav-tasks"
                   : item.name === "Help"
                     ? "nav-help"
-                    : item.name === "SalesTrack"
+                    : item.name === "Claims Track"
                       ? "nav-customers"
                       : undefined;
 
@@ -459,19 +476,26 @@ export default function DashboardNav() {
                   title={isCollapsed ? item.description : ""}
                   className={`group relative flex items-center rounded-lg py-2 text-xs font-semibold transition-all ${isCollapsed ? "justify-center px-2" : "gap-x-2 px-2.5"
                     } ${active
-                      ? "bg-orange-500/10 text-white shadow-sm ring-1 ring-orange-500/20"
+                      ? "bg-primary/10 text-white shadow-sm ring-1 ring-primary/20"
                       : isPipeline
-                        ? "text-slate-300 hover:bg-orange-500/5 hover:text-white"
+                        ? "text-slate-300 hover:bg-primary/5 hover:text-white"
                         : "text-slate-300 hover:bg-slate-700/30 hover:text-white"
                     }`}
                 >
+                  {/* Active accent bar (Linear-style) */}
+                  {active && !isCollapsed && (
+                    <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+                  )}
+                  {active && isCollapsed && (
+                    <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+                  )}
                   <item.icon
                     className={`h-5 w-5 shrink-0 ${isRaceTrack
-                      ? "text-orange-400"
+                      ? "text-primary"
                       : active
-                      ? "text-orange-400"
+                      ? "text-primary"
                       : isPipeline
-                        ? "text-orange-300/70"
+                        ? "text-primary/70"
                         : "text-slate-400"
                       }`}
                   />
@@ -479,11 +503,11 @@ export default function DashboardNav() {
                     <span className="flex-1">{item.name}</span>
                   )}
                   {!isCollapsed && isPipeline && (
-                    <Star className="h-3.5 w-3.5 shrink-0 fill-orange-400 text-orange-400" />
+                    <Star className="h-3.5 w-3.5 shrink-0 fill-primary text-primary" />
                   )}
                   {/* Active indicator */}
                   {!isCollapsed && active && (
-                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-400" />
+                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                   )}
                   {/* Tooltip for collapsed state */}
                   {isCollapsed && (
@@ -504,7 +528,7 @@ export default function DashboardNav() {
           {!isCollapsed && (
             <div className="mb-2 rounded-lg bg-slate-700/30 p-2.5">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                   {firstName?.[0] || email?.[0]?.toUpperCase() || "?"}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -513,7 +537,7 @@ export default function DashboardNav() {
                   </p>
                   <p className="truncate text-[10px] text-slate-400">{email}</p>
                   {(isAdmin || isManager) && (
-                    <p className="mt-0.5 text-[10px] font-medium text-orange-400">
+                    <p className="mt-0.5 text-[10px] font-medium text-primary">
                       {isAdmin ? "Admin" : "Manager"}
                     </p>
                   )}

@@ -3,7 +3,7 @@
  *
  * Talks directly to Supabase's GoTrue (auth) and PostgREST (data) endpoints
  * with plain fetch — no SDK, no build step. Row Level Security applies because
- * every data request is made with the signed-in broker's access token, so a
+ * every data request is made with the signed-in teamMember's access token, so a
  * user only ever sees/edits their own rows.
  *
  * Exposes a single global: window.SB
@@ -178,7 +178,7 @@
 
   // ---- domain helpers ---------------------------------------------------
 
-  /** Active tasks (pending + overdue) for the signed-in broker, soonest first. */
+  /** Active tasks (pending + overdue) for the signed-in teamMember, soonest first. */
   async function getActiveTasks() {
     const user = await getUser();
     if (!user) throw new Error("Not signed in.");
@@ -186,7 +186,7 @@
       "id,title,type,priority,status,due_date,due_time,description,customer_id";
     const path =
       `tasks?select=${select}` +
-      `&broker_id=eq.${user.id}` +
+      `&team_member_id=eq.${user.id}` +
       `&status=in.(pending,overdue)` +
       `&order=due_date.asc,due_time.asc`;
     return rest(path, { method: "GET" });
@@ -196,7 +196,7 @@
     const user = await getUser();
     if (!user) throw new Error("Not signed in.");
     const payload = {
-      broker_id: user.id,
+      team_member_id: user.id,
       created_by: user.id,
       status: "pending",
       ...task,
@@ -225,7 +225,7 @@
     const user = await getUser();
     if (!user) throw new Error("Not signed in.");
     const payload = {
-      broker_id: user.id,
+      team_member_id: user.id,
       on_kanban_board: true,
       ...customer,
     };
@@ -237,24 +237,24 @@
     return Array.isArray(rows) ? rows[0] : rows;
   }
 
-  /** Lightweight list of the broker's customers for the task's "link to" picker. */
+  /** Lightweight list of the team member's customers for the task's "link to" picker. */
   async function getCustomers() {
     const user = await getUser();
     if (!user) throw new Error("Not signed in.");
     const path =
       "customers?select=id,business_name,contact_name" +
-      `&broker_id=eq.${user.id}` +
+      `&team_member_id=eq.${user.id}` +
       "&order=business_name.asc&limit=500";
     return rest(path, { method: "GET" });
   }
 
-  /** The broker's pipeline statuses (custom names), ordered. */
+  /** The teamMember's pipeline statuses (custom names), ordered. */
   async function getStatuses() {
     const user = await getUser();
     if (!user) throw new Error("Not signed in.");
     const path =
       "customer_statuses?select=id,name,order" +
-      `&broker_id=eq.${user.id}` +
+      `&team_member_id=eq.${user.id}` +
       "&order=order.asc";
     return rest(path, { method: "GET" });
   }

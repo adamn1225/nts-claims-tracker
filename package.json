@@ -1,7 +1,7 @@
 {
   "name": "nts-claims-tracker",
   "version": "0.1.0",
-  "description": "Freight broker CRM for Nationwide Transport Services - Customer tracking and follow-up management system",
+  "description": "Cargo and transportation claims management system for Nationwide Transport Services",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,8 +9,12 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "db:types": "npx --yes supabase gen types typescript --project-id cuvrgvikdtagkhysxoqo --schema public > lib/database.types.ts",
-    "db:link": "npx supabase link --project-ref cuvrgvikdtagkhysxoqo",
+    "db:types": "npx --yes supabase gen types typescript --project-id zbyeuopslmdpzprvizxd --schema public > lib/database.types.ts",
+    "db:link": "npx supabase link --project-ref zbyeuopslmdpzprvizxd",
+    "db:reset": "npx supabase db reset",
+    "db:push": "npx supabase db push",
+    "db:diff": "npx supabase db diff",
+    "db:migration": "npx supabase migration new",
     "deploy": "netlify deploy --prod",
     "deploy:preview": "netlify deploy",
     "test": "playwright test",

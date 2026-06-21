@@ -130,13 +130,13 @@ export async function GET(request: NextRequest) {
 
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { data: broker } = await supabase
-        .from("brokers")
+    const { data: teamMember } = await supabase
+        .from("team_members")
         .select("is_admin, is_sales_coach")
         .eq("id", user.id)
         .maybeSingle();
 
-    const hasAccess = Boolean(broker?.is_admin || (broker as { is_sales_coach?: boolean })?.is_sales_coach);
+    const hasAccess = Boolean(teamMember?.is_admin || (teamMember as { is_sales_coach?: boolean })?.is_sales_coach);
     if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { searchParams } = new URL(request.url);

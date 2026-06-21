@@ -5,7 +5,7 @@
  * - Company-wide KPIs (total customers, win rate, overdue tasks)
  * - Office filter to drill down to single office
  * - Office comparison view
- * - Broker-level breakdown
+ * - TeamMember-level breakdown
  * - Weekly/monthly trend filters
  *
  * Access: Admins only
@@ -35,9 +35,9 @@ type OfficeStats = {
   win_rate_pct: number;
 };
 
-type BrokerStats = {
-  broker_id: string;
-  broker_name: string;
+type TeamMemberStats = {
+  team_member_id: string;
+  team_member_name: string;
   office_location: string;
   total_customers: number;
   prospect_count: number;
@@ -56,7 +56,7 @@ export default function AdminReportsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [officeStats, setOfficeStats] = useState<OfficeStats[]>([]);
-  const [brokerStats, setBrokerStats] = useState<BrokerStats[]>([]);
+  const [teamMemberStats, setTeamMemberStats] = useState<TeamMemberStats[]>([]);
   const [selectedOffice, setSelectedOffice] = useState<string | null>(null);
   const [overallStats, setOverallStats] = useState({
     total_customers: 0,
@@ -78,13 +78,13 @@ export default function AdminReportsPage() {
           return;
         }
 
-        const { data: broker, error: fetchError } = await supabase
-          .from("brokers")
+        const { data: teamMember, error: fetchError } = await supabase
+          .from("team_members")
           .select("is_admin")
           .eq("id", user.id)
           .single();
 
-        if (fetchError || !broker?.is_admin) {
+        if (fetchError || !teamMember?.is_admin) {
           router.push("/dashboard/reports");
           return;
         }
@@ -116,14 +116,14 @@ export default function AdminReportsPage() {
 
         setOfficeStats(officeData || []);
 
-        // Query broker-level stats from the view
-        const { data: brokerData, error: brokerError } = await supabase
+        // Query teamMember-level stats from the view
+        const { data: teamMemberData, error: teamMemberError } = await supabase
           .from("broker_customer_summary")
           .select("*");
 
-        if (brokerError) throw brokerError;
+        if (teamMemberError) throw teamMemberError;
 
-        setBrokerStats(brokerData || []);
+        setTeamMemberStats(teamMemberData || []);
 
         // Calculate overall stats
         const totalCustomers = (officeData || []).reduce(
@@ -170,10 +170,10 @@ export default function AdminReportsPage() {
   }, [isAdmin, supabase]);
 
   // Filter data by selected office
-  const filteredBrokerStats = useMemo(() => {
-    if (!selectedOffice) return brokerStats;
-    return brokerStats.filter((b) => b.office_location === selectedOffice);
-  }, [brokerStats, selectedOffice]);
+  const filteredTeamMemberStats = useMemo(() => {
+    if (!selectedOffice) return teamMemberStats;
+    return teamMemberStats.filter((b) => b.office_location === selectedOffice);
+  }, [teamMemberStats, selectedOffice]);
 
   if (loading) {
     return (
@@ -265,7 +265,7 @@ export default function AdminReportsPage() {
             Performance by Office
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Click an office to drill down to individual brokers
+            Click an office to drill down to individual teamMembers
           </p>
         </div>
 
@@ -331,13 +331,13 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      {/* Broker Breakdown (if office selected or all) */}
-      {filteredBrokerStats.length > 0 && (
+      {/* TeamMember Breakdown (if office selected or all) */}
+      {filteredTeamMemberStats.length > 0 && (
         <div className="rounded-lg border border-slate-200 bg-white">
           <div className="border-b border-slate-200 p-6 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
-                Broker Performance
+                TeamMember Performance
                 {selectedOffice && (
                   <span className="ml-2 inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-sm font-medium text-orange-700">
                     {selectedOffice}
@@ -345,7 +345,7 @@ export default function AdminReportsPage() {
                 )}
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Individual broker metrics
+                Individual teamMember metrics
               </p>
             </div>
             {selectedOffice && (
@@ -363,7 +363,7 @@ export default function AdminReportsPage() {
               <thead className="border-b border-slate-200 bg-slate-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
-                    Broker Name
+                    TeamMember Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
                     Office
@@ -386,28 +386,28 @@ export default function AdminReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredBrokerStats.map((broker) => (
-                  <tr key={broker.broker_id} className="hover:bg-slate-50">
+                {filteredTeamMemberStats.map((teamMember) => (
+                  <tr key={teamMember.team_member_id} className="hover:bg-slate-50">
                     <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                      {broker.broker_name}
+                      {teamMember.team_member_name}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-700">
-                      {broker.office_location}
+                      {teamMember.office_location}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-700">
-                      {broker.total_customers}
+                      {teamMember.total_customers}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-700">
-                      {broker.prospect_count}
+                      {teamMember.prospect_count}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-700">
-                      {broker.active_count}
+                      {teamMember.active_count}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-green-600">
-                      {broker.won_count}
+                      {teamMember.won_count}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-blue-600">
-                      {broker.win_rate_pct}%
+                      {teamMember.win_rate_pct}%
                     </td>
                   </tr>
                 ))}

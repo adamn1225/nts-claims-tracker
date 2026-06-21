@@ -45,7 +45,7 @@ export async function GET(
       .from("customers")
       .select("*")
       .eq("id", params.id)
-      .eq("broker_id", token.broker_id) // Security: only access own customers
+      .eq("team_member_id", token.team_member_id) // Security: only access own customers
       .single();
     
     if (error || !data) {
@@ -101,7 +101,7 @@ export async function PUT(
     
     // Remove fields that shouldn't be updated via API
     delete body.id;
-    delete body.broker_id; // Prevent reassignment via this endpoint; use sms-campaign-contact for new records
+    delete body.team_member_id; // Prevent reassignment via this endpoint; use sms-campaign-contact for new records
     delete body.created_at;
     // import_source is intentionally allowed through — external integrations may update it
     
@@ -113,7 +113,7 @@ export async function PUT(
         updated_at: new Date().toISOString(),
       })
       .eq("id", params.id)
-      .eq("broker_id", token.broker_id) // Security: only update own customers
+      .eq("team_member_id", token.team_member_id) // Security: only update own customers
       .select()
       .single();
     
@@ -170,7 +170,7 @@ export async function DELETE(
       .from("customers")
       .delete()
       .eq("id", params.id)
-      .eq("broker_id", token.broker_id); // Security: only delete own customers
+      .eq("team_member_id", token.team_member_id); // Security: only delete own customers
     
     if (error) {
       await logRequest({ status: 404 }, "Customer not found or delete failed");

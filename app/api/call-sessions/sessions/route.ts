@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const mode = body.mode === "ephemeral" ? "ephemeral" : "saved";
 
     const insert: Record<string, unknown> = {
-        broker_id: user.id,
+        team_member_id: user.id,
         mode,
         list_id: body.listId ?? null,
     };

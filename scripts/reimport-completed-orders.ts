@@ -95,8 +95,8 @@ type FieldKey =
     | "orderCreated" | "estShipDate" | "deliveredDate" | "quotedDate"
     | "orderSent" | "orderSigned"
     | "carrierCompanyName" | "carrierPay" | "codToCarrier"
-    | "quotePrice" | "cargoValue" | "brokerBalance"
-    | "brokerAssign" | "brokerBranch"
+    | "quotePrice" | "cargoValue" | "teamMemberBalance"
+    | "teamMemberAssign" | "teamMemberBranch"
     | "originCity" | "originState" | "originZip" | "originCountry"
     | "destinationCity" | "destinationState" | "destinationZip" | "destinationCountry"
     | "cargo" | "shipVia" | "duration" | "distance"
@@ -126,9 +126,9 @@ const HEADER_ALIASES: Record<FieldKey, string[]> = {
     codToCarrier: ["codtocarrier"],
     quotePrice: ["quoteprice"],
     cargoValue: ["cargovalue"],
-    brokerBalance: ["brokerbalance"],
-    brokerAssign: ["brokerassign"],
-    brokerBranch: ["brokerbranch"],
+    teamMemberBalance: ["brokerbalance"],
+    teamMemberAssign: ["brokerassign"],
+    teamMemberBranch: ["brokerbranch"],
     originCity: ["origincity"],
     originState: ["originstate"],
     originZip: ["originzip"],
@@ -202,7 +202,7 @@ function buildRecord(
         parseCurrencyNumeric(raw("codToCarrier"));
     const quotePriceNumeric = parseCurrencyNumeric(raw("quotePrice"));
     const cargoValueNumeric = parseCurrencyNumeric(raw("cargoValue"));
-    const brokerBalanceNumeric = parseCurrencyNumeric(raw("brokerBalance"));
+    const teamMemberBalanceNumeric = parseCurrencyNumeric(raw("teamMemberBalance"));
 
     // Clamp helpers — column precision limits prevent overflow on garbage CSV rows.
     const clamp = (n: number | null, max: number) =>
@@ -261,8 +261,8 @@ function buildRecord(
     setIfMapped("estShipDate", "est_ship_date", parseDateIso(raw("estShipDate")));
     setIfMapped("deliveredDate", "delivered_date", parseDateIso(raw("deliveredDate")));
     setIfMapped("orderStatus", "order_status", raw("orderStatus") || null);
-    if (has("brokerAssign") || has("assignedTo")) {
-        rec.assigned_to = raw("brokerAssign") || raw("assignedTo") || null;
+    if (has("teamMemberAssign") || has("assignedTo")) {
+        rec.assigned_to = raw("teamMemberAssign") || raw("assignedTo") || null;
     }
 
     // New raw CRM columns
@@ -276,8 +276,8 @@ function buildRecord(
     setIfMapped("destinationCountry", "destination_country", raw("destinationCountry") || null);
     setIfMapped("cargoValue", "cargo_value", raw("cargoValue") || null);
     setIfMapped("quotedDate", "quoted_date", parseDateIso(raw("quotedDate")));
-    setIfMapped("brokerBalance", "broker_balance", raw("brokerBalance") || null);
-    setIfMapped("brokerBranch", "broker_branch", raw("brokerBranch") || null);
+    setIfMapped("teamMemberBalance", "broker_balance", raw("teamMemberBalance") || null);
+    setIfMapped("teamMemberBranch", "broker_branch", raw("teamMemberBranch") || null);
     setIfMapped("duration", "duration_text", raw("duration") || null);
     setIfMapped("distance", "distance_text", raw("distance") || null);
     setIfMapped("loadName", "load_name", raw("loadName") || null);
@@ -305,7 +305,7 @@ function buildRecord(
     }
     if (has("quotePrice")) rec.quote_price_numeric = quotePriceNumeric;
     if (has("cargoValue")) rec.cargo_value_numeric = cargoValueNumeric;
-    if (has("brokerBalance")) rec.broker_balance_numeric = brokerBalanceNumeric;
+    if (has("teamMemberBalance")) rec.broker_balance_numeric = teamMemberBalanceNumeric;
     if (has("distance")) rec.distance_miles = distanceMiles;
     if (has("duration")) rec.duration_minutes = durationMinutes;
     if (has("length")) rec.length_ft = lengthFt;

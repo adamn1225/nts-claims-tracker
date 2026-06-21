@@ -43,7 +43,7 @@ export default function DesktopOnlyView({
             <Smartphone className="h-8 w-8 text-slate-400" />
           </div>
           <ArrowRight className="h-6 w-6 text-slate-300" />
-          <div className="rounded-full bg-linear-to-br from-orange-500 to-orange-600 p-4 shadow-lg">
+          <div className="rounded-full bg-primary p-4 shadow-lg">
             <Monitor className="h-8 w-8 text-white" />
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function DesktopOnlyView({
         {mobileAlternative && (
           <Link
             href={mobileAlternative.href}
-            className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-orange-500 to-orange-600 px-6 py-3 font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-white shadow-md transition-all hover:bg-primary-text hover:shadow-lg active:scale-95"
           >
             {mobileAlternative.label}
             <ArrowRight className="h-4 w-4" />
@@ -84,10 +84,10 @@ export default function DesktopOnlyView({
         {/* NTS Branding */}
         <div className="mt-12 border-t border-slate-200 pt-6">
           <p className="text-xs font-medium text-slate-400">
-            NTS ClaimsTracker
+            NTS Claims Tracker
           </p>
           <p className="mt-1 text-xs text-slate-400">
-            Freight Broker CRM
+            Freight Claims Management
           </p>
         </div>
       </div>

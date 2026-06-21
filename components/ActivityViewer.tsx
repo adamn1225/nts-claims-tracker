@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * ActivityViewer — togglable Timeline / Heatmap view for a broker's work patterns.
+ * ActivityViewer — togglable Timeline / Heatmap view for a team member's work patterns.
  *
  * Timeline view: Shows inferred working sessions for a single selected day.
  *   - Sessions are derived from CRM touch-points + GoTo phone calls.
@@ -261,7 +261,7 @@ function EventLegend() {
 const DAY_START = 6;
 const DAY_END = 20;
 
-function SingleDayTimeline({ brokerId }: { brokerId: string }) {
+function SingleDayTimeline({ teamMemberId }: { teamMemberId: string }) {
     const today = new Date().toLocaleDateString("en-CA");
     const [date, setDate] = useState(today);
     const [data, setData] = useState<SessionsData | null>(null);
@@ -273,12 +273,12 @@ function SingleDayTimeline({ brokerId }: { brokerId: string }) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/sales-monitor/activity-sessions?brokerId=${brokerId}&date=${date}`);
+            const res = await fetch(`/api/sales-monitor/activity-sessions?teamMemberId=${teamMemberId}&date=${date}`);
             if (!res.ok) { setError((await res.json()).error || "Failed to load sessions"); return; }
             setData(await res.json());
         } catch (e) { setError(String(e)); }
         finally { setLoading(false); }
-    }, [brokerId, date]);
+    }, [teamMemberId, date]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -369,7 +369,7 @@ function SingleDayTimeline({ brokerId }: { brokerId: string }) {
 
 interface DayResult { date: string; data: SessionsData | null; error: string | null }
 
-function DateRangeTimeline({ brokerId }: { brokerId: string }) {
+function DateRangeTimeline({ teamMemberId }: { teamMemberId: string }) {
     const today = new Date().toLocaleDateString("en-CA");
     const [startDate, setStartDate] = useState(offsetDate(today, -6)); // last 7 days default
     const [endDate, setEndDate] = useState(today);
@@ -396,7 +396,7 @@ function DateRangeTimeline({ brokerId }: { brokerId: string }) {
         const results = await Promise.all(
             dates.map(async (d): Promise<DayResult> => {
                 try {
-                    const res = await fetch(`/api/sales-monitor/activity-sessions?brokerId=${brokerId}&date=${d}`);
+                    const res = await fetch(`/api/sales-monitor/activity-sessions?teamMemberId=${teamMemberId}&date=${d}`);
                     if (!res.ok) return { date: d, data: null, error: (await res.json()).error || "Error" };
                     return { date: d, data: await res.json(), error: null };
                 } catch (e) {
@@ -406,7 +406,7 @@ function DateRangeTimeline({ brokerId }: { brokerId: string }) {
         );
         setRows(results);
         setLoading(false);
-    }, [brokerId, startDate, endDate]);
+    }, [teamMemberId, startDate, endDate]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -539,7 +539,7 @@ function DateRangeTimeline({ brokerId }: { brokerId: string }) {
     );
 }
 
-function TimelineView({ brokerId }: { brokerId: string }) {
+function TimelineView({ teamMemberId }: { teamMemberId: string }) {
     const [mode, setMode] = useState<"single" | "range">("single");
 
     return (
@@ -559,14 +559,14 @@ function TimelineView({ brokerId }: { brokerId: string }) {
                     Date Range
                 </button>
             </div>
-            {mode === "single" ? <SingleDayTimeline brokerId={brokerId} /> : <DateRangeTimeline brokerId={brokerId} />}
+            {mode === "single" ? <SingleDayTimeline teamMemberId={teamMemberId} /> : <DateRangeTimeline teamMemberId={teamMemberId} />}
         </div>
     );
 }
 
 // ─── Heatmap View ─────────────────────────────────────────────────────────────
 
-function HeatmapView({ brokerId, days }: { brokerId: string; days: number }) {
+function HeatmapView({ teamMemberId, days }: { teamMemberId: string; days: number }) {
     const [data, setData] = useState<HeatmapData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -576,7 +576,7 @@ function HeatmapView({ brokerId, days }: { brokerId: string; days: number }) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/sales-monitor/activity-heatmap?brokerId=${brokerId}&days=${days}`);            if (!res.ok) {
+            const res = await fetch(`/api/sales-monitor/activity-heatmap?teamMemberId=${teamMemberId}&days=${days}`);            if (!res.ok) {
                 const e = await res.json();
                 setError(e.error || "Failed to load heatmap");
                 return;
@@ -587,7 +587,7 @@ function HeatmapView({ brokerId, days }: { brokerId: string; days: number }) {
         } finally {
             setLoading(false);
         }
-    }, [brokerId, days]);
+    }, [teamMemberId, days]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -705,12 +705,12 @@ function HeatmapView({ brokerId, days }: { brokerId: string; days: number }) {
 // ─── Exported Component ───────────────────────────────────────────────────────
 
 interface ActivityViewerProps {
-    brokerId: string;
-    brokerName: string;
+    teamMemberId: string;
+    teamMemberName: string;
     days: number;
 }
 
-export default function ActivityViewer({ brokerId, brokerName, days }: ActivityViewerProps) {
+export default function ActivityViewer({ teamMemberId, teamMemberName, days }: ActivityViewerProps) {
     const [view, setView] = useState<"timeline" | "heatmap">("timeline");
 
     return (
@@ -720,10 +720,10 @@ export default function ActivityViewer({ brokerId, brokerName, days }: ActivityV
                 <div>
                     <h2 className="text-base font-bold text-slate-900">
                         Work Pattern Analysis —{" "}
-                        <span className="text-orange-600">{brokerName}</span>
+                        <span className="text-orange-600">{teamMemberName}</span>
                     </h2>
                     <p className="mt-0.5 text-xs text-slate-500">
-                        When is this broker active? Sessions are inferred from CRM activity and GoTo phone calls.
+                        When is this teamMember active? Sessions are inferred from CRM activity and GoTo phone calls.
                     </p>
                 </div>
 
@@ -753,8 +753,8 @@ export default function ActivityViewer({ brokerId, brokerName, days }: ActivityV
             </div>
 
             {/* View content */}
-            {view === "timeline" && <TimelineView brokerId={brokerId} />}
-            {view === "heatmap" && <HeatmapView brokerId={brokerId} days={days} />}
+            {view === "timeline" && <TimelineView teamMemberId={teamMemberId} />}
+            {view === "heatmap" && <HeatmapView teamMemberId={teamMemberId} days={days} />}
         </section>
     );
 }

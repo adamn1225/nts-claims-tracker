@@ -5,7 +5,7 @@ import { encrypt, decrypt } from "@/lib/encryption";
 // Refresh a GoTo access token using the stored refresh token
 async function refreshGoToToken(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  brokerId: string,
+  teamMemberId: string,
   encryptedRefreshToken: string
 ): Promise<{ access_token: string; expires_at: string } | null> {
   const clientId = process.env.GOTO_CLIENT_ID;
@@ -49,7 +49,7 @@ async function refreshGoToToken(
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
       })
-      .eq("user_id", brokerId);
+      .eq("user_id", teamMemberId);
 
     return { access_token: data.access_token, expires_at: expiresAt };
   } catch (err) {
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Load broker's GoTo connection
+  // Load team member's GoTo connection
   const { data: connection, error: connError } = await supabase
     .from("goto_connections")
     .select("access_token, refresh_token, expires_at, goto_user_email")

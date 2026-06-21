@@ -18,26 +18,26 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Get current broker details
-        const { data: currentBroker, error: brokerError } = await supabase
-            .from("brokers")
+        // Get current team member details
+        const { data: currentTeamMember, error: teamMemberError } = await supabase
+            .from("team_members")
             .select("*")
             .eq("id", user.id)
             .single();
 
-        if (brokerError || !currentBroker) {
+        if (teamMemberError || !currentTeamMember) {
             return NextResponse.json(
-                { error: "Broker profile not found" },
+                { error: "TeamMember profile not found" },
                 { status: 404 }
             );
         }
 
         // Parse request body
-        const { customerId, customerName, brokerIds, mode, message } = await req.json();
+        const { customerId, customerName, teamMemberIds, mode, message } = await req.json();
 
-        if (!customerId || !brokerIds || !Array.isArray(brokerIds) || brokerIds.length === 0) {
+        if (!customerId || !teamMemberIds || !Array.isArray(teamMemberIds) || teamMemberIds.length === 0) {
             return NextResponse.json(
-                { error: "Invalid request: customerId and brokerIds are required" },
+                { error: "Invalid request: customerId and teamMemberIds are required" },
                 { status: 400 }
             );
         }
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         // Verify current user has access to this customer
         const { data: customer, error: customerError } = await supabase
             .from("customers")
-            .select("id, business_name, customer_id, broker_id")
+            .select("id, business_name, customer_id, team_member_id")
             .eq("id", customerId)
             .single();
 
@@ -67,9 +67,9 @@ export async function POST(req: NextRequest) {
 
         // Check if user is admin, manager, or owns the customer
         const canShare =
-            currentBroker.is_admin ||
-            currentBroker.is_manager ||
-            customer.broker_id === currentBroker.id;
+            currentTeamMember.is_admin ||
+            currentTeamMember.is_manager ||
+            customer.team_member_id === currentTeamMember.id;
 
         if (!canShare) {
             return NextResponse.json(
@@ -78,11 +78,11 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Fetch recipient broker details
+        // Fetch recipient teamMember details
         const { data: recipients, error: recipientsError } = await supabase
-            .from("brokers")
+            .from("team_members")
             .select("id, first_name, last_name, email")
-            .in("id", brokerIds)
+            .in("id", teamMemberIds)
             .eq("is_active", true);
 
         if (recipientsError || !recipients || recipients.length === 0) {
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Filter out self if somehow included
-        const filteredRecipients = recipients.filter((r) => r.id !== currentBroker.id);
+        const filteredRecipients = recipients.filter((r) => r.id !== currentTeamMember.id);
 
         if (filteredRecipients.length === 0) {
             return NextResponse.json(
@@ -106,10 +106,10 @@ export async function POST(req: NextRequest) {
         if (collaborationMode === "team_up") {
             const collaboratorsToInsert = filteredRecipients.map((recipient) => ({
                 customer_id: customer.id,
-                broker_id: recipient.id,
+                team_member_id: recipient.id,
                 role: "partner",
                 access_level: "full",
-                invited_by: currentBroker.id,
+                invited_by: currentTeamMember.id,
                 active: true,
             }));
 
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
                 );
             }
 
-            // Create notifications for each invited broker
+            // Create notifications for each invited teamMember
             const notificationPromises = filteredRecipients.map((recipient) =>
                 fetch(`${appUrl}/api/notifications/collaboration-invited`, {
                     method: "POST",
@@ -134,10 +134,10 @@ export async function POST(req: NextRequest) {
                         Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
                     },
                     body: JSON.stringify({
-                        invitedBrokerId: recipient.id,
+                        invitedTeamMemberId: recipient.id,
                         customerId: customer.id,
                         customerName: customer.business_name,
-                        inviterBrokerId: currentBroker.id,
+                        inviterTeamMemberId: currentTeamMember.id,
                         inviterName: senderFullName,
                     }),
                 })
@@ -153,9 +153,9 @@ export async function POST(req: NextRequest) {
             // Log collaboration initiation to contact log
             await supabase.from("contact_log").insert({
                 customer_id: customer.id,
-                broker_id: currentBroker.id,
+                team_member_id: currentTeamMember.id,
                 type: "other",
-                subject: `Teamed up with ${filteredRecipients.length} broker(s)`,
+                subject: `Teamed up with ${filteredRecipients.length} team member(s)`,
                 notes: message
                     ? `${message}\n\nTeam members: ${filteredRecipients.map((r) => `${r.first_name} ${r.last_name || ""}`.trim()).join(", ")}`
                     : `Team members: ${filteredRecipients.map((r) => `${r.first_name} ${r.last_name || ""}`.trim()).join(", ")}`,
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Send emails to recipients
-        const senderFullName = `${currentBroker.first_name} ${currentBroker.last_name || ""}`.trim();
+        const senderFullName = `${currentTeamMember.first_name} ${currentTeamMember.last_name || ""}`.trim();
         const customerUrl = `${appUrl}/dashboard/customers/${customer.customer_id || customer.id}`;
 
         const emailPromises = filteredRecipients.map(async (recipient) => {

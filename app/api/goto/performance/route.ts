@@ -2,7 +2,7 @@
  * GET /api/goto/performance
  *
  * Admin-only endpoint. Uses the org admin GoTo token to pull performance data
- * for all brokers handling queue calls.
+ * for all team members handling queue calls.
  *
  * DATA SOURCES (tried in order):
  *   1. Queue-caller analytics API (queue-caller.v1.read scope) — preferred.
@@ -78,13 +78,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: callerBroker } = await supabase
-    .from("brokers")
+  const { data: callerTeamMember } = await supabase
+    .from("team_members")
     .select("is_admin, is_sales_coach")
     .eq("id", user.id)
     .maybeSingle();
 
-  const hasAccess = Boolean(callerBroker?.is_admin || (callerBroker as { is_sales_coach?: boolean })?.is_sales_coach);
+  const hasAccess = Boolean(callerTeamMember?.is_admin || (callerTeamMember as { is_sales_coach?: boolean })?.is_sales_coach);
   if (!hasAccess) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
   }
 
   // ── Load config, queues, and call data in parallel ─────────────────────────
-  const [brokersResult, overridesResult, availableQueues, queueCallerResult, orgUsers] = await Promise.all([
-    supabase.from("brokers").select("id, email, full_name, office_location").eq("is_active", true),
+  const [teamMembersResult, overridesResult, availableQueues, queueCallerResult, orgUsers] = await Promise.all([
+    supabase.from("team_members").select("id, email, full_name, office_location").eq("is_active", true),
     supabase
       .from("performance_overrides")
       .select("goto_user_email, goto_user_key, display_name_override, office_location, is_excluded"),
@@ -136,11 +136,11 @@ export async function GET(request: NextRequest) {
     fetchGoToOrgUsers(adminToken, numericAccountKey),
   ]);
 
-  type BrokerRow = { id: string; email: string | null; full_name: string | null; office_location: string | null };
+  type TeamMemberRow = { id: string; email: string | null; full_name: string | null; office_location: string | null };
   type OverrideRow = { goto_user_email: string; goto_user_key: string | null; display_name_override: string | null; office_location: string | null; is_excluded: boolean };
 
-  const brokerByEmail = new Map<string, BrokerRow>(
-    ((brokersResult.data ?? []) as BrokerRow[]).map((b) => [b.email?.toLowerCase() ?? "", b]),
+  const teamMemberByEmail = new Map<string, TeamMemberRow>(
+    ((teamMembersResult.data ?? []) as TeamMemberRow[]).map((b) => [b.email?.toLowerCase() ?? "", b]),
   );
   const overrideByEmail = new Map<string, OverrideRow>(
     ((overridesResult.data ?? []) as OverrideRow[]).map((o) => [o.goto_user_email?.toLowerCase(), o]),
@@ -229,16 +229,16 @@ export async function GET(request: NextRequest) {
 
     for (const [rawAgentName, records] of callsByAgent) {
       const displayName = extractAgentDisplayName(rawAgentName);
-      // Try to match to a broker by name to get office_location
+      // Try to match to a team member by name to get office_location
       const emailKey = records.find((r) => r.callerNumber)?.callerNumber; // not email, try by name
-      // Best effort: find a broker whose full_name matches the display name
+      // Best effort: find a team member whose full_name matches the display name
       let officeLocation: string | null = null;
-      for (const [email, broker] of brokerByEmail) {
-        const brokName = broker.full_name?.toLowerCase().trim() ?? "";
+      for (const [email, teamMember] of teamMemberByEmail) {
+        const brokName = teamMember.full_name?.toLowerCase().trim() ?? "";
         if (brokName && displayName.toLowerCase().includes(brokName.split(" ")[0])) {
           const ov = overrideByEmail.get(email);
           if (ov?.is_excluded) { officeLocation = null; break; }
-          officeLocation = ov?.office_location?.trim() || broker.office_location?.trim() || null;
+          officeLocation = ov?.office_location?.trim() || teamMember.office_location?.trim() || null;
           break;
         }
       }
@@ -476,8 +476,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // NOTE: We're NOT matching to SalesTrack brokers - this is a company-wide GoTo dashboard
-    // It shows ALL employees with GoTo accounts (brokers, accountants, managers, etc.)
+    // NOTE: We're NOT matching to SalesTrack teamMembers - this is a company-wide GoTo dashboard
+    // It shows ALL employees with GoTo accounts (teamMembers, accountants, managers, etc.)
     console.log(`[Performance] Company-wide GoTo monitoring: ${orgUsers.length} total users`);
 
     // Also check performance_overrides for custom names by userKey

@@ -43,9 +43,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get broker info
-    const { data: broker } = await supabase
-      .from("brokers")
+    // Get team member info
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("email, first_name, last_name")
       .eq("id", user.id)
       .single();
@@ -54,10 +54,10 @@ export async function POST(request: Request) {
     const { data: feedback, error: insertError } = await supabase
       .from("feedback")
       .insert({
-        broker_id: user.id,
-        broker_email: broker?.email || user.email,
-        broker_name: broker
-          ? `${broker.first_name} ${broker.last_name || ""}`.trim()
+        team_member_id: user.id,
+        broker_email: teamMember?.email || user.email,
+        team_member_name: teamMember
+          ? `${teamMember.first_name} ${teamMember.last_name || ""}`.trim()
           : "Unknown",
         category: category || "general",
         rating: rating || null,
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
                   type: "text/html",
                   value: `
                     <h2>New Feedback Received</h2>
-                    <p><strong>From:</strong> ${broker ? `${broker.first_name} ${broker.last_name || ""}`.trim() : "Unknown"} (${broker?.email || user.email})</p>
+                    <p><strong>From:</strong> ${teamMember ? `${teamMember.first_name} ${teamMember.last_name || ""}`.trim() : "Unknown"} (${teamMember?.email || user.email})</p>
                     <p><strong>Category:</strong> ${category || "General"}</p>
                     ${rating ? `<p><strong>Rating:</strong> ${"⭐".repeat(rating)} (${rating}/5)</p>` : ""}
                     ${pageContext ? `<p><strong>Page:</strong> ${pageContext}</p>` : ""}

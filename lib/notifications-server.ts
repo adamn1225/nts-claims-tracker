@@ -23,9 +23,9 @@ function getServiceSupabase() {
 }
 
 /**
- * Fallback timezone used when a broker has no timezone preference set.
+ * Fallback timezone used when a team member has no timezone preference set.
  * NTS historically operated entirely in US Eastern, so this preserves the
- * previous behavior for any broker who hasn't picked a timezone yet.
+ * previous behavior for any teamMember who hasn't picked a timezone yet.
  */
 const DEFAULT_TIMEZONE = "America/New_York";
 
@@ -33,7 +33,7 @@ const DEFAULT_TIMEZONE = "America/New_York";
  * Convert a wall-clock date/time in a given IANA timezone to the correct
  * absolute UTC instant, accounting for daylight saving time.
  *
- * This generalizes the old Eastern-only helper so each broker's tasks and
+ * This generalizes the old Eastern-only helper so each teamMember's tasks and
  * digest times are interpreted in their own timezone. The offset is computed
  * for the specific date, so DST transitions are handled automatically.
  */
@@ -116,16 +116,16 @@ function getNowInZone(timeZone: string = DEFAULT_TIMEZONE) {
 }
 
 /**
- * Look up a broker's timezone preference, falling back to the default.
+ * Look up a team member's timezone preference, falling back to the default.
  */
-async function getBrokerTimezone(
+async function getTeamMemberTimezone(
   supabase: ReturnType<typeof getServiceSupabase>,
-  brokerId: string,
+  teamMemberId: string,
 ): Promise<string> {
   const { data } = await supabase
     .from("user_preferences")
     .select("timezone")
-    .eq("broker_id", brokerId)
+    .eq("team_member_id", teamMemberId)
     .maybeSingle();
   return data?.timezone || DEFAULT_TIMEZONE;
 }
@@ -148,9 +148,9 @@ export async function generateTaskNotifications(taskId: string) {
     return;
   }
 
-  // Parse due_date and due_time in the broker's own timezone so reminders fire
-  // at the correct local moment regardless of where the broker is located.
-  const brokerTimezone = await getBrokerTimezone(supabase, task.broker_id);
+  // Parse due_date and due_time in the team member's own timezone so reminders fire
+  // at the correct local moment regardless of where the team member is located.
+  const teamMemberTimezone = await getTeamMemberTimezone(supabase, task.team_member_id);
 
   if (!task.due_time) {
     // No reminders for all-day tasks (can't do "15 minutes before" without a time)
@@ -179,9 +179,9 @@ export async function generateTaskNotifications(taskId: string) {
     return;
   }
   
-  // Build the absolute UTC instant for this task's due time in the broker's
+  // Build the absolute UTC instant for this task's due time in the team member's
   // timezone. DST-aware so reminders are not an hour off across transitions.
-  const dueDate = wallClockToUTC(year, month, day, hours, minutes, brokerTimezone);
+  const dueDate = wallClockToUTC(year, month, day, hours, minutes, teamMemberTimezone);
 
   // Verify the date is valid
   if (isNaN(dueDate.getTime())) {
@@ -196,7 +196,7 @@ export async function generateTaskNotifications(taskId: string) {
   console.log(`Task ${taskId} due date parsed:`, {
     input: { date: task.due_date, time: task.due_time },
     parsed: dueDate.toISOString(),
-    localTime: dueDate.toLocaleString("en-US", { timeZone: brokerTimezone }),
+    localTime: dueDate.toLocaleString("en-US", { timeZone: teamMemberTimezone }),
   });
 
   const notifications = [];
@@ -212,9 +212,9 @@ export async function generateTaskNotifications(taskId: string) {
     const now = new Date();
     console.log(`Checking reminder ${minutesBefore} min before:`, {
       notificationDate: notificationDate.toISOString(),
-      notificationDateLocal: notificationDate.toLocaleString("en-US", { timeZone: brokerTimezone }),
+      notificationDateLocal: notificationDate.toLocaleString("en-US", { timeZone: teamMemberTimezone }),
       now: now.toISOString(),
-      nowLocal: now.toLocaleString("en-US", { timeZone: brokerTimezone }),
+      nowLocal: now.toLocaleString("en-US", { timeZone: teamMemberTimezone }),
       isFuture: notificationDate > now,
     });
 
@@ -237,7 +237,7 @@ export async function generateTaskNotifications(taskId: string) {
       }
 
       notifications.push({
-        broker_id: task.broker_id,
+        team_member_id: task.team_member_id,
         type: "task_reminder",
         title: `Task Due in ${reminderTime}`,
         message: `${task.title} is due at ${timeString}`,
@@ -302,22 +302,22 @@ export async function sendOverdueTaskReminders() {
     return 0;
   }
 
-  // Build a broker -> timezone map so each task's due time is evaluated in the
-  // owning broker's timezone (nationwide team across multiple zones).
+  // Build a team member -> timezone map so each task's due time is evaluated in the
+  // owning teamMember's timezone (nationwide team across multiple zones).
   const { data: allPrefs } = await supabase
     .from("user_preferences")
-    .select("broker_id, timezone");
-  const timezoneByBroker = new Map<string, string>(
-    (allPrefs || []).map((p) => [p.broker_id, p.timezone || DEFAULT_TIMEZONE]),
+    .select("team_member_id, timezone");
+  const timezoneByTeamMember = new Map<string, string>(
+    (allPrefs || []).map((p) => [p.team_member_id, p.timezone || DEFAULT_TIMEZONE]),
   );
 
   const now = new Date();
   const overdueTasks = [];
 
   for (const task of tasks || []) {
-    const tz = timezoneByBroker.get(task.broker_id) || DEFAULT_TIMEZONE;
+    const tz = timezoneByTeamMember.get(task.team_member_id) || DEFAULT_TIMEZONE;
 
-    // Check if task is past due, interpreting its due time in the broker's tz.
+    // Check if task is past due, interpreting its due time in the team member's tz.
     const [year, month, day] = task.due_date.split("-").map(Number);
     let dueDate: Date;
     if (task.due_time) {
@@ -329,7 +329,7 @@ export async function sendOverdueTaskReminders() {
 
     if (dueDate >= now) continue; // Not overdue yet
 
-    // Check if we already sent an email today (broker-local calendar day).
+    // Check if we already sent an email today (teamMember-local calendar day).
     const todayLocal = getNowInZone(tz).dateStr;
     if (task.last_reminder_sent_date) {
       const lastSent = new Date(task.last_reminder_sent_date).toLocaleDateString(
@@ -350,13 +350,13 @@ export async function sendOverdueTaskReminders() {
   console.log(`Found ${overdueTasks.length} past-due tasks`);
 
   let emailsSent = 0;
-  const emailLog: Array<{ broker: string; task: string; status: string }> = [];
+  const emailLog: Array<{ teamMember: string; task: string; status: string }> = [];
 
   // Send email notifications for each overdue task
   for (const task of overdueTasks) {
     // Create in-app notification (no status change!)
     const { error: notifError } = await supabase.from("notifications").insert({
-      broker_id: task.broker_id,
+      team_member_id: task.team_member_id,
       type: "task_reminder",
       title: "Task Past Due",
       message: `${task.title} is past its due date`,
@@ -375,32 +375,32 @@ export async function sendOverdueTaskReminders() {
       );
     }
 
-    // Fetch broker info for email
-    const { data: broker } = await supabase
-      .from("brokers")
+    // Fetch team member info for email
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("email, first_name, last_name, is_active")
-      .eq("id", task.broker_id)
+      .eq("id", task.team_member_id)
       .single();
 
-    // Skip sending email if broker account is deactivated
-    if (!broker || broker.is_active === false) {
+    // Skip sending email if teamMember account is deactivated
+    if (!teamMember || teamMember.is_active === false) {
       console.log(
-        `Skipping overdue email: Broker ${task.broker_id} is deactivated`,
+        `Skipping overdue email: TeamMember ${task.team_member_id} is deactivated`,
       );
       emailLog.push({
-        broker: broker?.email || "Unknown",
+        teamMember: teamMember?.email || "Unknown",
         task: task.title,
         status: "skipped (deactivated)",
       });
       continue;
     }
 
-    if (broker?.email) {
+    if (teamMember?.email) {
       // Send overdue email notification
       try {
         const emailSent = await sendTaskReminderEmail(
-          broker.email,
-          `${broker.first_name} ${broker.last_name || ""}`.trim(),
+          teamMember.email,
+          `${teamMember.first_name} ${teamMember.last_name || ""}`.trim(),
           {
             taskTitle: task.title,
             taskDescription: task.description,
@@ -414,10 +414,10 @@ export async function sendOverdueTaskReminders() {
         if (emailSent) {
           emailsSent++;
           console.log(
-            `Sent overdue reminder to ${broker.email} for task: ${task.title}`,
+            `Sent overdue reminder to ${teamMember.email} for task: ${task.title}`,
           );
           emailLog.push({
-            broker: broker.email,
+            teamMember: teamMember.email,
             task: task.title,
             status: "sent",
           });
@@ -429,10 +429,10 @@ export async function sendOverdueTaskReminders() {
             .eq("id", task.id);
         } else {
           console.error(
-            `Failed to send overdue email to ${broker.email} for task: ${task.title}`,
+            `Failed to send overdue email to ${teamMember.email} for task: ${task.title}`,
           );
           emailLog.push({
-            broker: broker.email,
+            teamMember: teamMember.email,
             task: task.title,
             status: "failed",
           });
@@ -458,21 +458,21 @@ export async function sendOverdueTaskReminders() {
  * 
  * PATTERN MATCHES WORKING sendDailyDigestEmails() FUNCTION
  * 
- * @param testBrokerId - Optional: If provided, only send reminders to this broker (for safe testing)
+ * @param testTeamMemberId - Optional: If provided, only send reminders to this teamMember (for safe testing)
  */
-export async function sendUpcomingTaskReminders(testBrokerId?: string) {
+export async function sendUpcomingTaskReminders(testTeamMemberId?: string) {
   const supabase = getServiceSupabase();
 
-  if (testBrokerId) {
-    console.log("🧪 TEST MODE: Only processing broker:", testBrokerId);
+  if (testTeamMemberId) {
+    console.log("🧪 TEST MODE: Only processing team member:", testTeamMemberId);
   } else {
     console.log("🔔 Checking for upcoming task reminders...");
   }
 
   const now = new Date();
 
-  // Step 1: Get all brokers with email preferences (SAME AS DAILY DIGEST)
-  let brokerQuery = supabase.from("brokers").select(
+  // Step 1: Get all team members with email preferences (SAME AS DAILY DIGEST)
+  let teamMemberQuery = supabase.from("team_members").select(
     `
       id,
       email,
@@ -486,57 +486,57 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
   )
   .neq("is_active", false); // FILTER: Only send to active accounts
 
-  // TEST MODE: Filter to specific broker only
-  if (testBrokerId) {
-    brokerQuery = brokerQuery.eq("id", testBrokerId);
+  // TEST MODE: Filter to specific teamMember only
+  if (testTeamMemberId) {
+    teamMemberQuery = teamMemberQuery.eq("id", testTeamMemberId);
   }
 
-  const { data: brokers, error: brokersError } = await brokerQuery;
+  const { data: teamMembers, error: teamMembersError } = await teamMemberQuery;
 
-  if (brokersError) {
-    console.error("Error fetching brokers:", brokersError);
+  if (teamMembersError) {
+    console.error("Error fetching team members:", teamMembersError);
     return 0;
   }
 
-  if (testBrokerId) {
-    console.log(`🧪 TEST MODE: Found ${brokers?.length || 0} broker(s) matching ID`);
+  if (testTeamMemberId) {
+    console.log(`🧪 TEST MODE: Found ${teamMembers?.length || 0} team member(s) matching ID`);
   } else {
-    console.log(`Found ${brokers?.length || 0} total brokers in database`);
+    console.log(`Found ${teamMembers?.length || 0} total team members in database`);
   }
 
   let emailsSent = 0;
   const emailLog: Array<{
-    broker: string;
+    teamMember: string;
     task: string;
     status: string;
     reason?: string;
   }> = [];
 
-  // Step 2: Loop through each broker (SAME AS DAILY DIGEST)
-  for (const broker of brokers || []) {
-    console.log(`Processing broker: ${broker.email}`);
+  // Step 2: Loop through each teamMember (SAME AS DAILY DIGEST)
+  for (const teamMember of teamMembers || []) {
+    console.log(`Processing team member: ${teamMember.email}`);
     
     // Check if email notifications are enabled
-    const prefs = Array.isArray(broker.user_preferences)
-      ? broker.user_preferences[0]
-      : broker.user_preferences;
+    const prefs = Array.isArray(teamMember.user_preferences)
+      ? teamMember.user_preferences[0]
+      : teamMember.user_preferences;
       
     if (!prefs?.email_notifications_enabled) {
-      console.log(`   Email notifications disabled for ${broker.email}`);
+      console.log(`   Email notifications disabled for ${teamMember.email}`);
       continue;
     }
 
-    // Interpret this broker's task times in their own timezone.
-    const brokerTimezone = prefs.timezone || DEFAULT_TIMEZONE;
+    // Interpret this teamMember's task times in their own timezone.
+    const teamMemberTimezone = prefs.timezone || DEFAULT_TIMEZONE;
     const currentLocalTime = now.toLocaleString("en-US", {
-      timeZone: brokerTimezone,
+      timeZone: teamMemberTimezone,
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
-    console.log(`   Local time for ${broker.email}: ${currentLocalTime} (${brokerTimezone})`);
+    console.log(`   Local time for ${teamMember.email}: ${currentLocalTime} (${teamMemberTimezone})`);
 
-    // Step 3: Get this broker's pending tasks with times and reminders
+    // Step 3: Get this teamMember's pending tasks with times and reminders
     const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
       .select(
@@ -545,13 +545,13 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
         customer:customers(business_name, contact_name)
       `,
       )
-      .eq("broker_id", broker.id)
+      .eq("team_member_id", teamMember.id)
       .eq("status", "pending")
       .not("due_time", "is", null) // Only tasks with specific time
       .not("reminder_days", "is", null); // Only tasks with reminders
 
     if (tasksError) {
-      console.error(`   Error fetching tasks for ${broker.email}:`, tasksError);
+      console.error(`   Error fetching tasks for ${teamMember.email}:`, tasksError);
       continue;
     }
 
@@ -562,7 +562,7 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
       // Skip if no reminder configured
       if (!task.reminder_days || task.reminder_days.length === 0) continue;
 
-      // Parse due date and time in the broker's timezone (same logic as
+      // Parse due date and time in the team member's timezone (same logic as
       // generateTaskNotifications).
       const [year, month, day] = task.due_date.split("-").map(Number);
       const timeMatch = task.due_time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
@@ -573,7 +573,7 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
       const dueHours = parseInt(timeMatch[1]);
       const dueMinutes = parseInt(timeMatch[2]);
 
-      // Build the absolute UTC instant for this task's due time in the broker's
+      // Build the absolute UTC instant for this task's due time in the team member's
       // timezone. DST-aware so reminders fire at the right moment year-round.
       const dueDate = wallClockToUTC(
         year,
@@ -581,7 +581,7 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
         day,
         dueHours,
         dueMinutes,
-        brokerTimezone,
+        teamMemberTimezone,
       );
 
       // Check if ANY reminder was sent recently (within last 10 minutes to avoid duplicates)
@@ -623,8 +623,8 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
       // Step 5: Send email (SAME AS DAILY DIGEST)
       try {
         const emailSent = await sendTaskReminderEmail(
-          broker.email,
-          `${broker.first_name} ${broker.last_name || ""}`.trim(),
+          teamMember.email,
+          `${teamMember.first_name} ${teamMember.last_name || ""}`.trim(),
           {
             taskTitle: task.title,
             taskDescription: task.description,
@@ -639,10 +639,10 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
         if (emailSent) {
           emailsSent++;
           console.log(
-            `✅ Sent ${reminderToSend}-minute reminder to ${broker.email} for task: ${task.title}`,
+            `✅ Sent ${reminderToSend}-minute reminder to ${teamMember.email} for task: ${task.title}`,
           );
           emailLog.push({
-            broker: broker.email,
+            teamMember: teamMember.email,
             task: task.title,
             status: "sent",
           });
@@ -654,10 +654,10 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
             .eq("id", task.id);
         } else {
           console.error(
-            `❌ Failed to send reminder email to ${broker.email} for task: ${task.title}`,
+            `❌ Failed to send reminder email to ${teamMember.email} for task: ${task.title}`,
           );
           emailLog.push({
-            broker: broker.email,
+            teamMember: teamMember.email,
             task: task.title,
             status: "failed",
           });
@@ -668,7 +668,7 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
           emailError,
         );
         emailLog.push({
-          broker: broker.email,
+          teamMember: teamMember.email,
           task: task.title,
           status: "error",
           reason: String(emailError),
@@ -690,13 +690,13 @@ export async function sendUpcomingTaskReminders(testBrokerId?: string) {
  * Encourages task creation if user has no tasks
  * This should be run by a cron job daily (e.g., 8 AM)
  */
-export async function sendDailyDigestEmails(specificBrokerId?: string) {
+export async function sendDailyDigestEmails(specificTeamMemberId?: string) {
   const supabase = getServiceSupabase();
 
   console.log("Generating daily digest emails for all users...");
 
-  // Build query to get brokers with user preferences
-  let query = supabase.from("brokers").select(
+  // Build query to get teamMembers with user preferences
+  let query = supabase.from("team_members").select(
     `
       id,
       email,
@@ -712,53 +712,53 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
   )
   .neq("is_active", false); // FILTER: Only send to active accounts
 
-  // If specific broker ID provided, filter to that broker only
-  if (specificBrokerId) {
-    query = query.eq("id", specificBrokerId);
+  // If specific teamMember ID provided, filter to that teamMember only
+  if (specificTeamMemberId) {
+    query = query.eq("id", specificTeamMemberId);
   }
 
-  const { data: brokers, error: brokersError } = await query;
+  const { data: teamMembers, error: teamMembersError } = await query;
 
-  if (brokersError) {
-    console.error("Error fetching brokers:", brokersError);
+  if (teamMembersError) {
+    console.error("Error fetching team members:", teamMembersError);
     return 0;
   }
 
-  console.log(`Found ${brokers?.length || 0} total brokers in database`);
+  console.log(`Found ${teamMembers?.length || 0} total team members in database`);
 
-  // Each broker may be in a different timezone (nationwide team / travelers).
-  // The server (Netlify) runs in UTC, so for every broker we compute "now" as
+  // Each teamMember may be in a different timezone (nationwide team / travelers).
+  // The server (Netlify) runs in UTC, so for every teamMember we compute "now" as
   // it appears on their own wall clock before comparing against their
   // digest_time preference and task due dates. Otherwise an 08:00 local digest
   // would fire at the wrong hour and not-yet-due tasks would look overdue
   // across the UTC midnight boundary.
   let emailsSent = 0;
-  const emailLog: Array<{ broker: string; tasks: string; status: string }> = [];
+  const emailLog: Array<{ teamMember: string; tasks: string; status: string }> = [];
 
-  for (const broker of brokers || []) {
-    console.log(`Processing broker: ${broker.email}`);
-    console.log(`   User preferences:`, broker.user_preferences);
+  for (const teamMember of teamMembers || []) {
+    console.log(`Processing team member: ${teamMember.email}`);
+    console.log(`   User preferences:`, teamMember.user_preferences);
     // Check if email notifications are enabled
     // user_preferences is returned as an array from the join, get first item
-    const prefs = Array.isArray(broker.user_preferences)
-      ? broker.user_preferences[0]
-      : broker.user_preferences;
+    const prefs = Array.isArray(teamMember.user_preferences)
+      ? teamMember.user_preferences[0]
+      : teamMember.user_preferences;
     if (!prefs?.email_notifications_enabled) {
       emailLog.push({
-        broker: broker.email,
+        teamMember: teamMember.email,
         tasks: "N/A",
         status: "Email disabled",
       });
       continue;
     }
 
-    // Compute "now" in this broker's timezone.
-    const brokerTimezone = prefs.timezone || DEFAULT_TIMEZONE;
-    const localNow = getNowInZone(brokerTimezone);
+    // Compute "now" in this teamMember's timezone.
+    const teamMemberTimezone = prefs.timezone || DEFAULT_TIMEZONE;
+    const localNow = getNowInZone(teamMemberTimezone);
     const today = localNow.dateStr;
     const currentHour = localNow.hour;
     const currentMinute = localNow.minute;
-    const brokerNow = localNow.wallClock;
+    const teamMemberNow = localNow.wallClock;
     const currentTimeString = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 
     // Check if it's time to send digest to this user (±10 minute window)
@@ -771,12 +771,12 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
 
     if (timeDiff > 10) {
       emailLog.push({
-        broker: broker.email,
+        teamMember: teamMember.email,
         tasks: "N/A",
-        status: `Wrong time (wants ${preferredTime} ${brokerTimezone}, now ${currentTimeString})`,
+        status: `Wrong time (wants ${preferredTime} ${teamMemberTimezone}, now ${currentTimeString})`,
       });
       console.log(
-        `   Skipping: User wants ${preferredTime} (${brokerTimezone}), current is ${currentTimeString} (diff: ${timeDiff} min)`,
+        `   Skipping: User wants ${preferredTime} (${teamMemberTimezone}), current is ${currentTimeString} (diff: ${timeDiff} min)`,
       );
       continue;
     }
@@ -788,7 +788,7 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
     // Check if we already sent digest today (prevent duplicates from overlapping time windows)
     if (prefs.last_digest_sent_date === today) {
       emailLog.push({
-        broker: broker.email,
+        teamMember: teamMember.email,
         tasks: "N/A",
         status: "Already sent today",
       });
@@ -797,7 +797,7 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
     }
 
     try {
-      // Fetch all non-completed tasks for this broker
+      // Fetch all non-completed tasks for this teamMember
       const { data: tasks, error: tasksError } = await supabase
         .from("tasks")
         .select(
@@ -806,15 +806,15 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
           customer:customers(business_name, contact_name)
         `,
         )
-        .eq("broker_id", broker.id)
+        .eq("team_member_id", teamMember.id)
         .neq("status", "completed")
         .neq("status", "archived")
         .order("due_date", { ascending: true });
 
       if (tasksError) {
-        console.error(`Error fetching tasks for ${broker.email}:`, tasksError);
+        console.error(`Error fetching tasks for ${teamMember.email}:`, tasksError);
         emailLog.push({
-          broker: broker.email,
+          teamMember: teamMember.email,
           tasks: "N/A",
           status: `DB error`,
         });
@@ -841,7 +841,7 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
 
         if (
           dueDateStr < today ||
-          (dueDateStr === today && taskDate < brokerNow)
+          (dueDateStr === today && taskDate < teamMemberNow)
         ) {
           overdueTasks.push(task);
         } else if (dueDateStr === today) {
@@ -849,7 +849,7 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
         } else {
           // Only include upcoming tasks within next 7 days
           const daysUntil = Math.floor(
-            (taskDate.getTime() - brokerNow.getTime()) / (1000 * 60 * 60 * 24),
+            (taskDate.getTime() - teamMemberNow.getTime()) / (1000 * 60 * 60 * 24),
           );
           if (daysUntil <= 7) {
             upcomingTasks.push(task);
@@ -877,7 +877,7 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
       // Generate email HTML
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
       const { html, subject } = await generateDailyDigestHTML(
-        broker.first_name || "there",
+        teamMember.first_name || "there",
         {
           overdueTasks,
           todayTasks,
@@ -888,7 +888,7 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
 
       // Send email
       const emailSent = await sendEmail({
-        to: broker.email,
+        to: teamMember.email,
         subject,
         html,
       });
@@ -900,25 +900,25 @@ export async function sendDailyDigestEmails(specificBrokerId?: string) {
         await supabase
           .from("user_preferences")
           .update({ last_digest_sent_date: today })
-          .eq("broker_id", broker.id);
+          .eq("team_member_id", teamMember.id);
 
         const totalTasks =
           overdueTasks.length + todayTasks.length + upcomingTasks.length;
         emailLog.push({
-          broker: broker.email,
+          teamMember: teamMember.email,
           tasks: `${overdueTasks.length} overdue, ${todayTasks.length} today, ${upcomingTasks.length} upcoming`,
           status: totalTasks === 0 ? "Sent (empty)" : "Sent",
         });
       } else {
         emailLog.push({
-          broker: broker.email,
+          teamMember: teamMember.email,
           tasks: "N/A",
           status: "Send failed",
         });
       }
     } catch (error) {
       emailLog.push({
-        broker: broker.email,
+        teamMember: teamMember.email,
         tasks: "N/A",
         status: `${error}`,
       });

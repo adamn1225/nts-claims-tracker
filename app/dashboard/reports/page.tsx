@@ -4,7 +4,7 @@
  * Routing Logic:
  * - Admin: Redirects to /dashboard/reports/admin (company-wide view)
  * - Manager: Redirects to /dashboard/reports/office (office-specific view)
- * - Regular Broker: Shows access denied
+ * - Regular TeamMember: Shows access denied
  *
  * This page acts as a router to the appropriate dashboard based on user role.
  */
@@ -34,9 +34,9 @@ export default function ReportsPage() {
           return;
         }
 
-        // Fetch user's broker record to check role
-        const { data: broker, error: fetchError } = await supabase
-          .from("brokers")
+        // Fetch user's teamMember record to check role
+        const { data: teamMember, error: fetchError } = await supabase
+          .from("team_members")
           .select("is_admin, is_manager, office_location")
           .eq("id", user.id)
           .single();
@@ -45,17 +45,17 @@ export default function ReportsPage() {
           throw new Error("Failed to fetch user role");
         }
 
-        if (!broker) {
-          throw new Error("Broker profile not found");
+        if (!teamMember) {
+          throw new Error("TeamMember profile not found");
         }
 
         // Route based on role
-        if (broker.is_admin) {
+        if (teamMember.is_admin) {
           router.push("/dashboard/reports/admin");
-        } else if (broker.is_manager) {
+        } else if (teamMember.is_manager) {
           router.push("/dashboard/reports/office");
         } else {
-          // Regular broker - show access denied
+          // Regular teamMember - show access denied
           setError(
             "You don't have permission to view analytics. Contact your manager.",
           );

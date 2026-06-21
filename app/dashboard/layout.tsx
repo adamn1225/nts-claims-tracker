@@ -39,7 +39,7 @@ import { AiCoachPanel } from "@/components/ai-coach/AiCoachPanel";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { redirect, useRouter, usePathname } from "next/navigation";
-import { BrokerViewProvider } from "@/contexts/BrokerViewContext";
+import { TeamMemberViewProvider } from "@/contexts/TeamMemberViewContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { ClickToCallProvider } from "@/contexts/ClickToCallContext";
 import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
@@ -88,7 +88,7 @@ function DockBackListener() {
   return null;
 }
 
-function DashboardContent({ children, brokerId }: { children: React.ReactNode; brokerId: string }) {
+function DashboardContent({ children, teamMemberId }: { children: React.ReactNode; teamMemberId: string }) {
   const pathname = usePathname();
   const { setCurrentPage } = useAiCoach();
 
@@ -106,7 +106,7 @@ function DashboardContent({ children, brokerId }: { children: React.ReactNode; b
       {children}
 
       {/* AI Sales Coach Panel - Opened from Help Modal */}
-      {brokerId && <AiCoachPanel />}
+      {teamMemberId && <AiCoachPanel />}
     </>
   );
 }
@@ -120,7 +120,7 @@ export default function DashboardLayout({
   const supabase = createClient();
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
-  const [brokerId, setBrokerId] = useState<string>("");
+  const [teamMemberId, setTeamMemberId] = useState<string>("");
   const [showTour, setShowTour] = useState(false);
 
   // Listen for count updates from NotificationsPanel (fresher data)
@@ -144,8 +144,8 @@ export default function DashboardLayout({
         } = await supabase.auth.getUser();
         if (!user) return;
 
-        setBrokerId(user.id);
-        console.log("🔍 Authenticated user broker_id:", user.id);
+        setTeamMemberId(user.id);
+        console.log("🔍 Authenticated user team_member_id:", user.id);
 
         // Check tour status - show on first 3 logins
         const tourSkipped = localStorage.getItem("tour-skipped");
@@ -167,10 +167,8 @@ export default function DashboardLayout({
         const { count, error, data } = await supabase
           .from("notifications")
           .select("*", { count: "exact" })
-          .eq("broker_id", user.id)
-          .eq("is_read", false)
-          .eq("is_archived", false)
-          .or(`scheduled_for.is.null,scheduled_for.lte.${new Date().toISOString()}`); // Only count notifications that are due
+          .eq("user_id", user.id)
+          .is("read_at", null);
 
         console.log("📊 Unread notifications query result:", {
           count,
@@ -189,7 +187,7 @@ export default function DashboardLayout({
 
     fetchUserData();
 
-    // Subscribe to real-time changes for this broker only
+    // Subscribe to real-time changes for this teamMember only
     const channel = supabase
       .channel("notifications-changes")
       .on(
@@ -198,7 +196,7 @@ export default function DashboardLayout({
           event: "*",
           schema: "public",
           table: "notifications",
-          filter: `broker_id=eq.${brokerId}`,
+          filter: `user_id=eq.${teamMemberId}`,
         },
         () => {
           console.log("🔔 Real-time notification change detected, refetching...");
@@ -214,16 +212,16 @@ export default function DashboardLayout({
 
   // Start browser notification polling
   useEffect(() => {
-    if (!brokerId) return;
+    if (!teamMemberId) return;
 
-    console.log("🔔 Starting notification polling for broker:", brokerId);
-    const stopPolling = startNotificationPolling(brokerId);
+    console.log("🔔 Starting notification polling for team member:", teamMemberId);
+    const stopPolling = startNotificationPolling(teamMemberId);
 
     return () => {
       console.log("🔕 Stopping notification polling");
       stopPolling();
     };
-  }, [brokerId]);
+  }, [teamMemberId]);
 
   const handleTourComplete = () => {
     setShowTour(false);
@@ -240,7 +238,7 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <BrokerViewProvider>
+      <TeamMemberViewProvider>
         <ClickToCallProvider>
           <AiCoachProvider>
             <OnlinePresenceProvider>
@@ -257,14 +255,14 @@ export default function DashboardLayout({
                 {/* Top Navigation - Search and notifications */}
                 <TopNav
                   unreadCount={unreadCount}
-                  brokerId={brokerId}
+                  teamMemberId={teamMemberId}
                   notificationsPanelOpen={notificationsPanelOpen}
                   setNotificationsPanelOpen={setNotificationsPanelOpen}
                 />
 
                 {/* Main Content Area - Scrollable with padding for mobile header */}
                 <main className="flex-1 overflow-y-auto pt-14 lg:pt-22">
-                  <DashboardContent brokerId={brokerId}>
+                  <DashboardContent teamMemberId={teamMemberId}>
                     {children}
                   </DashboardContent>
                 </main>
@@ -302,7 +300,7 @@ export default function DashboardLayout({
               </OnlinePresenceProvider>
           </AiCoachProvider>
         </ClickToCallProvider>
-      </BrokerViewProvider>
+      </TeamMemberViewProvider>
     </SidebarProvider>
   );
 }

@@ -3,13 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Create a "collaboration invited" notification
- * Called when a broker is invited to team up on a customer
+ * Called when a team member is invited to team up on a customer
  * 
  * Body: {
- *   invitedBrokerId: string (recipient),
+ *   invitedTeamMemberId: string (recipient),
  *   customerId: string,
  *   customerName: string,
- *   inviterBrokerId: string,
+ *   inviterTeamMemberId: string,
  *   inviterName: string,
  * }
  */
@@ -29,14 +29,14 @@ export async function POST(req: NextRequest) {
 
         // Parse request
         const {
-            invitedBrokerId,
+            invitedTeamMemberId,
             customerId,
             customerName,
-            inviterBrokerId,
+            inviterTeamMemberId,
             inviterName,
         } = await req.json();
 
-        if (!invitedBrokerId || !customerId || !inviterBrokerId || !inviterName) {
+        if (!invitedTeamMemberId || !customerId || !inviterTeamMemberId || !inviterName) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Skip self-notification: don't notify inviter about their own invitation
-        if (invitedBrokerId === inviterBrokerId) {
+        if (invitedTeamMemberId === inviterTeamMemberId) {
             return NextResponse.json({
                 success: true,
                 skipped: true,
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         const { data, error } = await supabase
             .from("notifications")
             .insert({
-                broker_id: invitedBrokerId,
+                team_member_id: invitedTeamMemberId,
                 customer_id: customerId,
                 type: "collaboration_invited",
                 title: `${inviterName} invited you to team up`,

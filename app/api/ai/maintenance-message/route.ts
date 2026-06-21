@@ -3,7 +3,7 @@
  *
  * Admin-only helper that writes or improves the short user-facing message shown
  * on the maintenance page (and used in the advance-warning email). Keeps tone
- * calm, friendly, and professional for a freight-broker CRM audience.
+ * calm, friendly, and professional for a freight-team-member CRM audience.
  *
  * Request body:
  *   mode?           "write" | "improve"  (default "write")
@@ -52,12 +52,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: broker } = await supabase
-    .from("brokers")
+  const { data: teamMember } = await supabase
+    .from("team_members")
     .select("is_admin")
     .eq("id", user.id)
     .single();
-  if (!broker?.is_admin) {
+  if (!teamMember?.is_admin) {
     return NextResponse.json(
       { error: "Admin access required" },
       { status: 403 },
@@ -88,8 +88,8 @@ export async function POST(request: Request) {
   if (endsAt) contextLines.push(`Expected back online: ${endsAt}`);
 
   const systemPrompt = [
-    "You write short, friendly, professional maintenance notices for an internal freight-broker CRM called NTS Claims Tracker.",
-    "Audience: busy freight brokers and sales reps. Keep it calm, reassuring, and human.",
+    "You write short, friendly, professional maintenance notices for an internal freight-team-member CRM called NTS Claims Tracker.",
+    "Audience: busy freight team members and sales reps. Keep it calm, reassuring, and human.",
     "Rules:",
     "- 1 to 3 short sentences. No greeting line, no signature, no subject line.",
     "- Plain text only. No markdown, no emojis, no placeholders like [time].",

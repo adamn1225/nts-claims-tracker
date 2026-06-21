@@ -20,7 +20,7 @@ const tokenHints = [
   "{{first_name}}",
   "{{last_name}}",
   "{{company}}",
-  "{{broker_name}}",
+  "{{team_member_name}}",
   "{{broker_phone}}",
   "{{broker_email}}",
   "{{lanes}}",
@@ -48,7 +48,7 @@ export default function EmailTemplateEditor() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [currentBroker, setCurrentBroker] = useState<any>(null);
+  const [currentTeamMember, setCurrentTeamMember] = useState<any>(null);
   const [templateFilter, setTemplateFilter] = useState<"custom" | "system">("custom");
 
   const selected = templates.find((t) => t.id === selectedId);
@@ -64,7 +64,7 @@ export default function EmailTemplateEditor() {
 
   useEffect(() => {
     loadTemplates();
-    loadCurrentBroker();
+    loadCurrentTeamMember();
   }, []);
 
   // Auto-compile MJML to HTML preview (debounced)
@@ -174,15 +174,15 @@ export default function EmailTemplateEditor() {
     }
   };
 
-  const loadCurrentBroker = async () => {
+  const loadCurrentTeamMember = async () => {
     try {
       const response = await fetch("/api/debug/user-info");
       const data = await response.json();
-      if (response.ok && data.broker) {
-        setCurrentBroker(data.broker);
+      if (response.ok && data.teamMember) {
+        setCurrentTeamMember(data.teamMember);
       }
     } catch (error) {
-      console.error("Error loading broker info:", error);
+      console.error("Error loading team member info:", error);
     }
   };
 
@@ -344,15 +344,15 @@ export default function EmailTemplateEditor() {
 
     // Replace tokens with demo data
     const subject = selected.subject
-      .replaceAll("{{first_name}}", currentBroker?.first_name || "Alex")
-      .replaceAll("{{broker_name}}", currentBroker ? `${currentBroker.first_name} ${currentBroker.last_name}` : "Demo Broker");
+      .replaceAll("{{first_name}}", currentTeamMember?.first_name || "Alex")
+      .replaceAll("{{team_member_name}}", currentTeamMember ? `${currentTeamMember.first_name} ${currentTeamMember.last_name}` : "Demo TeamMember");
 
     const body = html
-      .replaceAll("{{first_name}}", currentBroker?.first_name || "Alex")
+      .replaceAll("{{first_name}}", currentTeamMember?.first_name || "Alex")
       .replaceAll("{{company}}", "Acme Corp")
-      .replaceAll("{{broker_name}}", currentBroker ? `${currentBroker.first_name} ${currentBroker.last_name}` : "Demo Broker")
-      .replaceAll("{{broker_phone}}", currentBroker?.phone || "(555) 010-0000")
-      .replaceAll("{{broker_email}}", currentBroker?.email || "demo@ntslogistics.com");
+      .replaceAll("{{team_member_name}}", currentTeamMember ? `${currentTeamMember.first_name} ${currentTeamMember.last_name}` : "Demo TeamMember")
+      .replaceAll("{{broker_phone}}", currentTeamMember?.phone || "(555) 010-0000")
+      .replaceAll("{{broker_email}}", currentTeamMember?.email || "demo@ntslogistics.com");
 
     const emailContent = `To: ${to}\nSubject: ${subject}\n\n${body}`;
 
@@ -892,19 +892,19 @@ export default function EmailTemplateEditor() {
                       <p className="text-xs text-slate-500">Subject:</p>
                       <p className="text-sm font-medium">
                         {selected.subject
-                          .replaceAll("{{first_name}}", currentBroker?.first_name || "Alex")
-                          .replaceAll("{{broker_name}}", currentBroker ? `${currentBroker.first_name} ${currentBroker.last_name}` : "Demo Broker")}
+                          .replaceAll("{{first_name}}", currentTeamMember?.first_name || "Alex")
+                          .replaceAll("{{team_member_name}}", currentTeamMember ? `${currentTeamMember.first_name} ${currentTeamMember.last_name}` : "Demo TeamMember")}
                       </p>
                     </div>
                     <div
                       className="text-sm"
                       dangerouslySetInnerHTML={{
                         __html: compiledHtml
-                          .replaceAll("{{first_name}}", currentBroker?.first_name || "Alex")
+                          .replaceAll("{{first_name}}", currentTeamMember?.first_name || "Alex")
                           .replaceAll("{{company}}", "Acme Corp")
-                          .replaceAll("{{broker_name}}", currentBroker ? `${currentBroker.first_name} ${currentBroker.last_name}` : "Demo Broker")
-                          .replaceAll("{{broker_phone}}", currentBroker?.phone || "(555) 010-0000")
-                          .replaceAll("{{broker_email}}", currentBroker?.email || "demo@ntslogistics.com")
+                          .replaceAll("{{team_member_name}}", currentTeamMember ? `${currentTeamMember.first_name} ${currentTeamMember.last_name}` : "Demo TeamMember")
+                          .replaceAll("{{broker_phone}}", currentTeamMember?.phone || "(555) 010-0000")
+                          .replaceAll("{{broker_email}}", currentTeamMember?.email || "demo@ntslogistics.com")
                           .replaceAll("{{lanes}}", "CA to TX")
                           .replaceAll("{{frequency}}", "Weekly")
                           .replaceAll("{{next_steps}}", "Send pricing quote"),

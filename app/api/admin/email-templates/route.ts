@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from("email_templates")
       .select("*")
-      .or(`is_system.eq.true,broker_id.eq.${user.id}`)
+      .or(`is_system.eq.true,team_member_id.eq.${user.id}`)
       .eq("is_active", true);
 
     // Filter by template type if specified
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     const { data: template, error } = await supabase
       .from("email_templates")
       .insert({
-        broker_id: user.id,
+        team_member_id: user.id,
         name,
         subject,
         body: templateBody,
@@ -184,7 +184,7 @@ export async function DELETE(request: Request) {
     // Check if template exists and if it's a system template
     const { data: template, error: fetchError } = await supabase
       .from("email_templates")
-      .select("is_system, name, broker_id")
+      .select("is_system, name, team_member_id")
       .eq("id", id)
       .single();
 
@@ -197,13 +197,13 @@ export async function DELETE(request: Request) {
 
     // If system template, require admin access
     if (template.is_system) {
-      const { data: broker } = await supabase
-        .from("brokers")
+      const { data: teamMember } = await supabase
+        .from("team_members")
         .select("is_admin")
         .eq("id", user.id)
         .single();
 
-      if (!broker?.is_admin) {
+      if (!teamMember?.is_admin) {
         return NextResponse.json(
           { error: "Admin access required to delete system templates" },
           { status: 403 },
@@ -212,7 +212,7 @@ export async function DELETE(request: Request) {
     }
 
     // Check ownership for non-system templates
-    if (!template.is_system && template.broker_id !== user.id) {
+    if (!template.is_system && template.team_member_id !== user.id) {
       return NextResponse.json(
         { error: "You can only delete your own templates" },
         { status: 403 },

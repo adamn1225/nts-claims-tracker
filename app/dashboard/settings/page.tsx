@@ -113,7 +113,7 @@ const notificationTypes = [
 ];
 
 // US timezones used for scheduling digests, reminders, and overdue checks.
-// Values are IANA timezone names; labels are broker-friendly.
+// Values are IANA timezone names; labels are teamMember-friendly.
 const TIMEZONE_OPTIONS = [
   { value: "America/New_York", label: "Eastern Time (ET)" },
   { value: "America/Chicago", label: "Central Time (CT)" },
@@ -239,8 +239,8 @@ function SettingsPageContent() {
 
         setUserEmail(user.email || "");
 
-        const { data: broker, error } = await supabase
-          .from("brokers")
+        const { data: teamMember, error } = await supabase
+          .from("team_members")
           .select(
             "first_name, last_name, office_location, is_admin, is_manager",
           )
@@ -248,13 +248,13 @@ function SettingsPageContent() {
           .single();
 
         if (error) {
-          console.error("Failed to fetch broker info:", error);
-        } else if (broker) {
-          setFirstName(broker.first_name || "");
-          setLastName(broker.last_name || "");
-          setOfficeLocation(broker.office_location || "");
-          setIsAdmin(broker.is_admin ?? false);
-          setIsManager(broker.is_manager ?? false);
+          console.error("Failed to fetch team member info:", error);
+        } else if (teamMember) {
+          setFirstName(teamMember.first_name || "");
+          setLastName(teamMember.last_name || "");
+          setOfficeLocation(teamMember.office_location || "");
+          setIsAdmin(teamMember.is_admin ?? false);
+          setIsManager(teamMember.is_manager ?? false);
         }
 
         // Fetch user preferences
@@ -275,7 +275,7 @@ function SettingsPageContent() {
             setDailyDigestEnabled(prefs.dailyDigestEnabled ?? false);
             setDigestTime(prefs.digestTime || "08:00");
             // Use the saved timezone; if none, fall back to the browser's
-            // detected timezone so new brokers get a sensible default.
+            // detected timezone so new teamMembers get a sensible default.
             const detectedTz =
               Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
             setTimezone(prefs.timezone || detectedTz);
@@ -287,7 +287,7 @@ function SettingsPageContent() {
         const { data: msTokens } = await supabase
           .from('microsoft_tokens')
           .select('id')
-          .eq('broker_id', user.id)
+          .eq('team_member_id', user.id)
           .single();
         
         setMicrosoftConnected(!!msTokens);
@@ -629,7 +629,7 @@ function SettingsPageContent() {
                             ? "Administrator"
                             : isManager
                               ? "Manager"
-                              : "Broker"}
+                              : "TeamMember"}
                         </span>
                         {isAdmin && (
                           <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">

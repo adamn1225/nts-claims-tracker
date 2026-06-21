@@ -130,7 +130,7 @@ async function importMappings(mappings: CSVMapping[]) {
 
   console.log(`\n⚠️  Manual Step Required:`);
   console.log(`This data needs to be matched against GoTo user accounts.`);
-  console.log(`\nOption 1: Use Admin UI to map DIDs to broker accounts`);
+  console.log(`\nOption 1: Use Admin UI to map DIDs to team member accounts`);
   console.log(`Option 2: Store raw DID → name in performance_overrides\n`);
 
   // For now, just output the mappings - would need UI to complete import

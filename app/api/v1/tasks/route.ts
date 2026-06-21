@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from("tasks")
       .select("*", { count: "exact" })
-      .eq("broker_id", token.broker_id)
+      .eq("team_member_id", token.team_member_id)
       .range(offset, offset + limit - 1)
       .order("due_date", { ascending: true });
     
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       .from("tasks")
       .insert({
         ...body,
-        broker_id: token.broker_id, // Force broker_id to token owner
+        team_member_id: token.team_member_id, // Force team_member_id to token owner
         status: body.status || "pending",
       })
       .select()

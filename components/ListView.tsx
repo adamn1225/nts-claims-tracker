@@ -82,7 +82,7 @@ interface ListViewProps {
     customer: Customer,
   ) => void;
   canReassign?: boolean;
-  onReassign?: (customerId: string, customerName: string, brokerId: string) => void;
+  onReassign?: (customerId: string, customerName: string, teamMemberId: string) => void;
   onAddToBoard?: (customerId: string) => void;
   onStatusChange?: (customerId: string, newStatus: string) => void;
 }
@@ -115,8 +115,8 @@ export default function ListView({
   // Bulk selection state
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set());
 
-  // Broker names for "Assigned to" column
-  const [brokerNames, setBrokerNames] = useState<Record<string, string>>({});
+  // TeamMember names for "Assigned to" column
+  const [teamMemberNames, setTeamMemberNames] = useState<Record<string, string>>({});
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,7 +125,7 @@ export default function ListView({
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareCustomer, setShareCustomer] = useState<Customer | null>(null);
-  const [currentBrokerId, setCurrentBrokerId] = useState<string>("");
+  const [currentTeamMemberId, setCurrentTeamMemberId] = useState<string>("");
 
   // Use context filters
   const { searchQuery, statusFilter, sourceFilter, timezoneFilter, timezoneMode } = useCustomerSearch();
@@ -189,48 +189,48 @@ export default function ListView({
     fetchStatuses();
   }, []);
 
-  // Fetch current broker ID
+  // Fetch current team member ID
   useEffect(() => {
-    const fetchBrokerId = async () => {
+    const fetchTeamMemberId = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: broker } = await supabase
-          .from("brokers")
+        const { data: teamMember } = await supabase
+          .from("team_members")
           .select("id")
           .eq("id", user.id)
           .single();
-        if (broker) {
-          setCurrentBrokerId(broker.id);
+        if (teamMember) {
+          setCurrentTeamMemberId(teamMember.id);
         }
       }
     };
-    fetchBrokerId();
+    fetchTeamMemberId();
   }, []);
 
-  // Fetch broker names for "Assigned to" column
+  // Fetch teamMember names for "Assigned to" column
   useEffect(() => {
-    const fetchBrokerNames = async () => {
+    const fetchTeamMemberNames = async () => {
       const supabase = createClient();
-      const brokerIds = [...new Set(customers.map(c => c.broker_id).filter(Boolean))];
+      const teamMemberIds = [...new Set(customers.map(c => c.team_member_id).filter(Boolean))];
 
-      if (brokerIds.length === 0) return;
+      if (teamMemberIds.length === 0) return;
 
       const { data } = await supabase
-        .from("brokers")
+        .from("team_members")
         .select("id, first_name, last_name")
-        .in("id", brokerIds);
+        .in("id", teamMemberIds);
 
       if (data) {
         const names: Record<string, string> = {};
-        data.forEach(broker => {
-          names[broker.id] = `${broker.first_name} ${broker.last_name || ''}`.trim();
+        data.forEach(teamMember => {
+          names[teamMember.id] = `${teamMember.first_name} ${teamMember.last_name || ''}`.trim();
         });
-        setBrokerNames(names);
+        setTeamMemberNames(names);
       }
     };
 
-    fetchBrokerNames();
+    fetchTeamMemberNames();
   }, [customers]);
 
   // ListView-specific pins (separate from kanban pins) - stored in localStorage
@@ -661,11 +661,11 @@ export default function ListView({
                         size="sm"
                         noteCount={customer.note_count || 0}
                       />
-                      {canReassign && onReassign && customer.broker_id && (
+                      {canReassign && onReassign && customer.team_member_id && (
                         <button
-                          onClick={() => onReassign(customer.id, customer.business_name || "Unknown", customer.broker_id!)}
+                          onClick={() => onReassign(customer.id, customer.business_name || "Unknown", customer.team_member_id!)}
                           className="rounded p-1.5 text-blue-600 transition-colors hover:bg-blue-50"
-                          title="Reassign to another broker"
+                          title="Reassign to another team member"
                         >
                           <UserPlus className="h-4 w-4" />
                         </button>
@@ -838,9 +838,9 @@ export default function ListView({
                           <div
                             key={collab.id}
                             className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-orange-400 to-orange-600 text-[10px] font-bold text-white"
-                            title={collab.broker_name}
+                            title={collab.team_member_name}
                           >
-                            {collab.broker_name.charAt(0).toUpperCase()}
+                            {collab.team_member_name.charAt(0).toUpperCase()}
                           </div>
                         ))}
                         {customer.collaborators.length > 2 && (
@@ -856,10 +856,10 @@ export default function ListView({
 
                   {/* Assigned To */}
                   <td className="px-4 py-3">
-                    {customer.broker_id && brokerNames[customer.broker_id] ? (
+                    {customer.team_member_id && teamMemberNames[customer.team_member_id] ? (
                       <div className="flex items-center gap-1.5 text-sm text-slate-700">
                         <User className="h-3.5 w-3.5 text-orange-500" />
-                        {brokerNames[customer.broker_id]}
+                        {teamMemberNames[customer.team_member_id]}
                       </div>
                     ) : (
                       <span className="text-sm text-slate-400">Unassigned</span>
@@ -1180,7 +1180,7 @@ export default function ListView({
             setShareCustomer(null);
           }}
           customer={shareCustomer}
-          currentBrokerId={currentBrokerId || ""}
+          currentTeamMemberId={currentTeamMemberId || ""}
         />
       )}
     </div>

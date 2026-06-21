@@ -221,8 +221,8 @@ export default function StatusConfigModal({
                   type="text"
                   value={newStatusName}
                   onChange={(e) => setNewStatusName(e.target.value)}
-                  placeholder="e.g., Warm Lead, Negotiating, Qualified"
-                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-20"
+                  placeholder="e.g., Documenting, Settlement, Carrier Review"
+                  className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   onKeyDown={(e) => e.key === "Enter" && handleAddStatus()}
                 />
               </div>
@@ -253,7 +253,7 @@ export default function StatusConfigModal({
 
               <button
                 onClick={handleAddStatus}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 text-sm font-medium text-white transition-colors hover:bg-orange-600"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-white transition-colors hover:bg-primary-text"
               >
                 <Plus className="h-4 w-4" />
                 Add Status

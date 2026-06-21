@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email-service";
 import {
   replaceTokens,
-  getBrokerTokens,
+  getTeamMemberTokens,
   getCustomerTokens,
   mergeTokens,
 } from "@/lib/email-template-processor";
@@ -25,13 +25,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: broker } = await supabase
-      .from("brokers")
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("is_admin")
       .eq("id", user.id)
       .single();
 
-    if (!broker?.is_admin) {
+    if (!teamMember?.is_admin) {
       return NextResponse.json(
         { error: "Admin access required" },
         { status: 403 },
@@ -58,21 +58,21 @@ export async function POST(request: Request) {
         // Send to current admin user only
         emailsSent = await sendDailyDigestEmails(user.id);
       } else if (recipient === "specific" && specificEmail) {
-        // Find broker by email
-        const { data: targetBroker } = await supabase
-          .from("brokers")
+        // Find teamMember by email
+        const { data: targetTeamMember } = await supabase
+          .from("team_members")
           .select("id")
           .eq("email", specificEmail)
           .single();
 
-        if (!targetBroker) {
+        if (!targetTeamMember) {
           return NextResponse.json(
             { error: `No user found with email: ${specificEmail}` },
             { status: 404 },
           );
         }
 
-        emailsSent = await sendDailyDigestEmails(targetBroker.id);
+        emailsSent = await sendDailyDigestEmails(targetTeamMember.id);
       } else if (recipient === "all") {
         // Send to all users (respects their preferences)
         emailsSent = await sendDailyDigestEmails();
@@ -107,55 +107,55 @@ export async function POST(request: Request) {
 
       // Determine recipients
       let recipientEmails: string[] = [];
-      let recipientBrokers: any[] = [];
+      let recipientTeamMembers: any[] = [];
 
       if (recipient === "test") {
-        const { data: currentBroker } = await supabase
-          .from("brokers")
+        const { data: currentTeamMember } = await supabase
+          .from("team_members")
           .select("*")
           .eq("id", user.id)
           .single();
-        if (currentBroker) {
-          recipientBrokers = [currentBroker];
+        if (currentTeamMember) {
+          recipientTeamMembers = [currentTeamMember];
         }
       } else if (recipient === "specific" && specificEmail) {
-        const { data: targetBroker } = await supabase
-          .from("brokers")
+        const { data: targetTeamMember } = await supabase
+          .from("team_members")
           .select("*")
           .eq("email", specificEmail)
           .single();
 
-        if (!targetBroker) {
+        if (!targetTeamMember) {
           return NextResponse.json(
             { error: `No user found with email: ${specificEmail}` },
             { status: 404 },
           );
         }
-        recipientBrokers = [targetBroker];
+        recipientTeamMembers = [targetTeamMember];
       } else if (recipient === "all") {
-        // Get all active brokers, optionally filtered by office
-        let brokersQuery = supabase
-          .from("brokers")
+        // Get all active team members, optionally filtered by office
+        let teamMembersQuery = supabase
+          .from("team_members")
           .select("*")
           .eq("is_active", true);
         
         // Apply office filter if provided (for managers)
         if (officeFilter) {
-          brokersQuery = brokersQuery.eq("office_location", officeFilter);
+          teamMembersQuery = teamMembersQuery.eq("office_location", officeFilter);
         }
         
-        const { data: allBrokers } = await brokersQuery;
-        recipientBrokers = allBrokers || [];
+        const { data: allTeamMembers } = await teamMembersQuery;
+        recipientTeamMembers = allTeamMembers || [];
       }
 
       // Send emails with token replacement
-      for (const recipientBroker of recipientBrokers) {
-        const brokerTokens = await getBrokerTokens(
-          recipientBroker.id,
+      for (const recipientTeamMember of recipientTeamMembers) {
+        const teamMemberTokens = await getTeamMemberTokens(
+          recipientTeamMember.id,
           supabase,
         );
-        const tokens = mergeTokens(brokerTokens, {
-          first_name: recipientBroker.first_name || "there",
+        const tokens = mergeTokens(teamMemberTokens, {
+          first_name: recipientTeamMember.first_name || "there",
           company: "their company", // Could fetch from customer data if needed
         });
 
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
         processedBody = replaceTokens(processedBody, tokens);
 
         const sent = await sendEmail({
-          to: recipientBroker.email,
+          to: recipientTeamMember.email,
           subject: processedSubject,
           html: processedBody,
         });

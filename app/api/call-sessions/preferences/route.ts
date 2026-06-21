@@ -28,10 +28,10 @@ export async function GET() {
     const { data } = await supabase
         .from("dialer_ai_preferences")
         .select("*")
-        .eq("broker_id", user.id)
+        .eq("team_member_id", user.id)
         .maybeSingle();
 
-    return NextResponse.json({ preferences: data ?? { broker_id: user.id, ...DEFAULTS } });
+    return NextResponse.json({ preferences: data ?? { team_member_id: user.id, ...DEFAULTS } });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -40,14 +40,14 @@ export async function PATCH(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json().catch(() => ({}));
-    const updates: Record<string, unknown> = { broker_id: user.id };
+    const updates: Record<string, unknown> = { team_member_id: user.id };
     for (const f of PREF_FIELDS) {
         if (body[f] !== undefined) updates[f] = body[f];
     }
 
     const { data, error } = await supabase
         .from("dialer_ai_preferences")
-        .upsert(updates, { onConflict: "broker_id" })
+        .upsert(updates, { onConflict: "team_member_id" })
         .select()
         .single();
 

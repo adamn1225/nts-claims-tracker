@@ -6,7 +6,7 @@
  *
  * Request body:
  *   customerId  string      — UUID of the current customer
- *   message     string      — Broker's question/request
+ *   message     string      — TeamMember's question/request
  *   history     Message[]   — Previous conversation (last 10 messages)
  *   callState   string      — Current call state ('ringing' | 'answered' | 'ended' | 'idle')
  *
@@ -99,7 +99,7 @@ function getPageHelpContext(pathname: string) {
   if (pathname.includes("/power-dialer")) {
     return {
       pageName: "Power Dialer",
-      description: "The Power Dialer helps brokers efficiently call through their customer queue with auto-progression and quick outcome logging.",
+      description: "The Power Dialer helps team members efficiently call through their customer queue with auto-progression and quick outcome logging.",
       features: [
         "Queue modes: All Customers, Overdue Only, Custom Filters",
         "Auto-advance to next customer after logging outcome",
@@ -114,13 +114,13 @@ function getPageHelpContext(pathname: string) {
   if (pathname.includes("/imports")) {
     return {
       pageName: "Import & Export",
-      description: "Import customer lists via CSV and distribute leads to brokers across your team.",
+      description: "Import customer lists via CSV and distribute leads to team members across your team.",
       features: [
         "CSV upload with drag-and-drop support",
         "Preview data before importing",
-        "Distribute contacts to individual brokers or use even distribution",
+        "Distribute contacts to individual team members or use even distribution",
         "Filter by industry, state, or source before distributing",
-        "Track distributed contacts with assigned broker info",
+        "Track distributed contacts with assigned team member info",
         "Bulk actions: reassign, delete, update source tags",
         "Limbo tab shows assigned contacts not yet in workspace",
       ],
@@ -307,7 +307,7 @@ function getAdminPageContext(pathname: string): string {
       match: "/dashboard/admin",
       label: "Admin Console",
       detail:
-        "Tabbed admin area: Brokers (add/deactivate/roles), Reassign (move customers between brokers), API Tokens, Features (feature access control), Landing Pages (review broker landing configs), Email (broadcasts, templates, daily digest), Company (analytics), Maintenance (toggle maintenance mode, schedule a window, AI-assisted message, email all users).",
+        "Tabbed admin area: TeamMembers (add/deactivate/roles), Reassign (move customers between team members), API Tokens, Features (feature access control), Landing Pages (review team member landing configs), Email (broadcasts, templates, daily digest), Company (analytics), Maintenance (toggle maintenance mode, schedule a window, AI-assisted message, email all users).",
     },
     {
       match: "/dashboard/performance",
@@ -441,13 +441,13 @@ export async function POST(request: NextRequest) {
 
   // Admin Assistant mode is restricted to admins.
   if (mode === "admin") {
-    const { data: adminBroker } = await supabase
-      .from("brokers")
+    const { data: adminTeamMember } = await supabase
+      .from("team_members")
       .select("is_admin")
       .eq("id", user.id)
       .single();
 
-    if (!adminBroker?.is_admin) {
+    if (!adminTeamMember?.is_admin) {
       return NextResponse.json(
         { error: "Admin access required" },
         { status: 403 }
@@ -516,10 +516,10 @@ If asked about features NOT on this page, briefly mention where to find them and
         return NextResponse.json({ error: "Customer not found" }, { status: 404 });
       }
 
-      // Security: Verify broker owns this customer (or is admin)
-      if (customer.broker_id !== user.id) {
+      // Security: Verify teamMember owns this customer (or is admin)
+      if (customer.team_member_id !== user.id) {
         const { data: profile } = await supabase
-          .from("brokers")
+          .from("team_members")
           .select("role")
           .eq("id", user.id)
           .single();
@@ -579,7 +579,7 @@ Keep responses practical and actionable.`;
   let searchWasTriggered = false;
 
   // SMART AUTO-SEARCH: Always search when customer is loaded in sales mode
-  // This ensures brokers always have complete context for their calls
+  // This ensures teamMembers always have complete context for their calls
   
   // Fetch customer data first to check for missing fields
   let customerData: any = null;

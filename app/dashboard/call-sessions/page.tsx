@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Call Sessions — broker-built power dialer with custom contact lists
+ * Call Sessions — teamMember-built power dialer with custom contact lists
  * separate from the main contacts table.
  *
  * Views:
@@ -46,7 +46,7 @@ type CallList = {
 };
 
 type Preferences = {
-    broker_id?: string;
+    team_member_id?: string;
     pre_call_brief: boolean;
     post_performance: boolean;
     post_tips: boolean;

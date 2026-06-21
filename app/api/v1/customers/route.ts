@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from("customers")
       .select("*", { count: "exact" })
-      .eq("broker_id", token.broker_id) // Only return token owner's customers
+      .eq("team_member_id", token.team_member_id) // Only return token owner's customers
       .range(offset, offset + limit - 1)
       .order("updated_at", { ascending: false });
     
@@ -155,11 +155,11 @@ export async function POST(request: NextRequest) {
     }
     
     // Create customer
-    // If broker_id is provided in body, use it. If explicitly null, create unassigned.
+    // If team_member_id is provided in body, use it. If explicitly null, create unassigned.
     // If not provided at all, default to token owner (backward compatibility)
     const customerData = {
       ...body,
-      broker_id: body.hasOwnProperty('broker_id') ? body.broker_id : token.broker_id,
+      team_member_id: body.hasOwnProperty('team_member_id') ? body.team_member_id : token.team_member_id,
     };
     
     const { data, error } = await supabaseAdmin

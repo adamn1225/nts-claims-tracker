@@ -3,9 +3,9 @@
  * Centralized permission logic for the entire app
  */
 
-export interface BrokerPermissions {
+export interface TeamMemberPermissions {
   id: string;
-  broker_id: string;
+  team_member_id: string;
 
   // View permissions
   can_view_all_brokers: boolean;
@@ -50,7 +50,7 @@ export interface BrokerPermissions {
   updated_at: string;
 }
 
-export interface Broker {
+export interface TeamMember {
   id: string;
   email: string;
   first_name: string;
@@ -64,27 +64,27 @@ export interface Broker {
 }
 
 /**
- * Check if user can view a specific broker's data
+ * Check if user can view a specific teamMember's data
  */
-export function canViewBroker(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
-  targetBroker: Broker,
+export function canViewTeamMember(
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
+  targetTeamMember: TeamMember,
 ): boolean {
   // Can always view own data
-  if (currentBroker.id === targetBroker.id) return true;
+  if (currentTeamMember.id === targetTeamMember.id) return true;
 
   // Admin flag overrides permissions
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
 
   // Check granular permissions
   if (permissions.can_view_all_brokers) return true;
 
-  // Can view brokers in same office
+  // Can view teamMembers in same office
   if (
     permissions.can_view_office_brokers &&
-    currentBroker.office_location &&
-    currentBroker.office_location === targetBroker.office_location
+    currentTeamMember.office_location &&
+    currentTeamMember.office_location === targetTeamMember.office_location
   ) {
     return true;
   }
@@ -96,13 +96,13 @@ export function canViewBroker(
  * Check if user can edit a customer
  */
 export function canEditCustomer(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
-  customerBrokerId: string,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
+  customerTeamMemberId: string,
   customerOfficeLocation: string | null,
 ): boolean {
   // Admin flag overrides
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
 
   // Can edit all customers
   if (permissions.can_edit_all_customers) return true;
@@ -110,7 +110,7 @@ export function canEditCustomer(
   // Can edit own customers
   if (
     permissions.can_edit_own_customers &&
-    currentBroker.id === customerBrokerId
+    currentTeamMember.id === customerTeamMemberId
   ) {
     return true;
   }
@@ -118,8 +118,8 @@ export function canEditCustomer(
   // Can edit office customers
   if (
     permissions.can_edit_office_customers &&
-    currentBroker.office_location &&
-    currentBroker.office_location === customerOfficeLocation
+    currentTeamMember.office_location &&
+    currentTeamMember.office_location === customerOfficeLocation
   ) {
     return true;
   }
@@ -131,25 +131,25 @@ export function canEditCustomer(
  * Check if user can view a customer
  */
 export function canViewCustomer(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
-  customerBrokerId: string,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
+  customerTeamMemberId: string,
   customerOfficeLocation: string | null,
 ): boolean {
   // Admin flag overrides
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
 
   // Can view all customers
   if (permissions.can_view_all_customers) return true;
 
   // Can always view own customers
-  if (currentBroker.id === customerBrokerId) return true;
+  if (currentTeamMember.id === customerTeamMemberId) return true;
 
   // Can view office customers
   if (
     permissions.can_view_office_customers &&
-    currentBroker.office_location &&
-    currentBroker.office_location === customerOfficeLocation
+    currentTeamMember.office_location &&
+    currentTeamMember.office_location === customerOfficeLocation
   ) {
     return true;
   }
@@ -161,10 +161,10 @@ export function canViewCustomer(
  * Check if user can manage other users
  */
 export function canManageUsers(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
 ): boolean {
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
   return permissions.can_manage_users;
 }
 
@@ -172,10 +172,10 @@ export function canManageUsers(
  * Check if user can manage custom statuses
  */
 export function canManageStatuses(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
 ): boolean {
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
   return permissions.can_manage_statuses;
 }
 
@@ -183,10 +183,10 @@ export function canManageStatuses(
  * Check if user can view analytics
  */
 export function canViewAnalytics(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
 ): boolean {
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
   return permissions.can_view_analytics;
 }
 
@@ -194,10 +194,10 @@ export function canViewAnalytics(
  * Check if user can export data
  */
 export function canExportData(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
 ): boolean {
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
   return permissions.can_export_data;
 }
 
@@ -205,27 +205,27 @@ export function canExportData(
  * Check if user can edit a task
  */
 export function canEditTask(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
-  taskBrokerId: string,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
+  taskTeamMemberId: string,
   taskOfficeLocation: string | null,
 ): boolean {
   // Admin flag overrides
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
 
   // Can edit all tasks
   if (permissions.can_edit_all_tasks) return true;
 
   // Can edit own tasks
-  if (permissions.can_edit_own_tasks && currentBroker.id === taskBrokerId) {
+  if (permissions.can_edit_own_tasks && currentTeamMember.id === taskTeamMemberId) {
     return true;
   }
 
   // Can edit office tasks
   if (
     permissions.can_edit_office_tasks &&
-    currentBroker.office_location &&
-    currentBroker.office_location === taskOfficeLocation
+    currentTeamMember.office_location &&
+    currentTeamMember.office_location === taskOfficeLocation
   ) {
     return true;
   }
@@ -237,25 +237,25 @@ export function canEditTask(
  * Check if user can view a task
  */
 export function canViewTask(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
-  taskBrokerId: string,
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
+  taskTeamMemberId: string,
   taskOfficeLocation: string | null,
 ): boolean {
   // Admin flag overrides
-  if (currentBroker.is_admin) return true;
+  if (currentTeamMember.is_admin) return true;
 
   // Can view all tasks
   if (permissions.can_view_all_tasks) return true;
 
   // Can always view own tasks
-  if (currentBroker.id === taskBrokerId) return true;
+  if (currentTeamMember.id === taskTeamMemberId) return true;
 
   // Can view office tasks
   if (
     permissions.can_view_office_tasks &&
-    currentBroker.office_location &&
-    currentBroker.office_location === taskOfficeLocation
+    currentTeamMember.office_location &&
+    currentTeamMember.office_location === taskOfficeLocation
   ) {
     return true;
   }
@@ -264,19 +264,19 @@ export function canViewTask(
 }
 
 /**
- * Get list of broker IDs that the current user can view
+ * Get list of teamMember IDs that the current user can view
  */
-export function getViewableBrokerIds(
-  permissions: BrokerPermissions,
-  currentBroker: Broker,
-  allBrokers: Broker[],
+export function getViewableTeamMemberIds(
+  permissions: TeamMemberPermissions,
+  currentTeamMember: TeamMember,
+  allTeamMembers: TeamMember[],
 ): string[] {
   // Always include own ID
-  const viewableIds = new Set<string>([currentBroker.id]);
+  const viewableIds = new Set<string>([currentTeamMember.id]);
 
-  for (const broker of allBrokers) {
-    if (canViewBroker(permissions, currentBroker, broker)) {
-      viewableIds.add(broker.id);
+  for (const teamMember of allTeamMembers) {
+    if (canViewTeamMember(permissions, currentTeamMember, teamMember)) {
+      viewableIds.add(teamMember.id);
     }
   }
 
@@ -284,9 +284,9 @@ export function getViewableBrokerIds(
 }
 
 /**
- * Default permissions for new brokers
+ * Default permissions for new teamMembers
  */
-export const DEFAULT_PERMISSIONS: Partial<BrokerPermissions> = {
+export const DEFAULT_PERMISSIONS: Partial<TeamMemberPermissions> = {
   can_view_all_brokers: false,
   can_view_office_brokers: true,
   can_view_all_customers: false,
@@ -311,7 +311,7 @@ export const DEFAULT_PERMISSIONS: Partial<BrokerPermissions> = {
 /**
  * Manager permissions preset
  */
-export const MANAGER_PERMISSIONS: Partial<BrokerPermissions> = {
+export const MANAGER_PERMISSIONS: Partial<TeamMemberPermissions> = {
   can_view_all_brokers: true,
   can_view_office_brokers: true,
   can_view_all_customers: false,
@@ -336,7 +336,7 @@ export const MANAGER_PERMISSIONS: Partial<BrokerPermissions> = {
 /**
  * Admin permissions preset
  */
-export const ADMIN_PERMISSIONS: Partial<BrokerPermissions> = {
+export const ADMIN_PERMISSIONS: Partial<TeamMemberPermissions> = {
   can_view_all_brokers: true,
   can_view_office_brokers: true,
   can_view_all_customers: true,
@@ -360,10 +360,10 @@ export const ADMIN_PERMISSIONS: Partial<BrokerPermissions> = {
 
 /**
  * Sales Coach permissions preset
- * Baseline broker experience + approved coach tooling + company-wide visibility,
+ * Baseline teamMember experience + approved coach tooling + company-wide visibility,
  * while keeping destructive/admin-governance capabilities disabled.
  */
-export const SALES_COACH_PERMISSIONS: Partial<BrokerPermissions> = {
+export const SALES_COACH_PERMISSIONS: Partial<TeamMemberPermissions> = {
   can_view_all_brokers: true,
   can_view_office_brokers: true,
   can_view_all_customers: true,
@@ -395,23 +395,23 @@ export const SALES_COACH_PERMISSIONS: Partial<BrokerPermissions> = {
  * Resolve role-based permission preset.
  */
 export function getRolePermissionPreset(
-  broker: Pick<Broker, "is_admin" | "is_manager" | "is_sales_coach">,
-): Partial<BrokerPermissions> {
-  if (broker.is_admin) return ADMIN_PERMISSIONS;
-  if (broker.is_sales_coach) return SALES_COACH_PERMISSIONS;
-  if (broker.is_manager) return MANAGER_PERMISSIONS;
+  teamMember: Pick<TeamMember, "is_admin" | "is_manager" | "is_sales_coach">,
+): Partial<TeamMemberPermissions> {
+  if (teamMember.is_admin) return ADMIN_PERMISSIONS;
+  if (teamMember.is_sales_coach) return SALES_COACH_PERMISSIONS;
+  if (teamMember.is_manager) return MANAGER_PERMISSIONS;
   return DEFAULT_PERMISSIONS;
 }
 
 /**
  * Build a full fallback permissions object when broker_permissions rows are missing.
  */
-export function createFallbackPermissions(broker: Broker): BrokerPermissions {
-  const preset = getRolePermissionPreset(broker);
+export function createFallbackPermissions(teamMember: TeamMember): TeamMemberPermissions {
+  const preset = getRolePermissionPreset(teamMember);
 
   return {
     id: "",
-    broker_id: broker.id,
+    team_member_id: teamMember.id,
     can_view_all_brokers: false,
     can_view_office_brokers: true,
     can_view_all_customers: false,

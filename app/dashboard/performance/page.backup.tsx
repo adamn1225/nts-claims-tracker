@@ -36,7 +36,7 @@ import type {
   ViewMode,
 } from "@/components/performance/types";
 import { KpiRow } from "@/components/performance/KpiRow";
-import { BrokerLeaderboard } from "@/components/performance/BrokerLeaderboard";
+import { TeamMemberLeaderboard } from "@/components/performance/TeamMemberLeaderboard";
 import { CallDetailPanel } from "@/components/performance/CallDetailPanel";
 import { CoachingSummary } from "@/components/performance/CoachingSummary";
 import { GroupView } from "@/components/performance/GroupView";
@@ -77,13 +77,13 @@ export default function PerformanceDashboardPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { router.push("/auth/login"); return; }
 
-        const { data: broker, error: brokerErr } = await supabase
-          .from("brokers")
+        const { data: teamMember, error: teamMemberErr } = await supabase
+          .from("team_members")
           .select("is_admin")
           .eq("id", user.id)
           .single();
 
-        if (brokerErr || !broker?.is_admin) { router.push("/dashboard"); return; }
+        if (teamMemberErr || !teamMember?.is_admin) { router.push("/dashboard"); return; }
         setAuthorized(true);
       } catch (err) {
         console.error("Authorization error:", err);
@@ -375,7 +375,7 @@ export default function PerformanceDashboardPage() {
           {viewMode === "team" && (
             <div className="space-y-6">
               <KpiRow agents={data.agentSummaries} />
-              <BrokerLeaderboard
+              <TeamMemberLeaderboard
                 agents={data.agentSummaries}
                 selectedAgent={selectedAgent}
                 onSelectAgent={setSelectedAgent}
@@ -419,7 +419,7 @@ export default function PerformanceDashboardPage() {
                     <span className="text-sm font-semibold text-slate-800">{selectedGroup}</span>
                   </div>
                   <KpiRow agents={visibleAgents} />
-                  <BrokerLeaderboard agents={visibleAgents} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
+                  <TeamMemberLeaderboard agents={visibleAgents} selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
                   {selectedAgent && (
                     <div className="grid gap-6 xl:grid-cols-3">
                       <div className="xl:col-span-2">

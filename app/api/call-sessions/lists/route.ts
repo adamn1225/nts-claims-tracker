@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/call-sessions/lists  -> all lists for current broker (with counts)
+// GET /api/call-sessions/lists  -> all lists for current team member (with counts)
 export async function GET() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
         .from("dialer_lists")
         .insert({
-            broker_id: user.id,
+            team_member_id: user.id,
             name,
             description: body.description ?? null,
         })

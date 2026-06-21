@@ -40,18 +40,18 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check user permissions
-    const { data: broker } = await supabase
-      .from("brokers")
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("is_admin, is_manager")
       .eq("id", user.id)
       .single();
 
-    if (!broker) {
-      return NextResponse.json({ error: "Broker not found" }, { status: 404 });
+    if (!teamMember) {
+      return NextResponse.json({ error: "Team member not found" }, { status: 404 });
     }
 
     console.log(`User ${user.id} attempting to delete ${idsToDelete.length} contacts`);
-    console.log(`User role - Admin: ${broker.is_admin}, Manager: ${broker.is_manager}`);
+    console.log(`User role - Admin: ${teamMember.is_admin}, Manager: ${teamMember.is_manager}`);
 
     // Batch delete to avoid query size limits (max 100 IDs per batch)
     const BATCH_SIZE = 100;

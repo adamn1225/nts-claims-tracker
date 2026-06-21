@@ -31,13 +31,13 @@ import {
   Activity,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import InviteBrokerModal from "./InviteBrokerModal";
-import EditBrokerModal from "./EditBrokerModal";
-import BrokerReassignment from "./BrokerReassignment";
+import InviteTeamMemberModal from "./InviteTeamMemberModal";
+import EditTeamMemberModal from "./EditTeamMemberModal";
+import TeamMemberReassignment from "./TeamMemberReassignment";
 import CompanyAnalytics from "./CompanyAnalytics";
 import ActivityAnalytics from "./ActivityAnalytics";
 
-type BrokerRow = {
+type TeamMemberRow = {
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -52,25 +52,25 @@ type BrokerRow = {
 type ManagerConsoleProps = {
   userId: string;
   officeLocation: string | null;
-  canInviteBrokers: boolean;
+  canInviteTeamMembers: boolean;
   canInviteAnyOffice: boolean;
 };
 
 export default function ManagerConsole({
   userId,
   officeLocation,
-  canInviteBrokers,
+  canInviteTeamMembers,
   canInviteAnyOffice,
 }: ManagerConsoleProps) {
   const supabase = createClient();
   const isMobileOrTablet = useIsMobileOrTablet();
-  const [brokers, setBrokers] = useState<BrokerRow[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedBroker, setSelectedBroker] = useState<BrokerRow | null>(null);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMemberRow | null>(null);
   const [resendingInvite, setResendingInvite] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
     | "team"
@@ -93,7 +93,7 @@ export default function ManagerConsole({
     );
   }
 
-  // Load brokers from the manager's office
+  // Load teamMembers from the manager's office
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -101,11 +101,11 @@ export default function ManagerConsole({
 
       // Managers see only their office unless they have can_invite_any_office permission
       let query = supabase
-        .from("brokers")
+        .from("team_members")
         .select(
           "id, first_name, last_name, email, is_admin, is_manager, is_remote, office_location, is_active",
         )
-        .eq("is_active", true) // Only show active brokers
+        .eq("is_active", true) // Only show active team members
         .order("created_at", { ascending: false });
 
       // Restrict to office if manager doesn't have can_invite_any_office
@@ -118,7 +118,7 @@ export default function ManagerConsole({
       if (error) {
         setError(error.message);
       } else {
-        setBrokers(data || []);
+        setTeamMembers(data || []);
       }
       setLoading(false);
     };
@@ -142,8 +142,8 @@ export default function ManagerConsole({
       throw new Error("No active session");
     }
 
-    // Call API route to create user and broker record
-    const response = await fetch("/api/admin/invite-broker", {
+    // Call API route to create user and teamMember record
+    const response = await fetch("/api/admin/invite-team-member", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,7 +155,7 @@ export default function ManagerConsole({
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.error || "Failed to invite broker");
+      throw new Error(result.error || "Failed to invite team member");
     }
 
     // Check if email failed but user was created
@@ -165,9 +165,9 @@ export default function ManagerConsole({
       throw error;
     }
 
-    // Reload brokers list
+    // Reload teamMembers list
     const { data: updated, error } = await supabase
-      .from("brokers")
+      .from("team_members")
       .select(
         "id, first_name, last_name, email, is_admin, is_manager, is_remote, office_location, is_active",
       )
@@ -175,7 +175,7 @@ export default function ManagerConsole({
       .order("created_at", { ascending: false });
 
     if (!error && updated) {
-      setBrokers(updated);
+      setTeamMembers(updated);
     }
   };
 
@@ -189,7 +189,7 @@ export default function ManagerConsole({
     is_manager: boolean;
   }): Promise<void> => {
     const { error } = await supabase
-      .from("brokers")
+      .from("team_members")
       .update({
         first_name: data.first_name,
         last_name: data.last_name,
@@ -203,7 +203,7 @@ export default function ManagerConsole({
 
     if (error) throw new Error(error.message);
 
-    setBrokers((prev) =>
+    setTeamMembers((prev) =>
       prev.map((b) =>
         b.id === data.id
           ? {
@@ -244,22 +244,22 @@ export default function ManagerConsole({
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return brokers.filter(
+    return teamMembers.filter(
       (b) =>
         (b.first_name || "").toLowerCase().includes(q) ||
         (b.last_name || "").toLowerCase().includes(q) ||
         b.email.toLowerCase().includes(q) ||
         (b.office_location || "").toLowerCase().includes(q),
     );
-  }, [brokers, query]);
+  }, [teamMembers, query]);
 
   // Calculate office metrics
   const metrics = useMemo(() => {
-    const totalBrokers = brokers.length;
-    const managers = brokers.filter((b) => b.is_manager && !b.is_admin).length;
-    const remoteBrokers = brokers.filter((b) => b.is_remote).length;
-    return { totalBrokers, managers, remoteBrokers };
-  }, [brokers]);
+    const totalTeamMembers = teamMembers.length;
+    const managers = teamMembers.filter((b) => b.is_manager && !b.is_admin).length;
+    const remoteTeamMembers = teamMembers.filter((b) => b.is_remote).length;
+    return { totalTeamMembers, managers, remoteTeamMembers };
+  }, [teamMembers]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -324,14 +324,14 @@ export default function ManagerConsole({
       <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         {activeTab === "team" && (
           <TeamManagementTab
-            brokers={brokers}
+            teamMembers={teamMembers}
             loading={loading}
             error={error}
             query={query}
             setQuery={setQuery}
-            canInviteBrokers={canInviteBrokers}
+            canInviteTeamMembers={canInviteTeamMembers}
             setIsInviteModalOpen={setIsInviteModalOpen}
-            setSelectedBroker={setSelectedBroker}
+            setSelectedTeamMember={setSelectedTeamMember}
             setIsEditModalOpen={setIsEditModalOpen}
             handleResendInvite={handleResendInvite}
             resendingInvite={resendingInvite}
@@ -340,7 +340,7 @@ export default function ManagerConsole({
           />
         )}
         {activeTab === "reassign" && (
-          <BrokerReassignment officeFilter={canInviteAnyOffice ? null : officeLocation} />
+          <TeamMemberReassignment officeFilter={canInviteAnyOffice ? null : officeLocation} />
         )}
         {activeTab === "analytics" && (
           <CompanyAnalytics officeFilter={officeLocation} />
@@ -351,7 +351,7 @@ export default function ManagerConsole({
       </div>
 
       {/* Modals */}
-      <InviteBrokerModal
+      <InviteTeamMemberModal
         isOpen={isInviteModalOpen}
         onCloseAction={() => setIsInviteModalOpen(false)}
         onSubmitAction={handleInviteSubmit}
@@ -360,15 +360,15 @@ export default function ManagerConsole({
         }
       />
 
-      {selectedBroker && (
-        <EditBrokerModal
+      {selectedTeamMember && (
+        <EditTeamMemberModal
           isOpen={isEditModalOpen}
           onCloseAction={() => {
             setIsEditModalOpen(false);
-            setSelectedBroker(null);
+            setSelectedTeamMember(null);
           }}
           onSubmitAction={handleEditSubmit}
-          broker={selectedBroker}
+          teamMember={selectedTeamMember}
           isAdmin={false} // Managers cannot change role permissions
         />
       )}
@@ -378,28 +378,28 @@ export default function ManagerConsole({
 
 // Team Management Tab Component
 function TeamManagementTab({
-  brokers,
+  teamMembers,
   loading,
   error,
   query,
   setQuery,
-  canInviteBrokers,
+  canInviteTeamMembers,
   setIsInviteModalOpen,
-  setSelectedBroker,
+  setSelectedTeamMember,
   setIsEditModalOpen,
   handleResendInvite,
   resendingInvite,
   officeLocation,
   canInviteAnyOffice,
 }: {
-  brokers: BrokerRow[];
+  teamMembers: TeamMemberRow[];
   loading: boolean;
   error: string | null;
   query: string;
   setQuery: (q: string) => void;
-  canInviteBrokers: boolean;
+  canInviteTeamMembers: boolean;
   setIsInviteModalOpen: (open: boolean) => void;
-  setSelectedBroker: (broker: BrokerRow) => void;
+  setSelectedTeamMember: (teamMember: TeamMemberRow) => void;
   setIsEditModalOpen: (open: boolean) => void;
   handleResendInvite: (email: string) => void;
   resendingInvite: string | null;
@@ -408,22 +408,22 @@ function TeamManagementTab({
 }) {
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return brokers.filter(
+    return teamMembers.filter(
       (b) =>
         (b.first_name || "").toLowerCase().includes(q) ||
         (b.last_name || "").toLowerCase().includes(q) ||
         b.email.toLowerCase().includes(q) ||
         (b.office_location || "").toLowerCase().includes(q),
     );
-  }, [brokers, query]);
+  }, [teamMembers, query]);
 
   // Calculate office metrics
   const metrics = useMemo(() => {
-    const totalBrokers = brokers.length;
-    const managers = brokers.filter((b) => b.is_manager && !b.is_admin).length;
-    const remoteBrokers = brokers.filter((b) => b.is_remote).length;
-    return { totalBrokers, managers, remoteBrokers };
-  }, [brokers]);
+    const totalTeamMembers = teamMembers.length;
+    const managers = teamMembers.filter((b) => b.is_manager && !b.is_admin).length;
+    const remoteTeamMembers = teamMembers.filter((b) => b.is_remote).length;
+    return { totalTeamMembers, managers, remoteTeamMembers };
+  }, [teamMembers]);
 
   return (
     <div className="space-y-6">
@@ -439,7 +439,7 @@ function TeamManagementTab({
                 Total Team Members
               </p>
               <p className="mt-0.5 text-xl font-bold text-slate-900">
-                {metrics.totalBrokers}
+                {metrics.totalTeamMembers}
               </p>
             </div>
           </div>
@@ -466,10 +466,10 @@ function TeamManagementTab({
             </div>
             <div>
               <p className="text-xs font-medium text-zinc-900">
-                Remote Brokers
+                Remote TeamMembers
               </p>
               <p className="mt-0.5 text-xl font-bold text-slate-900">
-                {metrics.remoteBrokers}
+                {metrics.remoteTeamMembers}
               </p>
             </div>
           </div>
@@ -488,13 +488,13 @@ function TeamManagementTab({
             className="w-full rounded-lg border border-slate-300 py-2 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-500 focus:border-[#E85D04] focus:outline-none focus:ring-2 focus:ring-[#E85D04]/20"
           />
         </div>
-        {canInviteBrokers && (
+        {canInviteTeamMembers && (
           <button
             onClick={() => setIsInviteModalOpen(true)}
             className="flex items-center gap-2 rounded-lg bg-[#E85D04] px-4 py-2 text-sm font-medium text-white hover:bg-[#d14d00] focus:outline-none focus:ring-2 focus:ring-[#E85D04] focus:ring-offset-2"
           >
             <Plus className="h-4 w-4" />
-            Invite Broker
+            Invite TeamMember
           </button>
         )}
       </div>
@@ -544,33 +544,33 @@ function TeamManagementTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {filtered.map((broker) => {
-                  const fullName = [broker.first_name, broker.last_name]
+                {filtered.map((teamMember) => {
+                  const fullName = [teamMember.first_name, teamMember.last_name]
                     .filter(Boolean)
                     .join(" ");
-                  const role = broker.is_admin
+                  const role = teamMember.is_admin
                     ? "Admin"
-                    : broker.is_manager
+                    : teamMember.is_manager
                       ? "Manager"
-                      : "Broker";
-                  const location = broker.is_remote
+                      : "TeamMember";
+                  const location = teamMember.is_remote
                     ? "Remote"
-                    : broker.office_location || "—";
+                    : teamMember.office_location || "—";
 
                   return (
-                    <tr key={broker.id} className="hover:bg-slate-50">
+                    <tr key={teamMember.id} className="hover:bg-slate-50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">
                         {fullName || "—"}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-900">
-                        {broker.email}
+                        {teamMember.email}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            broker.is_admin
+                            teamMember.is_admin
                               ? "bg-red-100 text-red-700"
-                              : broker.is_manager
+                              : teamMember.is_manager
                                 ? "bg-purple-100 text-purple-700"
                                 : "bg-blue-100 text-blue-700"
                           }`}
@@ -585,17 +585,17 @@ function TeamManagementTab({
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
-                              setSelectedBroker(broker);
+                              setSelectedTeamMember(teamMember);
                               setIsEditModalOpen(true);
                             }}
                             className="rounded p-1 text-zinc-900 hover:bg-slate-100 hover:text-slate-900"
-                            title="Edit broker"
+                            title="Edit team member"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => handleResendInvite(broker.email)}
-                            disabled={resendingInvite === broker.email}
+                            onClick={() => handleResendInvite(teamMember.email)}
+                            disabled={resendingInvite === teamMember.email}
                             className="rounded p-1 text-zinc-900 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
                             title="Resend welcome email"
                           >

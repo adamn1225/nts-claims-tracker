@@ -95,7 +95,7 @@ export default function PwaInstallBanner() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-r from-orange-500 to-orange-600 px-4 py-3 shadow-lg md:hidden">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-linear-to-r from-primary to-primary-text px-4 py-3 shadow-lg md:hidden">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
           <Download className="h-5 w-5 text-white" />
@@ -105,14 +105,14 @@ export default function PwaInstallBanner() {
           <p className="text-sm font-semibold text-white">
             Install NTS Claims Tracker
           </p>
-          <p className="text-xs text-orange-100">
+          <p className="text-xs text-white/80">
             Quick access from your home screen
           </p>
         </div>
 
         <button
           onClick={handleInstall}
-          className="shrink-0 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50"
+          className="shrink-0 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-text transition-colors hover:bg-primary/5"
         >
           Install
         </button>

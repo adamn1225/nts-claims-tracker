@@ -7,7 +7,7 @@ interface TemplateTokens {
   first_name?: string;
   last_name?: string;
   company?: string;
-  broker_name?: string;
+  team_member_name?: string;
   broker_phone?: string;
   broker_email?: string;
   lanes?: string;
@@ -43,24 +43,24 @@ export function replaceTokens(
 }
 
 /**
- * Get available tokens from a broker's data
+ * Get available tokens from a team member's data
  */
-export async function getBrokerTokens(
-  brokerId: string,
+export async function getTeamMemberTokens(
+  teamMemberId: string,
   supabase: any,
 ): Promise<TemplateTokens> {
-  const { data: broker } = await supabase
-    .from("brokers")
+  const { data: teamMember } = await supabase
+    .from("team_members")
     .select("first_name, last_name, email, phone")
-    .eq("id", brokerId)
+    .eq("id", teamMemberId)
     .single();
 
-  if (!broker) return {};
+  if (!teamMember) return {};
 
   return {
-    broker_name: `${broker.first_name || ""} ${broker.last_name || ""}`.trim(),
-    broker_phone: broker.phone || "",
-    broker_email: broker.email || "",
+    team_member_name: `${teamMember.first_name || ""} ${teamMember.last_name || ""}`.trim(),
+    broker_phone: teamMember.phone || "",
+    broker_email: teamMember.email || "",
   };
 }
 

@@ -18,17 +18,18 @@ import {
   Palette,
   Wrench,
 } from "lucide-react";
-import BrokerTable from "@/components/admin/BrokerTable";
+import TeamMemberTable from "@/components/admin/TeamMemberTable";
 import EmailManagement from "@/components/admin/EmailManagement";
 import CompanyAnalytics from "@/components/admin/CompanyAnalytics";
 import ActivityAnalytics from "@/components/admin/ActivityAnalytics";
-import BrokerReassignment from "@/components/admin/BrokerReassignment";
+import TeamMemberReassignment from "@/components/admin/TeamMemberReassignment";
 import ApiTokenManagement from "@/components/admin/ApiTokenManagement";
 import FeatureAccessControl from "@/components/admin/FeatureAccessControl";
 import LandingReview from "@/components/admin/LandingReview";
 import MaintenanceControl from "@/components/admin/MaintenanceControl";
 import OnlineUsersIndicator from "@/components/admin/OnlineUsersIndicator";
 import ActivityHeatmap from "@/components/admin/ActivityHeatmap";
+import AdminTools from "@/components/admin/AdminTools";
 
 function AdminDashboard() {
   const router = useRouter();
@@ -38,10 +39,10 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
-  // Read active tab from URL, default to 'brokers'
-  const tabFromUrl = searchParams.get('tab') as any || 'brokers';
+  // Read active tab from URL, default to 'teamMembers'
+  const tabFromUrl = searchParams.get('tab') as any || 'teamMembers';
   const [activeTab, setActiveTab] = useState<
-    | "brokers"
+    | "teamMembers"
     | "reassign"
     | "api-tokens"
     | "feature-access"
@@ -49,6 +50,7 @@ function AdminDashboard() {
     | "email"
     | "analytics"
     | "maintenance"
+    | "tools"
     | "updates"
   >(tabFromUrl);
 
@@ -69,16 +71,16 @@ function AdminDashboard() {
           router.push("/auth/login");
           return;
         }
-        // Real admin check via brokers table
-        const { data: broker, error: brokerError } = await supabase
-          .from("brokers")
-          .select("is_admin")
+        // Real admin check via profiles.role (canonical source of truth)
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
           .eq("id", user.id)
           .single();
 
-        setIsAdmin(Boolean(broker?.is_admin));
-        if (brokerError)
-          console.warn("Broker lookup error", brokerError.message);
+        setIsAdmin(profile?.role === "admin");
+        if (profileError)
+          console.warn("Profile lookup error", profileError.message);
       } finally {
         setLoading(false);
       }
@@ -139,7 +141,7 @@ function AdminDashboard() {
             Admin Dashboard
           </h1>
           <p className="text-sm text-slate-600">
-            Manage brokers, email templates, and company analytics.
+            Manage teamMembers, email templates, and company analytics.
           </p>
         </div>
         <OnlineUsersIndicator />
@@ -148,14 +150,14 @@ function AdminDashboard() {
       {/* Tabs */}
       <div className="mb-6 flex gap-2 overflow-x-auto border-b border-slate-200 pb-2">
         <button
-          onClick={() => handleTabChange("brokers")}
+          onClick={() => handleTabChange("teamMembers")}
           className={`flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
-            activeTab === "brokers"
+            activeTab === "teamMembers"
               ? "border-b-2 border-orange-500 bg-orange-50 text-orange-700"
               : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          <Users className="h-4 w-4" /> Brokers
+          <Users className="h-4 w-4" /> TeamMembers
         </button>
         <button
           onClick={() => handleTabChange("reassign")}
@@ -228,6 +230,16 @@ function AdminDashboard() {
           <Wrench className="h-4 w-4" /> Maintenance
         </button>
         <button
+          onClick={() => handleTabChange("tools")}
+          className={`flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
+            activeTab === "tools"
+              ? "border-b-2 border-orange-500 bg-orange-50 text-orange-700"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          }`}
+        >
+          <Wrench className="h-4 w-4" /> Tools
+        </button>
+        <button
           onClick={() => router.push("/dashboard/admin/updates")}
           className="flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap text-slate-600 hover:bg-slate-50 hover:text-slate-900"
         >
@@ -237,8 +249,8 @@ function AdminDashboard() {
 
       {/* Panels */}
       <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        {activeTab === "brokers" && <BrokerTable />}
-        {activeTab === "reassign" && <BrokerReassignment />}
+        {activeTab === "teamMembers" && <TeamMemberTable />}
+        {activeTab === "reassign" && <TeamMemberReassignment />}
         {activeTab === "api-tokens" && <ApiTokenManagement />}
         {activeTab === "feature-access" && <FeatureAccessControl />}
         {activeTab === "landing" && <LandingReview />}
@@ -248,13 +260,14 @@ function AdminDashboard() {
             <ActivityHeatmap />
           </div>
         )}
+        {activeTab === "tools" && <AdminTools />}
         {activeTab === "email" && <EmailManagement />}
         {activeTab === "analytics" && (
           <div className="space-y-6">
-            {/* Broker/User Activity Analytics */}
+            {/* TeamMember/User Activity Analytics */}
             <div>
               <h2 className="mb-3 text-lg font-semibold text-slate-900">
-                Broker Activity
+                TeamMember Activity
               </h2>
               <ActivityAnalytics />
             </div>

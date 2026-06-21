@@ -88,8 +88,8 @@ type FieldKey =
     | "orderCreated" | "estShipDate" | "deliveredDate" | "quotedDate"
     | "orderSent" | "orderSigned"
     | "carrierCompanyName" | "carrierPay" | "codToCarrier"
-    | "quotePrice" | "cargoValue" | "brokerBalance"
-    | "brokerAssign" | "assignedTo" | "brokerBranch"
+    | "quotePrice" | "cargoValue" | "teamMemberBalance"
+    | "teamMemberAssign" | "assignedTo" | "teamMemberBranch"
     | "originCity" | "originState" | "originZip" | "originCountry"
     | "destinationCity" | "destinationState" | "destinationZip" | "destinationCountry"
     | "cargo" | "shipVia" | "orderStatus"
@@ -119,10 +119,10 @@ const HEADER_ALIASES: Record<FieldKey, string[]> = {
     codToCarrier: ["codtocarrier"],
     quotePrice: ["quoteprice", "price"],
     cargoValue: ["cargovalue"],
-    brokerBalance: ["brokerbalance"],
-    brokerAssign: ["brokerassign"],
+    teamMemberBalance: ["brokerbalance"],
+    teamMemberAssign: ["brokerassign"],
     assignedTo: ["assignedto"],
-    brokerBranch: ["brokerbranch"],
+    teamMemberBranch: ["brokerbranch"],
     originCity: ["origincity"],
     originState: ["originstate"],
     originZip: ["originzip"],
@@ -260,7 +260,7 @@ function buildRow(
         parseCurrencyNumeric(raw("codToCarrier"));
     const quotePriceNumeric = parseCurrencyNumeric(raw("quotePrice"));
     const cargoValueNumeric = parseCurrencyNumeric(raw("cargoValue"));
-    const brokerBalanceNumeric = parseCurrencyNumeric(raw("brokerBalance"));
+    const teamMemberBalanceNumeric = parseCurrencyNumeric(raw("teamMemberBalance"));
 
     const clamp = (n: number | null, max: number) =>
         n === null ? null : Math.min(n, max);
@@ -309,8 +309,8 @@ function buildRow(
         ifMapped("estShipDate", parseDateIso(raw("estShipDate"))),
         ifMapped("deliveredDate", parseDateIso(raw("deliveredDate"))),
         ifMapped("orderStatus", orNull(raw("orderStatus"))),
-        has("brokerAssign") || has("assignedTo")
-            ? orNull(raw("brokerAssign") || raw("assignedTo"))
+        has("teamMemberAssign") || has("assignedTo")
+            ? orNull(raw("teamMemberAssign") || raw("assignedTo"))
             : null,
         ifMapped("customerType", orNull(raw("customerType"))),
         ifMapped("orderSubType", orNull(raw("orderSubType"))),
@@ -322,8 +322,8 @@ function buildRow(
         ifMapped("destinationCountry", orNull(raw("destinationCountry"))),
         ifMapped("cargoValue", orNull(raw("cargoValue"))),
         ifMapped("quotedDate", parseDateIso(raw("quotedDate"))),
-        ifMapped("brokerBalance", orNull(raw("brokerBalance"))),
-        ifMapped("brokerBranch", orNull(raw("brokerBranch"))),
+        ifMapped("teamMemberBalance", orNull(raw("teamMemberBalance"))),
+        ifMapped("teamMemberBranch", orNull(raw("teamMemberBranch"))),
         ifMapped("duration", orNull(raw("duration"))),
         ifMapped("distance", orNull(raw("distance"))),
         ifMapped("loadName", orNull(raw("loadName"))),
@@ -346,7 +346,7 @@ function buildRow(
         has("carrierPay") || has("codToCarrier") ? carrierPayNumeric : null,
         ifMapped("quotePrice", quotePriceNumeric),
         ifMapped("cargoValue", cargoValueNumeric),
-        ifMapped("brokerBalance", brokerBalanceNumeric),
+        ifMapped("teamMemberBalance", teamMemberBalanceNumeric),
         ifMapped("distance", distanceMiles),
         ifMapped("duration", durationMinutes),
         ifMapped("length", lengthFt),

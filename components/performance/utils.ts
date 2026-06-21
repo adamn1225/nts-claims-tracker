@@ -43,7 +43,7 @@ export function lowIsBetterColor(value: number, goodThreshold = 10, warnThreshol
   return "text-red-900";
 }
 
-/** Compute per-broker coaching statistics from call details and scores */
+/** Compute per-teamMember coaching statistics from call details and scores */
 export function computeCoachingStats(
   calls: CallDetailRow[],
   scores: Record<string, CallScore>,

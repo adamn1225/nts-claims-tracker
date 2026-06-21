@@ -77,7 +77,7 @@ export default function CalendarView({
     tasks: Task[];
   } | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [brokerId, setBrokerId] = useState<string>("");
+  const [teamMemberId, setTeamMemberId] = useState<string>("");
 
   // Fetch tasks for calendar display
   useEffect(() => {
@@ -89,13 +89,13 @@ export default function CalendarView({
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      setBrokerId(user.id);
+      setTeamMemberId(user.id);
 
       // Fetch all tasks (including past ones, but not cancelled)
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
-        .eq("broker_id", user.id)
+        .eq("team_member_id", user.id)
         .neq("status", "cancelled")
         .order("due_date", { ascending: true });
 

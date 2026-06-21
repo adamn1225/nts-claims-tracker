@@ -24,7 +24,7 @@ import {
 type ContactLogEntry = {
   id: string;
   customer_id: string;
-  broker_id: string;
+  team_member_id: string;
   type: "call" | "email" | "meeting" | "note" | "sms" | "other";
   subject: string;
   notes: string | null;
@@ -123,7 +123,7 @@ export default function CustomerDetailModal({
         .from("contact_log")
         .insert({
           customer_id: customer.id,
-          broker_id: user.id,
+          team_member_id: user.id,
           type: "note",
           subject: noteSubject.trim() || "Quick Note",
           notes: noteContent.trim(),
@@ -167,7 +167,7 @@ export default function CustomerDetailModal({
         .from("contact_log")
         .insert({
           customer_id: customer.id,
-          broker_id: user.id,
+          team_member_id: user.id,
           type: type,
           subject: defaultSubject,
           notes: null,

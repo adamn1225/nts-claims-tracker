@@ -13,13 +13,13 @@ async function requireAdmin() {
     return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  const { data: broker } = await supabase
-    .from("brokers")
+  const { data: teamMember } = await supabase
+    .from("team_members")
     .select("is_admin")
     .eq("id", user.id)
     .single();
 
-  if (!broker?.is_admin) {
+  if (!teamMember?.is_admin) {
     return {
       error: NextResponse.json(
         { error: "Admin access required" },

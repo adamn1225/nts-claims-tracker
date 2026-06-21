@@ -313,7 +313,7 @@ export default function ImportPage() {
     try {
       for (const row of csvData) {
         const customer: any = {
-          broker_id: userId, // Assign to self
+          team_member_id: userId, // Assign to self
           business_name: "",
           contact_name: "",
           status: "inbox",        // Shows in Inbox column on kanban board
@@ -372,7 +372,7 @@ export default function ImportPage() {
 
         // Defensive retry: if PostgREST schema cache is stale and rejects the
         // optional `import_source` column, drop it and try again so the user's
-        // entire import doesn't fail. (See same pattern in delete-broker route.)
+        // entire import doesn't fail. (See same pattern in delete-team-member route.)
         if (
           error &&
           /column .*import_source.* does not exist/i.test(error.message || "")

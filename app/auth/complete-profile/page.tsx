@@ -44,17 +44,29 @@ export default function CompleteProfilePage() {
 
       setEmail(user.email ?? "");
 
-      const { data: broker } = await supabase
-        .from("brokers")
-        .select("first_name, last_name, office_location, is_remote")
+      // The profiles row is auto-created on first auth by the
+      // handle_new_auth_user trigger. SSO logins may have first_name /
+      // last_name already populated from raw_user_meta_data.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, office_location, is_remote, full_name")
         .eq("id", user.id)
         .single();
 
-      if (broker) {
-        setFirstName(broker.first_name ?? "");
-        setLastName(broker.last_name ?? "");
-        setOfficeLocation(broker.office_location ?? "");
-        setIsRemote(broker.is_remote ?? false);
+      if (profile) {
+        // Prefer explicit first/last; fall back to splitting full_name for
+        // tenants that only return a combined display name via SSO.
+        let first = profile.first_name ?? "";
+        let last = profile.last_name ?? "";
+        if (!first && !last && profile.full_name) {
+          const parts = profile.full_name.trim().split(/\s+/);
+          first = parts[0] ?? "";
+          last = parts.slice(1).join(" ");
+        }
+        setFirstName(first);
+        setLastName(last);
+        setOfficeLocation(profile.office_location ?? "");
+        setIsRemote(profile.is_remote ?? false);
       }
 
       setLoading(false);
@@ -89,17 +101,21 @@ export default function CompleteProfilePage() {
 
       if (!user) throw new Error("Not authenticated");
 
-      // Upsert: creates the brokers row if it doesn't exist yet (e.g. SSO users
-      // who authenticated but never got a brokers profile), or updates it if
-      // they already have one but it's missing required fields.
+      const trimmedFirst = firstName.trim();
+      const trimmedLast = lastName.trim();
+
+      // Update the user's profile. The row is auto-created by the
+      // handle_new_auth_user trigger; using upsert as a safety net in case
+      // that trigger ever fails to fire.
       const { error: upsertError } = await supabase
-        .from("brokers")
+        .from("profiles")
         .upsert(
           {
             id: user.id,
             email: user.email ?? "",
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
+            first_name: trimmedFirst,
+            last_name: trimmedLast,
+            full_name: `${trimmedFirst} ${trimmedLast}`,
             office_location: officeLocation,
             is_remote: isRemote,
             is_active: true,
@@ -112,7 +128,22 @@ export default function CompleteProfilePage() {
 
       router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save profile.");
+      // Surface Supabase PostgrestError fields (code/message/details/hint) so
+      // RLS or schema issues are diagnosable instead of hiding behind a
+      // generic message. PostgrestError is a plain object, not an Error.
+      const e = err as {
+        message?: string;
+        details?: string;
+        hint?: string;
+        code?: string;
+      } | null;
+      const message =
+        e?.message ||
+        (err instanceof Error ? err.message : null) ||
+        "Failed to save profile.";
+      const extras = [e?.code, e?.details, e?.hint].filter(Boolean).join(" — ");
+      setError(extras ? `${message} (${extras})` : message);
+      console.error("complete-profile upsert error:", err);
       setSaving(false);
     }
   };
@@ -120,7 +151,7 @@ export default function CompleteProfilePage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-900">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -130,7 +161,7 @@ export default function CompleteProfilePage() {
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E85D04]">
+          <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
             <span className="text-2xl font-black text-white">N</span>
           </div>
           <h1 className="text-2xl font-bold text-white">Complete Your Profile</h1>
@@ -148,7 +179,7 @@ export default function CompleteProfilePage() {
           )}
 
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div className="mb-4 rounded-lg bg-danger/10 p-3 text-sm text-danger">
               {error}
             </div>
           )}
@@ -158,27 +189,27 @@ export default function CompleteProfilePage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">
-                  First Name <span className="text-red-500">*</span>
+                  First Name <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Jane"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#E85D04] focus:outline-none focus:ring-2 focus:ring-[#E85D04]/20"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   disabled={saving}
                 />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Last Name <span className="text-red-500">*</span>
+                  Last Name <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Smith"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#E85D04] focus:outline-none focus:ring-2 focus:ring-[#E85D04]/20"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   disabled={saving}
                 />
               </div>
@@ -187,12 +218,12 @@ export default function CompleteProfilePage() {
             {/* Office Location */}
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Office Location <span className="text-red-500">*</span>
+                Office Location <span className="text-danger">*</span>
               </label>
               <select
                 value={officeLocation}
                 onChange={(e) => setOfficeLocation(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#E85D04] focus:outline-none focus:ring-2 focus:ring-[#E85D04]/20"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 disabled={saving}
               >
                 <option value="">Select your office</option>
@@ -211,7 +242,7 @@ export default function CompleteProfilePage() {
                 checked={isRemote}
                 onChange={(e) => setIsRemote(e.target.checked)}
                 disabled={saving}
-                className="h-4 w-4 rounded border-slate-300 text-[#E85D04] focus:ring-[#E85D04]"
+                className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
               />
               <span className="text-sm font-medium text-slate-700">I work remotely</span>
             </label>
@@ -219,7 +250,7 @@ export default function CompleteProfilePage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-lg bg-[#E85D04] py-2.5 font-semibold text-white transition-colors hover:bg-[#d14f00] disabled:opacity-50"
+              className="w-full rounded-lg bg-primary py-2.5 font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save & Continue"}
             </button>

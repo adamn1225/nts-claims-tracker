@@ -4,7 +4,7 @@ import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type RoleViewMode = "admin" | "broker" | "manager" | "sales_coach";
+type RoleViewMode = "admin" | "teamMember" | "manager" | "sales_coach";
 
 const ROLE_VIEW_STORAGE_KEY = "nts:role-view-mode";
 
@@ -23,13 +23,13 @@ export default function RoleViewSwitcher() {
 
                 if (!user) return;
 
-                const { data: broker } = await supabase
-                    .from("brokers")
+                const { data: teamMember } = await supabase
+                    .from("team_members")
                     .select("is_admin")
                     .eq("id", user.id)
                     .single();
 
-                const admin = Boolean(broker?.is_admin);
+                const admin = Boolean(teamMember?.is_admin);
                 setIsAdmin(admin);
 
                 if (!admin) {
@@ -77,7 +77,7 @@ export default function RoleViewSwitcher() {
                 title="Switch role view for demos"
             >
                 <option value="admin">Admin</option>
-                <option value="broker">Broker</option>
+                <option value="teamMember">TeamMember</option>
                 <option value="manager">Manager</option>
                 <option value="sales_coach">Sales Coach</option>
             </select>

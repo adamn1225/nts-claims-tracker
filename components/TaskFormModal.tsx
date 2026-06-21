@@ -23,7 +23,7 @@ interface TaskFormModalProps {
   onClose: () => void;
   onSave: (task: Partial<Task>) => Promise<Task>;
   task?: Task | null;
-  brokerId: string | null;
+  teamMemberId: string | null;
   customers?: Customer[]; // For customer selection
   preselectedCustomer?: Customer; // Customer pre-selected from customer card
 }
@@ -190,7 +190,7 @@ export default function TaskFormModal({
   onClose,
   onSave,
   task,
-  brokerId,
+  teamMemberId,
   customers = [],
   preselectedCustomer,
 }: TaskFormModalProps) {
@@ -198,7 +198,7 @@ export default function TaskFormModal({
   const isCustomerPreselected = !!preselectedCustomer;
 
   const [formData, setFormData] = useState<Partial<Task>>({
-    broker_id: brokerId,
+    team_member_id: teamMemberId,
     title: task?.title || "",
     description: task?.description || "",
     type: task?.type || "internal_reminder",
@@ -254,7 +254,7 @@ export default function TaskFormModal({
   // Load templates and check notification settings
   useEffect(() => {
     const loadData = async () => {
-      if (!isOpen || !brokerId) return;
+      if (!isOpen || !teamMemberId) return;
 
       const supabase = (await import("@/lib/supabase/client")).createClient();
       
@@ -262,7 +262,7 @@ export default function TaskFormModal({
       const { data: prefs } = await supabase
         .from("user_preferences")
         .select("email_notifications_enabled")
-        .eq("broker_id", brokerId)
+        .eq("team_member_id", teamMemberId)
         .single();
 
       setEmailNotificationsDisabled(prefs?.email_notifications_enabled === false);
@@ -271,14 +271,14 @@ export default function TaskFormModal({
       const { data: templatesData } = await supabase
         .from("task_templates")
         .select("*")
-        .eq("broker_id", brokerId)
+        .eq("team_member_id", teamMemberId)
         .order("name");
 
       setTemplates(templatesData || []);
     };
 
     loadData();
-  }, [isOpen, brokerId]);
+  }, [isOpen, teamMemberId]);
 
   // Close customer dropdown when clicking outside
   useEffect(() => {
@@ -320,7 +320,7 @@ export default function TaskFormModal({
   useEffect(() => {
     if (task) {
       setFormData({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         title: task.title || "",
         description: task.description || "",
         type: task.type || "internal_reminder",
@@ -334,7 +334,7 @@ export default function TaskFormModal({
     } else {
       // Reset form for new task
       setFormData({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         title: "",
         description: "",
         type: "internal_reminder",
@@ -348,7 +348,7 @@ export default function TaskFormModal({
     }
     // Reset touched fields when task changes
     setTouchedFields({});
-  }, [task, brokerId, preselectedCustomer]);
+  }, [task, teamMemberId, preselectedCustomer]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -530,7 +530,7 @@ export default function TaskFormModal({
       onClose();
       // Reset form
       setFormData({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         title: "",
         description: "",
         type: "internal_reminder",
@@ -587,11 +587,11 @@ export default function TaskFormModal({
   };
 
   const handleSaveAsTemplate = async () => {
-    if (!templateName.trim() || !brokerId) return;
+    if (!templateName.trim() || !teamMemberId) return;
 
     const supabase = (await import("@/lib/supabase/client")).createClient();
     const { error } = await supabase.from("task_templates").insert({
-      broker_id: brokerId,
+      team_member_id: teamMemberId,
       name: templateName.trim(),
       description: formData.description || null,
       type: formData.type,
@@ -606,7 +606,7 @@ export default function TaskFormModal({
       const { data: templatesData } = await supabase
         .from("task_templates")
         .select("*")
-        .eq("broker_id", brokerId)
+        .eq("team_member_id", teamMemberId)
         .order("name");
       setTemplates(templatesData || []);
       setShowSaveTemplateDialog(false);

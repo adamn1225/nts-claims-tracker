@@ -3,7 +3,7 @@ import type { Database } from "./database.types";
 
 export interface CustomerModel {
   id: string;
-  brokerId: string | null;
+  teamMemberId: string | null;
   businessName: string | null;
   contactName: string | null;
   phone?: string;
@@ -32,7 +32,7 @@ export type DbCustomerUpdate =
 export function toCustomerModel(row: DbCustomerRow): CustomerModel {
   return {
     id: row.id,
-    brokerId: row.broker_id,
+    teamMemberId: row.team_member_id,
     businessName: row.business_name,
     contactName: row.contact_name,
     phone: row.phone ?? undefined,
@@ -58,7 +58,7 @@ export function fromCustomerModel(
 ): DbCustomerInsert | DbCustomerUpdate {
   const base: Partial<DbCustomerInsert> = {
     id: model.id,
-    broker_id: model.brokerId,
+    team_member_id: model.teamMemberId,
     business_name: model.businessName,
     contact_name: model.contactName,
     phone: model.phone,

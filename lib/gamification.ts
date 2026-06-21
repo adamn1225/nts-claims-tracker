@@ -1,7 +1,7 @@
 /**
- * Broker gamification engine.
+ * TeamMember gamification engine.
  *
- * Pure, dependency-free helpers that turn a broker's real activity into XP,
+ * Pure, dependency-free helpers that turn a team member's real activity into XP,
  * levels, profile strength, and achievements.
  */
 
@@ -9,7 +9,7 @@
 // Inputs
 // ---------------------------------------------------------------------------
 
-export type BrokerProfileFields = {
+export type TeamMemberProfileFields = {
   avatar_url: string | null;
   headline: string | null;
   bio: string | null;
@@ -17,13 +17,13 @@ export type BrokerProfileFields = {
   specialties: string[] | null;
 };
 
-/** Extra status flags that aren't stored on the brokers row itself. */
-export type BrokerProfileExtras = {
+/** Extra status flags that aren't stored on the teamMembers row itself. */
+export type TeamMemberProfileExtras = {
   gotoConnected: boolean;
   helpDocsViewed: boolean;
 };
 
-export type BrokerStats = {
+export type TeamMemberStats = {
   wonCount: number;
   activeCount: number;
   totalCustomers: number;
@@ -49,7 +49,7 @@ const XP_WEIGHTS = {
 } as const;
 
 export function computeXp(
-  stats: BrokerStats,
+  stats: TeamMemberStats,
   completenessSteps: number,
 ): number {
   return (
@@ -74,7 +74,7 @@ export type LevelTier = {
 };
 
 export const LEVELS: LevelTier[] = [
-  { level: 1, title: "Rookie Broker", min: 0 },
+  { level: 1, title: "Rookie TeamMember", min: 0 },
   { level: 2, title: "Dispatch Apprentice", min: 500 },
   { level: 3, title: "Lane Runner", min: 1500 },
   { level: 4, title: "Freight Closer", min: 3500 },
@@ -135,9 +135,9 @@ export type ProfileCheck = {
 };
 
 export function getProfileChecklist(
-  profile: BrokerProfileFields,
+  profile: TeamMemberProfileFields,
   portfolioCount: number,
-  extras: BrokerProfileExtras,
+  extras: TeamMemberProfileExtras,
 ): ProfileCheck[] {
   return [
     {
@@ -192,8 +192,8 @@ export function getProfileStrength(checklist: ProfileCheck[]): number {
 
 /** Completed profile fields — drives XP bonus. */
 export function getCompletenessSteps(
-  profile: BrokerProfileFields,
-  extras: BrokerProfileExtras,
+  profile: TeamMemberProfileFields,
+  extras: TeamMemberProfileExtras,
 ): number {
   return [
     profile.avatar_url,
@@ -222,9 +222,9 @@ export type Achievement = {
 };
 
 export function getAchievements(
-  stats: BrokerStats,
-  profile: BrokerProfileFields,
-  extras: BrokerProfileExtras,
+  stats: TeamMemberStats,
+  profile: TeamMemberProfileFields,
+  extras: TeamMemberProfileExtras,
   profileStrength: number,
 ): Achievement[] {
   return [
@@ -371,19 +371,19 @@ export function getAchievements(
 }
 
 // ---------------------------------------------------------------------------
-// Handle helpers (broker email -> URL handle)
+// Handle helpers (teamMember email -> URL handle)
 // ---------------------------------------------------------------------------
 
 /**
- * Derives a URL handle from a broker's email address.
+ * Derives a URL handle from a team member's email address.
  * e.g. "noah.smith@ntsconnect.com" → "noah.smith"
  */
-export function brokerHandle(email: string): string {
+export function teamMemberHandle(email: string): string {
   return email.split("@")[0].toLowerCase();
 }
 
 /** @deprecated */
-export function brokerSlug(
+export function teamMemberSlug(
   firstName: string | null,
   lastName: string | null,
 ): string {

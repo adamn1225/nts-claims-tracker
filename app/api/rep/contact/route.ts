@@ -7,10 +7,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { brokerId, firstName, lastName, company, email, phone, message } = body;
+    const { teamMemberId, firstName, lastName, company, email, phone, message } = body;
 
     // Validate required fields
-    if (!brokerId || !firstName?.trim() || !lastName?.trim() || !email?.trim()) {
+    if (!teamMemberId || !firstName?.trim() || !lastName?.trim() || !email?.trim()) {
       return NextResponse.json(
         { error: "First name, last name, and email are required." },
         { status: 400 },
@@ -23,22 +23,22 @@ export async function POST(request: Request) {
     }
 
     // Service-role client: the submitter is anonymous, so we must bypass RLS
-    // to verify the broker and create the lead. Server-side only — never
+    // to verify the team member and create the lead. Server-side only — never
     // expose this key to the client.
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify the broker exists and is active before creating a lead
-    const { data: broker, error: brokerErr } = await supabase
-      .from("brokers")
+    // Verify the team member exists and is active before creating a lead
+    const { data: teamMember, error: teamMemberErr } = await supabase
+      .from("team_members")
       .select("id, first_name, last_name")
-      .eq("id", brokerId)
+      .eq("id", teamMemberId)
       .eq("is_active", true)
       .single();
 
-    if (brokerErr || !broker) {
-      return NextResponse.json({ error: "Broker not found." }, { status: 404 });
+    if (teamMemberErr || !teamMember) {
+      return NextResponse.json({ error: "Team member not found." }, { status: 404 });
     }
 
     // Build the notes string from the message
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       .filter(Boolean)
       .join("\n");
 
-    // Create the customer/prospect record assigned to this broker
+    // Create the customer/prospect record assigned to this teamMember
     const { error: insertErr } = await supabase.from("customers").insert({
       first_name: firstName.trim(),
       last_name: lastName.trim(),
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       email: email.trim(),
       phone: phone?.trim() || null,
       notes,
-      broker_id: brokerId,
+      team_member_id: teamMemberId,
       status: "Prospect",
       on_kanban_board: true,
       import_source: "public_landing_page",

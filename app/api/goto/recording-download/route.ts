@@ -5,7 +5,7 @@
  * call to /recording/v1/recordings/{id}/content so the browser can save the
  * file without ever seeing the access token.
  *
- * Auth: admin or sales_coach broker.
+ * Auth: admin or sales_coach teamMember.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: callerBroker } = await supabase
-        .from("brokers")
+    const { data: callerTeamMember } = await supabase
+        .from("team_members")
         .select("is_admin, is_sales_coach")
         .eq("id", user.id)
         .maybeSingle();
 
     const hasCoachAccess = Boolean(
-        callerBroker?.is_admin || (callerBroker as { is_sales_coach?: boolean } | null)?.is_sales_coach
+        callerTeamMember?.is_admin || (callerTeamMember as { is_sales_coach?: boolean } | null)?.is_sales_coach
     );
 
     if (!hasCoachAccess) {

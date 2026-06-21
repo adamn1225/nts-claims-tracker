@@ -19,9 +19,9 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.ntsconnect.com";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { brokerId, customerIds, customerNames, assignedBy, assignedByBrokerId } = body;
+    const { teamMemberId, customerIds, customerNames, assignedBy, assignedByTeamMemberId } = body;
 
-    if (!brokerId || !customerIds || !Array.isArray(customerIds)) {
+    if (!teamMemberId || !customerIds || !Array.isArray(customerIds)) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
     const count = customerIds.length;
 
     // Skip if assigning to self (hyperfocused workspace principle)
-    if (brokerId === assignedByBrokerId) {
+    if (teamMemberId === assignedByTeamMemberId) {
       console.log("Skipping self-assignment notification (user knows what they did)");
       return NextResponse.json({ success: true, skipped: true });
     }
 
-    // Fetch broker information with email preferences
-    const { data: broker, error: brokerError } = await supabase
-      .from("brokers")
+    // Fetch teamMember information with email preferences
+    const { data: teamMember, error: teamMemberError } = await supabase
+      .from("team_members")
       .select(`
         id,
         email,
@@ -56,14 +56,14 @@ export async function POST(request: NextRequest) {
           email_notifications_enabled
         )
       `)
-      .eq("id", brokerId)
+      .eq("id", teamMemberId)
       .eq("is_active", true)
       .single();
 
-    if (brokerError || !broker) {
-      console.error("Error fetching broker:", brokerError);
+    if (teamMemberError || !teamMember) {
+      console.error("Error fetching team member:", teamMemberError);
       return NextResponse.json(
-        { error: "Broker not found" },
+        { error: "Team member not found" },
         { status: 404 }
       );
     }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Create one notification for single or multiple contacts
     if (count === 1) {
       const { error } = await supabase.from("notifications").insert({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         customer_id: customerIds[0],
         type: "contact_assigned",
         title: "New Contact Assigned",
@@ -90,30 +90,30 @@ export async function POST(request: NextRequest) {
       }
 
       // Send email notification if enabled
-      const prefs = Array.isArray(broker.user_preferences)
-        ? broker.user_preferences[0]
-        : broker.user_preferences;
+      const prefs = Array.isArray(teamMember.user_preferences)
+        ? teamMember.user_preferences[0]
+        : teamMember.user_preferences;
 
       if (prefs?.email_notifications_enabled) {
         const emailTemplate = generateContactAssignedEmail(
-          broker.first_name || "there",
+          teamMember.first_name || "there",
           customerNames[0],
           assignedBy,
           appUrl
         );
 
         await sendEmail({
-          to: broker.email,
+          to: teamMember.email,
           subject: emailTemplate.subject,
           html: emailTemplate.html,
         });
 
-        console.log(`📧 Email notification sent to ${broker.email}`);
+        console.log(`📧 Email notification sent to ${teamMember.email}`);
       }
     } else {
       // Batch assignment - create single notification
       const { error } = await supabase.from("notifications").insert({
-        broker_id: brokerId,
+        team_member_id: teamMemberId,
         type: "contact_assigned",
         title: "New Contacts Assigned",
         message: `${count} contacts were assigned to you by ${assignedBy}`,
@@ -131,29 +131,29 @@ export async function POST(request: NextRequest) {
       }
 
       // Send email notification if enabled
-      const prefs = Array.isArray(broker.user_preferences)
-        ? broker.user_preferences[0]
-        : broker.user_preferences;
+      const prefs = Array.isArray(teamMember.user_preferences)
+        ? teamMember.user_preferences[0]
+        : teamMember.user_preferences;
 
       if (prefs?.email_notifications_enabled) {
         const emailTemplate = generateBatchContactAssignedEmail(
-          broker.first_name || "there",
+          teamMember.first_name || "there",
           count,
           assignedBy,
           appUrl
         );
 
         await sendEmail({
-          to: broker.email,
+          to: teamMember.email,
           subject: emailTemplate.subject,
           html: emailTemplate.html,
         });
 
-        console.log(`📧 Batch email notification sent to ${broker.email}`);
+        console.log(`📧 Batch email notification sent to ${teamMember.email}`);
       }
     }
 
-    console.log(`✅ Created assignment notification for broker ${brokerId} (${count} contacts)`);
+    console.log(`✅ Created assignment notification for team member ${teamMemberId} (${count} contacts)`);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

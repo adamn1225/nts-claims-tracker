@@ -17,13 +17,13 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: broker } = await supabase
-        .from("brokers")
+    const { data: teamMember } = await supabase
+        .from("team_members")
         .select("is_admin")
         .eq("id", user.id)
         .maybeSingle();
 
-    if (!broker?.is_admin) {
+    if (!teamMember?.is_admin) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

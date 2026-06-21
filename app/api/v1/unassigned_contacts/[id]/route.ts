@@ -43,7 +43,7 @@ export async function GET(
       .from("customers")
       .select("*")
       .eq("id", params.id)
-      .is("broker_id", null) // Must be unassigned
+      .is("team_member_id", null) // Must be unassigned
       .single();
     
     if (error || !data) {
@@ -98,7 +98,7 @@ export async function PUT(
     // Remove protected fields
     delete body.id;
     delete body.created_at;
-    // Note: Allow broker_id update for assignment purposes
+    // Note: Allow team_member_id update for assignment purposes
     
     const { data, error } = await supabaseAdmin
       .from("customers")
@@ -107,7 +107,7 @@ export async function PUT(
         updated_at: new Date().toISOString(),
       })
       .eq("id", params.id)
-      .is("broker_id", null) // Must currently be unassigned
+      .is("team_member_id", null) // Must currently be unassigned
       .select()
       .single();
     
@@ -162,7 +162,7 @@ export async function DELETE(
       .from("customers")
       .delete()
       .eq("id", params.id)
-      .is("broker_id", null); // Must be unassigned
+      .is("team_member_id", null); // Must be unassigned
     
     if (error) {
       await logRequest({ status: 404 }, "Unassigned contact not found or delete failed");

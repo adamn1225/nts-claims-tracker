@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getCustomerDisplayName } from "@/lib/customer-utils";
 import {
   replaceTokens,
-  getBrokerTokens,
+  getTeamMemberTokens,
   getCustomerTokens,
   mergeTokens,
 } from "@/lib/email-template-processor";
@@ -80,14 +80,14 @@ export default function EmailTemplateModal({
     if (!user) return;
 
     try {
-      // Get broker tokens
-      const brokerTokens = await getBrokerTokens(user.id, supabase);
+      // Get teamMember tokens
+      const teamMemberTokens = await getTeamMemberTokens(user.id, supabase);
 
       // Get customer tokens
       const customerTokens = getCustomerTokens(customer);
 
       // Merge all tokens
-      const allTokens = mergeTokens(brokerTokens, customerTokens);
+      const allTokens = mergeTokens(teamMemberTokens, customerTokens);
 
       // Replace tokens in subject and body
       const subject = replaceTokens(template.subject, allTokens);

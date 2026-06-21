@@ -4,11 +4,11 @@ import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 type Props = {
-  brokerId: string;
-  brokerName: string;
+  teamMemberId: string;
+  teamMemberName: string;
 };
 
-export default function ContactForm({ brokerId, brokerName }: Props) {
+export default function ContactForm({ teamMemberId, teamMemberName }: Props) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [company, setCompany] = useState("");
@@ -28,7 +28,7 @@ export default function ContactForm({ brokerId, brokerName }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brokerId,
+          teamMemberId,
           firstName,
           lastName,
           company,
@@ -53,7 +53,7 @@ export default function ContactForm({ brokerId, brokerName }: Props) {
         <CheckCircle2 className="h-12 w-12 text-green-500" />
         <h3 className="text-lg font-semibold text-gray-900">Request received!</h3>
         <p className="text-sm text-gray-500">
-          {brokerName} will be in touch with you shortly.
+          {teamMemberName} will be in touch with you shortly.
         </p>
       </div>
     );
@@ -160,7 +160,7 @@ export default function ContactForm({ brokerId, brokerName }: Props) {
       </button>
 
       <p className="text-center text-xs text-gray-400">
-        Your information is only shared with {brokerName} at NTS.
+        Your information is only shared with {teamMemberName} at NTS.
       </p>
     </form>
   );

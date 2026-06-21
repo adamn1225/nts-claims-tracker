@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const state = searchParams.get("state"); // broker ID passed via state param
+  const state = searchParams.get("state"); // teamMember ID passed via state param
   const error = searchParams.get("error");
 
   // Create a response object early to capture session cookies
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     return redirectResponse;
   }
 
-  // Verify the authenticated user matches the state (broker ID)
+  // Verify the authenticated user matches the state (teamMember ID)
   // In production, session cookies may not persist during OAuth flow,
   // so we'll use the state parameter (user ID) to save the connection
   const {

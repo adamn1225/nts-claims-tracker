@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NTS Claims Tracker - Customer Relationship Management",
+  title: "NTS Claims Tracker - Cargo & Transportation Claims Management",
   description:
-    "Freight broker CRM for Nationwide Transport Services - Track customers, manage follow-ups, and grow your book of business",
+    "Claims management system for Nationwide Transport Services - Track cargo and transportation claims through intake, documentation, investigation, carrier review, settlement, and closure.",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "NTS Tracker",
+    title: "NTS Claims",
   },
 };
 

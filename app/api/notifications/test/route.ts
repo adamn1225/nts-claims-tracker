@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const { data: tasks } = await supabase
       .from("tasks")
       .select("id, title, status, due_date")
-      .eq("broker_id", user.id)
+      .eq("team_member_id", user.id)
       .in("status", ["overdue", "pending"]);
 
     const overdueCount =
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              brokerId: user.id,
+              teamMemberId: user.id,
               taskIds: overdueTaskIds,
             }),
           },
@@ -105,9 +105,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get broker email
-    const { data: broker } = await supabase
-      .from("brokers")
+    // Get teamMember email
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("email, first_name, last_name")
       .eq("id", user.id)
       .single();
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
         customer:customers(business_name)
       `,
       )
-      .eq("broker_id", user.id)
+      .eq("team_member_id", user.id)
       .order("due_date", { ascending: true });
 
     const now = new Date();
@@ -145,9 +145,9 @@ export async function GET(request: Request) {
     );
 
     return NextResponse.json({
-      broker: {
-        email: broker?.email,
-        name: `${broker?.first_name} ${broker?.last_name || ""}`.trim(),
+      teamMember: {
+        email: teamMember?.email,
+        name: `${teamMember?.first_name} ${teamMember?.last_name || ""}`.trim(),
       },
       stats: {
         totalTasks: tasks?.length || 0,

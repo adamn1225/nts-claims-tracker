@@ -9,7 +9,7 @@ import { useAiCoach, type CoachMode } from "@/contexts/AiCoachContext";
  * Lets admins flip the floating widget between the AI Sales Coach and an
  * admin-only, fully context-aware Admin Assistant. Hidden entirely for
  * non-admins (they only ever see the Sales Coach), so it adds zero clutter
- * for regular brokers.
+ * for regular teamMembers.
  */
 export function AiCoachAgentSwitcher() {
   const { mode, setMode, isAdmin, isLoading } = useAiCoach();

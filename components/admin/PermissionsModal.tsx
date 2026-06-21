@@ -13,11 +13,11 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
-import { BrokerPermissions } from "@/lib/permissions";
+import { TeamMemberPermissions } from "@/lib/permissions";
 
 type PermissionsModalProps = {
   isOpen: boolean;
-  broker: {
+  teamMember: {
     id: string;
     first_name: string | null;
     last_name: string | null;
@@ -31,11 +31,11 @@ type PermissionsModalProps = {
 
 export default function PermissionsModal({
   isOpen,
-  broker,
+  teamMember,
   onCloseAction,
   onSuccessAction,
 }: PermissionsModalProps) {
-  const [permissions, setPermissions] = useState<Partial<BrokerPermissions>>(
+  const [permissions, setPermissions] = useState<Partial<TeamMemberPermissions>>(
     {},
   );
   const [loading, setLoading] = useState(false);
@@ -46,16 +46,16 @@ export default function PermissionsModal({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
-    if (broker && isOpen) {
+    if (teamMember && isOpen) {
       loadPermissions();
     }
-  }, [broker, isOpen]);
+  }, [teamMember, isOpen]);
 
   useEffect(() => {
     // Check if all permissions are granted
     const allPermissions = [
-      "can_view_all_brokers",
-      "can_view_office_brokers",
+      "can_view_all_team_members",
+      "can_view_office_team_members",
       "can_view_all_customers",
       "can_view_office_customers",
       "can_view_all_tasks",
@@ -71,7 +71,7 @@ export default function PermissionsModal({
       "can_manage_permissions",
       "can_view_analytics",
       "can_export_data",
-      "can_invite_brokers",
+      "can_invite_team_members",
       "can_invite_any_office",
       "can_manage_email_settings",
       "can_send_email_broadcasts",
@@ -79,19 +79,19 @@ export default function PermissionsModal({
     ];
 
     const allGranted = allPermissions.every(
-      (key) => permissions[key as keyof BrokerPermissions] === true,
+      (key) => permissions[key as keyof TeamMemberPermissions] === true,
     );
     setGrantAll(allGranted);
   }, [permissions]);
 
   const loadPermissions = async () => {
-    if (!broker) return;
+    if (!teamMember) return;
     setLoading(true);
     setError(null);
 
     try {
       const response = await fetch(
-        `/api/broker-permissions?brokerId=${broker.id}`,
+        `/api/team-member-permissions?teamMemberId=${teamMember.id}`,
       );
       const data = await response.json();
 
@@ -100,7 +100,7 @@ export default function PermissionsModal({
       }
 
       // Filter out metadata fields, only keep permission booleans
-      const { id, broker_id, created_at, updated_at, ...permissionFields } =
+      const { id, team_member_id, created_at, updated_at, ...permissionFields } =
         data.permissions;
       setPermissions(permissionFields);
     } catch (err) {
@@ -114,20 +114,20 @@ export default function PermissionsModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!broker) return;
+    if (!teamMember) return;
 
     setSaving(true);
     setError(null);
     setSuccess(false);
 
     try {
-      const response = await fetch("/api/broker-permissions", {
+      const response = await fetch("/api/team-member-permissions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          brokerId: broker.id,
+          teamMemberId: teamMember.id,
           permissions,
         }),
       });
@@ -154,7 +154,7 @@ export default function PermissionsModal({
     }
   };
 
-  const togglePermission = (key: keyof BrokerPermissions) => {
+  const togglePermission = (key: keyof TeamMemberPermissions) => {
     setPermissions((prev) => ({
       ...prev,
       [key]: !prev[key],
@@ -190,7 +190,7 @@ export default function PermissionsModal({
     });
   };
 
-  if (!isOpen || !broker) return null;
+  if (!isOpen || !teamMember) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -203,7 +203,7 @@ export default function PermissionsModal({
                 Manage Permissions
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                {broker.first_name} {broker.last_name || ""} ({broker.email})
+                {teamMember.first_name} {teamMember.last_name || ""} ({teamMember.email})
               </p>
             </div>
             <button
@@ -265,10 +265,10 @@ export default function PermissionsModal({
                 </div>
                 <div className="space-y-2 rounded-lg border border-slate-200 p-4">
                   <PermissionCheckbox
-                    label="View Office Brokers"
-                    description="Can see and switch to brokers in same office"
+                    label="View Office TeamMembers"
+                    description="Can see and switch to team members in same office"
                     checked={permissions.can_view_office_brokers ?? false}
-                    onChange={() => togglePermission("can_view_office_brokers")}
+                    onChange={() => togglePermission("can_view_office_team_members")}
                   />
                   <PermissionCheckbox
                     label="Edit Own Customers"
@@ -294,7 +294,7 @@ export default function PermissionsModal({
                 <div className="space-y-2 rounded-lg border border-slate-200 p-4">
                   <PermissionCheckbox
                     label="Manage Users"
-                    description="Can invite, edit, and manage other brokers"
+                    description="Can invite, edit, and manage other team members"
                     checked={permissions.can_manage_users ?? false}
                     onChange={() => {
                       togglePermission("can_manage_users");
@@ -373,11 +373,11 @@ export default function PermissionsModal({
                       </div>
                       <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
                         <PermissionCheckbox
-                          label="View All Brokers"
-                          description="Can see and switch to any broker's view"
+                          label="View All TeamMembers"
+                          description="Can see and switch to any team member's view"
                           checked={permissions.can_view_all_brokers ?? false}
                           onChange={() =>
-                            togglePermission("can_view_all_brokers")
+                            togglePermission("can_view_all_team_members")
                           }
                         />
                         <PermissionCheckbox

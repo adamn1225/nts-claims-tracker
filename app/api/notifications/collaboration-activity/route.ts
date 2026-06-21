@@ -7,13 +7,13 @@ import { createClient } from "@/lib/supabase/server";
  * Batched to avoid notification spam
  * 
  * Body: {
- *   collaboratorBrokerIds: string[] (recipients - team members),
+ *   collaboratorTeamMemberIds: string[] (recipients - team members),
  *   customerId: string,
  *   customerName: string,
  *   activityType: "call" | "email" | "note",
  *   activityMessage: string,
- *   activityByBrokerId: string,
- *   activityByBrokerName: string,
+ *   activityByTeamMemberId: string,
+ *   activityByTeamMemberName: string,
  * }
  */
 export async function POST(req: NextRequest) {
@@ -32,21 +32,21 @@ export async function POST(req: NextRequest) {
 
         // Parse request
         const {
-            collaboratorBrokerIds,
+            collaboratorTeamMemberIds,
             customerId,
             customerName,
             activityType,
             activityMessage,
-            activityByBrokerId,
-            activityByBrokerName,
+            activityByTeamMemberId,
+            activityByTeamMemberName,
         } = await req.json();
 
         if (
-            !collaboratorBrokerIds ||
+            !collaboratorTeamMemberIds ||
             !customerId ||
             !activityType ||
-            !activityByBrokerId ||
-            !activityByBrokerName
+            !activityByTeamMemberId ||
+            !activityByTeamMemberName
         ) {
             return NextResponse.json(
                 { error: "Missing required fields" },
@@ -55,18 +55,18 @@ export async function POST(req: NextRequest) {
         }
 
         if (
-            !Array.isArray(collaboratorBrokerIds) ||
-            collaboratorBrokerIds.length === 0
+            !Array.isArray(collaboratorTeamMemberIds) ||
+            collaboratorTeamMemberIds.length === 0
         ) {
             return NextResponse.json(
-                { error: "collaboratorBrokerIds must be a non-empty array" },
+                { error: "collaboratorTeamMemberIds must be a non-empty array" },
                 { status: 400 }
             );
         }
 
         // Filter out self-notifications
-        const recipients = collaboratorBrokerIds.filter(
-            (id) => id !== activityByBrokerId
+        const recipients = collaboratorTeamMemberIds.filter(
+            (id) => id !== activityByTeamMemberId
         );
 
         if (recipients.length === 0) {
@@ -90,12 +90,12 @@ export async function POST(req: NextRequest) {
             note: "Added a note",
         };
 
-        const message = `${activityByBrokerName} ${typeLabel[activityType] || "updated"} on ${customerName}${activityMessage ? `: "${activityMessage}"` : ""
+        const message = `${activityByTeamMemberName} ${typeLabel[activityType] || "updated"} on ${customerName}${activityMessage ? `: "${activityMessage}"` : ""
             }`;
 
         // Create notifications for each recipient
-        const notificationsToInsert = recipients.map((brokerId) => ({
-            broker_id: brokerId,
+        const notificationsToInsert = recipients.map((teamMemberId) => ({
+            team_member_id: teamMemberId,
             customer_id: customerId,
             type: "collaboration_activity",
             title: `${typeEmoji[activityType]} Activity on shared opportunity`,

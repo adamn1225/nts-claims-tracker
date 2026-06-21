@@ -54,15 +54,15 @@ export function OnlinePresenceProvider({
       } = await supabase.auth.getUser();
       if (!user || cancelled) return;
 
-      const { data: broker } = await supabase
-        .from("brokers")
+      const { data: teamMember } = await supabase
+        .from("team_members")
         .select("first_name, last_name, email")
         .eq("id", user.id)
         .single();
 
       const name =
-        `${broker?.first_name ?? ""} ${broker?.last_name ?? ""}`.trim() ||
-        broker?.email ||
+        `${teamMember?.first_name ?? ""} ${teamMember?.last_name ?? ""}`.trim() ||
+        teamMember?.email ||
         user.email ||
         "Unknown user";
 

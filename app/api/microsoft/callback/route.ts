@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
-    const state = searchParams.get('state'); // broker_id
+    const state = searchParams.get('state'); // team_member_id
     const error = searchParams.get('error');
     
     if (error) {
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     const { error: dbError } = await supabase
       .from('microsoft_tokens')
       .upsert({
-        broker_id: user.id,
+        team_member_id: user.id,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
         expires_at: expiresAt.toISOString(),

@@ -41,7 +41,7 @@ interface TaskFlowModalProps {
   onTaskCompleted: () => void;
   onTaskDeleted: (taskId: string) => void;
   onTaskEdited: (task: Task) => void;
-  brokerId: string;
+  teamMemberId: string;
 }
 
 type CompletionOutcome =
@@ -80,7 +80,7 @@ export default function TaskFlowModal({
   onTaskCompleted,
   onTaskDeleted,
   onTaskEdited,
-  brokerId,
+  teamMemberId,
 }: TaskFlowModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showingCompletion, setShowingCompletion] = useState(false);
@@ -192,7 +192,7 @@ export default function TaskFlowModal({
           title: `Follow-up: ${currentTask.title}`,
           type: currentTask.type,
           customer_id: currentTask.customer_id,
-          broker_id: currentTask.broker_id,
+          team_member_id: currentTask.team_member_id,
           due_date: followUpDate,
           priority: currentTask.priority,
           status: "pending" as TaskStatus,
@@ -217,7 +217,7 @@ export default function TaskFlowModal({
           title: nextTaskTitle.trim(),
           type: nextTaskType,
           customer_id: currentTask.customer_id,
-          broker_id: brokerId,
+          team_member_id: teamMemberId,
           due_date: nextTaskDate,
           due_time: nextTaskTime || null,
           priority: nextTaskPriority,

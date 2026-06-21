@@ -6,13 +6,13 @@ function mapRows(rows: DbCustomerRow[]): CustomerModel[] {
   return rows.map(toCustomerModel);
 }
 
-export async function listCustomersByBroker(
-  brokerId: string,
+export async function listCustomersByTeamMember(
+  teamMemberId: string,
 ): Promise<CustomerModel[]> {
   const { data, error } = await supabase
     .from("customers")
     .select("*")
-    .eq("broker_id", brokerId)
+    .eq("team_member_id", teamMemberId)
     .order("is_pinned", { ascending: false })
     .order("pin_order", { ascending: true, nullsFirst: true })
     .order("business_name", { ascending: true });
@@ -40,7 +40,7 @@ export async function createCustomer(
 ): Promise<CustomerModel> {
   // Construct insert payload with required fields
   const payload = {
-    broker_id: input.brokerId,
+    team_member_id: input.teamMemberId,
     business_name: input.businessName,
     contact_name: input.contactName,
     status: input.status,

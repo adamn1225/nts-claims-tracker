@@ -22,7 +22,7 @@ const supabaseAdmin = createClient(
 
 /**
  * GET /api/v1/unassigned_contacts
- * Note: Returns ALL unassigned contacts (broker_id IS NULL)
+ * Note: Returns ALL unassigned contacts (team_member_id IS NULL)
  * These are contacts in the import pool waiting to be distributed
  */
 export async function GET(request: NextRequest) {
@@ -46,11 +46,11 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get(" limit") || "100"), 1000);
     const offset = (page - 1) * limit;
     
-    // Build query - only unassigned contacts (broker_id IS NULL)
+    // Build query - only unassigned contacts (team_member_id IS NULL)
     let query = supabaseAdmin
       .from("customers")
       .select("*", { count: "exact" })
-      .is("broker_id", null)
+      .is("team_member_id", null)
       .range(offset, offset + limit - 1)
       .order("created_at", { ascending: false });
     
@@ -146,12 +146,12 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Create unassigned contact (in customers table with broker_id = NULL)
+    // Create unassigned contact (in customers table with team_member_id = NULL)
     const { data, error } = await supabaseAdmin
       .from("customers")
       .insert({
         ...body,
-        broker_id: null, // Force NULL to mark as unassigned
+        team_member_id: null, // Force NULL to mark as unassigned
         import_source: body.import_source || "API Import",
       })
       .select()

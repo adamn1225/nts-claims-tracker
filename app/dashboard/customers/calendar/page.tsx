@@ -18,7 +18,7 @@ export default function CalendarViewPage() {
 
   const {
     customers,
-    currentBrokerId,
+    currentTeamMemberId,
     showCustomerModal,
     editingCustomer,
     isLoading,
@@ -50,7 +50,7 @@ export default function CalendarViewPage() {
     try {
       const { data, error } = await supabase.from("tasks").insert({
         ...taskData,
-        broker_id: currentBrokerId,
+        team_member_id: currentTeamMemberId,
       }).select().single();
 
       if (error || !data) throw error;
@@ -147,7 +147,7 @@ export default function CalendarViewPage() {
         }}
         onSave={handleSaveCustomer}
         customer={editingCustomer}
-        brokerId={currentBrokerId}
+        teamMemberId={currentTeamMemberId}
       />
 
       <TaskFormModal
@@ -157,7 +157,7 @@ export default function CalendarViewPage() {
           setSelectedTaskDate(null);
         }}
         onSave={handleSaveTask}
-        brokerId={currentBrokerId}
+        teamMemberId={currentTeamMemberId}
         customers={customers}
       />
 

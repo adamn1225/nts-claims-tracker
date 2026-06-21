@@ -3,7 +3,7 @@
  *
  * Searches GoTo recordings across the entire org by participant phone number
  * and date range. Used by the Performance dashboard "Call Search" tab as a
- * convenience replacement for the GoTo Call Reports UI when brokers request
+ * convenience replacement for the GoTo Call Reports UI when teamMembers request
  * recordings/transcripts for a specific phone number.
  *
  * Request body:
@@ -12,7 +12,7 @@
  *   endDate:      string (ISO)     — Inclusive end
  *   includeTranscripts?: boolean   — Fetch transcript text inline (default true)
  *
- * Auth: admin or sales_coach broker.
+ * Auth: admin or sales_coach teamMember.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -33,14 +33,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: callerBroker } = await supabase
-        .from("brokers")
+    const { data: callerTeamMember } = await supabase
+        .from("team_members")
         .select("is_admin, is_sales_coach")
         .eq("id", user.id)
         .maybeSingle();
 
     const hasCoachAccess = Boolean(
-        callerBroker?.is_admin || (callerBroker as { is_sales_coach?: boolean } | null)?.is_sales_coach
+        callerTeamMember?.is_admin || (callerTeamMember as { is_sales_coach?: boolean } | null)?.is_sales_coach
     );
 
     if (!hasCoachAccess) {

@@ -86,7 +86,7 @@ async function resolveAuth(
 // Refresh a GoTo access token using the stored refresh token
 async function refreshGoToToken(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  brokerId: string,
+  teamMemberId: string,
   encryptedRefreshToken: string
 ): Promise<{ access_token: string; expires_at: string } | null> {
   const clientId = process.env.GOTO_CLIENT_ID;
@@ -130,7 +130,7 @@ async function refreshGoToToken(
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
       })
-      .eq("user_id", brokerId);
+      .eq("user_id", teamMemberId);
 
     return { access_token: data.access_token, expires_at: expiresAt };
   } catch (err) {
@@ -140,8 +140,8 @@ async function refreshGoToToken(
 }
 
 // POST /api/goto/call
-// Initiates a click-to-call via GoTo Connect — rings the broker's phone first,
-// then connects to the customer when the broker answers.
+// Initiates a click-to-call via GoTo Connect — rings the team member's phone first,
+// then connects to the customer when the team member answers.
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
 
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
   console.log("[GoTo] Phone number normalized:", phoneNumber, "→", dialString);
 
-  // Load broker's GoTo connection
+  // Load team member's GoTo connection
   const { data: connection, error: connError } = await supabase
     .from("goto_connections")
     .select("access_token, refresh_token, expires_at, goto_user_email, preferred_device_id")

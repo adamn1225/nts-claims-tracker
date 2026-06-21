@@ -18,9 +18,9 @@ export async function GET() {
       );
     }
 
-    // Check broker record
-    const { data: broker, error: brokerError } = await supabase
-      .from("brokers")
+    // Check teamMember record
+    const { data: teamMember, error: teamMemberError } = await supabase
+      .from("team_members")
       .select("*")
       .eq("id", user.id)
       .single();
@@ -31,9 +31,9 @@ export async function GET() {
         email: user.email,
         createdAt: user.created_at,
       },
-      broker: broker || null,
-      brokerError: brokerError?.message || null,
-      hasBrokerRecord: !!broker,
+      teamMember: teamMember || null,
+      teamMemberError: teamMemberError?.message || null,
+      hasTeamMemberRecord: !!teamMember,
     });
   } catch (error) {
     console.error("User info error:", error);

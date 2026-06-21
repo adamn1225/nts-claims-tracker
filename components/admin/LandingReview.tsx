@@ -49,7 +49,7 @@ export default function LandingReview() {
       setAdminId(user?.id ?? null);
 
       const { data, error } = await supabase
-        .from("brokers")
+        .from("team_members")
         .select(
           "id, first_name, last_name, email, profile_slug, landing_config, landing_submitted_at",
         )
@@ -77,7 +77,7 @@ export default function LandingReview() {
     setBusyId(row.id);
     try {
       const { error } = await supabase
-        .from("brokers")
+        .from("team_members")
         .update({
           landing_config_approved: row.config,
           landing_status: "approved",
@@ -88,9 +88,9 @@ export default function LandingReview() {
         .eq("id", row.id);
       if (error) throw error;
 
-      // Notify the broker — they did not initiate this action.
+      // Notify the team member — they did not initiate this action.
       await supabase.from("notifications").insert({
-        broker_id: row.id,
+        team_member_id: row.id,
         type: "landing_approved",
         title: "Your landing page is live",
         message: row.profile_slug
@@ -116,7 +116,7 @@ export default function LandingReview() {
     try {
       const note = rejectNote.trim() || null;
       const { error } = await supabase
-        .from("brokers")
+        .from("team_members")
         .update({
           landing_status: "rejected",
           landing_review_note: note,
@@ -126,15 +126,15 @@ export default function LandingReview() {
         .eq("id", row.id);
       if (error) throw error;
 
-      // Notify the broker with the reviewer's feedback.
+      // Notify the team member with the reviewer's feedback.
       await supabase.from("notifications").insert({
-        broker_id: row.id,
+        team_member_id: row.id,
         type: "landing_changes_requested",
         title: "Landing page changes requested",
         message: note
           ? `An admin requested changes to your landing page: ${note}`
           : "An admin requested changes to your landing page. Please update it and re-submit for review.",
-        link_url: `/dashboard/brokers/${row.id}`,
+        link_url: `/dashboard/team-members/${row.id}`,
         is_read: false,
         is_archived: false,
         created_at: new Date().toISOString(),
@@ -167,7 +167,7 @@ export default function LandingReview() {
           No pages awaiting review
         </h3>
         <p className="mt-1 text-sm text-slate-500">
-          Broker landing page submissions will appear here for approval.
+          TeamMember landing page submissions will appear here for approval.
         </p>
       </div>
     );
@@ -245,7 +245,7 @@ export default function LandingReview() {
                     disabled={busyId === row.id || !row.profile_slug}
                     title={
                       !row.profile_slug
-                        ? "Broker must set a public page URL first"
+                        ? "TeamMember must set a public page URL first"
                         : undefined
                     }
                     className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
@@ -343,7 +343,7 @@ export default function LandingReview() {
               {rejecting === row.id && (
                 <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
                   <label className="mb-1 block text-xs font-medium text-amber-800">
-                    What needs to change? (sent to the broker)
+                    What needs to change? (sent to the team member)
                   </label>
                   <textarea
                     value={rejectNote}

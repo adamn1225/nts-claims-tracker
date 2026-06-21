@@ -1,4 +1,4 @@
-// Shared landing-page CMS model for broker public pages (/rep/[slug]).
+// Shared landing-page CMS model for teamMember public pages (/rep/[slug]).
 //
 // This module is framework-agnostic (no React, no Supabase) so it can be
 // imported from both server components and client components.

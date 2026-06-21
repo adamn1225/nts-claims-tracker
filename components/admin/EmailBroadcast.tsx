@@ -152,23 +152,23 @@ export default function EmailBroadcast({ officeFilter }: EmailBroadcastProps = {
         }
       }
 
-      // Get current broker info for token replacement
+      // Get current team member info for token replacement
       const { data: { user } } = await createClient().auth.getUser();
       if (user) {
-        const { data: broker } = await createClient()
-          .from('brokers')
+        const { data: teamMember } = await createClient()
+          .from('team_members')
           .select('first_name, last_name, email, phone')
           .eq('id', user.id)
           .single();
 
-        if (broker) {
+        if (teamMember) {
           // Replace tokens with demo data
           html = html
             .replace(/{{first_name}}/g, 'John')
             .replace(/{{company}}/g, 'Acme Logistics')
-            .replace(/{{broker_name}}/g, `${broker.first_name} ${broker.last_name}`)
-            .replace(/{{broker_email}}/g, broker.email || '')
-            .replace(/{{broker_phone}}/g, broker.phone || '');
+            .replace(/{{team_member_name}}/g, `${teamMember.first_name} ${teamMember.last_name}`)
+            .replace(/{{broker_email}}/g, teamMember.email || '')
+            .replace(/{{broker_phone}}/g, teamMember.phone || '');
         }
       }
 
@@ -244,7 +244,7 @@ export default function EmailBroadcast({ officeFilter }: EmailBroadcastProps = {
       const { data, error, count } = await supabase
         .from("user_preferences")
         .update({ digest_time: localTime })
-        .neq("broker_id", "00000000-0000-0000-0000-000000000000") // Update all records
+        .neq("team_member_id", "00000000-0000-0000-0000-000000000000") // Update all records
         .select();
 
       console.log("Update result:", { data, error, count, rowsAffected: data?.length });
@@ -560,7 +560,7 @@ export default function EmailBroadcast({ officeFilter }: EmailBroadcastProps = {
           {officeFilter && (
             <div className="mb-3 rounded-lg bg-blue-50 border border-blue-200 p-3">
               <p className="text-xs font-medium text-blue-900">
-                📍 Restricted to: <span className="font-bold">{officeFilter} Office</span> brokers only
+                📍 Restricted to: <span className="font-bold">{officeFilter} Office</span> teamMembers only
               </p>
             </div>
           )}
@@ -631,7 +631,7 @@ export default function EmailBroadcast({ officeFilter }: EmailBroadcastProps = {
                 </div>
                 <div className="text-xs text-slate-600">
                   {officeFilter 
-                    ? `Send to all brokers in ${officeFilter} office (respects their notification preferences)`
+                    ? `Send to all team members in ${officeFilter} office (respects their notification preferences)`
                     : "Send to everyone (respects their notification preferences)"
                   }
                 </div>
@@ -708,9 +708,9 @@ export default function EmailBroadcast({ officeFilter }: EmailBroadcastProps = {
                 <>
                   Custom template emails use token replacement. Available
                   tokens: {`{{first_name}}`}, {`{{company}}`},{" "}
-                  {`{{broker_name}}`}, {`{{broker_phone}}`},{" "}
+                  {`{{team_member_name}}`}, {`{{broker_phone}}`},{" "}
                   {`{{broker_email}}`}. Tokens are auto-filled from customer and
-                  broker data.
+                  teamMember data.
                 </>
               )}
             </div>
@@ -772,7 +772,7 @@ export default function EmailBroadcast({ officeFilter }: EmailBroadcastProps = {
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
                       <p className="text-xs text-blue-800">
                         📝 <strong>Note:</strong> Tokens like {`{{first_name}}`} and {`{{company}}`} are shown with sample data. 
-                        Real emails will use actual customer and broker information.
+                        Real emails will use actual customer and teamMember information.
                       </p>
                     </div>
                   </div>

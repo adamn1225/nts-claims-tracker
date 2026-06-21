@@ -5,9 +5,9 @@
  * in the organization and maps their GoTo user key → email address.
  *
  * This mapping is needed so the admin proxy can pull call history for a
- * specific broker even when that broker hasn't connected GoTo individually.
+ * specific teamMember even when that teamMember hasn't connected GoTo individually.
  *
- * Also optionally stores each broker's goto_user_key on their goto_connections
+ * Also optionally stores each teamMember's goto_user_key on their goto_connections
  * row (upserted) so future lookups are fast.
  *
  * Response:
@@ -33,13 +33,13 @@ export async function GET() {
   }
 
   // Only admins may call this endpoint
-  const { data: broker } = await supabase
-    .from("brokers")
+  const { data: teamMember } = await supabase
+    .from("team_members")
     .select("is_admin")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!broker?.is_admin) {
+  if (!teamMember?.is_admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -106,23 +106,23 @@ export async function GET() {
       status: u.status ?? "unknown",
     }));
 
-    // Best-effort: store goto_user_key on matching brokers' goto_connections rows
+    // Best-effort: store goto_user_key on matching teamMembers' goto_connections rows
     // so future lookups skip this API call entirely.
-    // We match GoTo email → brokers.email
+    // We match GoTo email → teamMembers.email
     if (users.length > 0) {
-      const { data: allBrokers } = await supabase
-        .from("brokers")
+      const { data: allTeamMembers } = await supabase
+        .from("team_members")
         .select("id, email");
 
-      if (allBrokers) {
+      if (allTeamMembers) {
         const emailToGotoKey: Record<string, string> = {};
         for (const u of users) {
           if (u.email) emailToGotoKey[u.email.toLowerCase()] = u.key;
         }
 
-        // Upsert goto_user_key for each broker who has a goto_connections row
+        // Upsert goto_user_key for each teamMember who has a goto_connections row
         // (non-admin rows only)
-        for (const b of allBrokers) {
+        for (const b of allTeamMembers) {
           const gotoKey = emailToGotoKey[b.email.toLowerCase()];
           if (!gotoKey) continue;
 

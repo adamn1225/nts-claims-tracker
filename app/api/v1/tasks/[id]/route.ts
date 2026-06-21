@@ -43,7 +43,7 @@ export async function GET(
       .from("tasks")
       .select("*")
       .eq("id", params.id)
-      .eq("broker_id", token.broker_id)
+      .eq("team_member_id", token.team_member_id)
       .single();
     
     if (error || !data) {
@@ -97,7 +97,7 @@ export async function PUT(
     
     // Remove protected fields
     delete body.id;
-    delete body.broker_id;
+    delete body.team_member_id;
     delete body.created_at;
     
     const { data, error } = await supabaseAdmin
@@ -107,7 +107,7 @@ export async function PUT(
         updated_at: new Date().toISOString(),
       })
       .eq("id", params.id)
-      .eq("broker_id", token.broker_id)
+      .eq("team_member_id", token.team_member_id)
       .select()
       .single();
     
@@ -162,7 +162,7 @@ export async function DELETE(
       .from("tasks")
       .delete()
       .eq("id", params.id)
-      .eq("broker_id", token.broker_id);
+      .eq("team_member_id", token.team_member_id);
     
     if (error) {
       await logRequest({ status: 404 }, "Task not found or delete failed");

@@ -4,8 +4,8 @@
  * POST /api/v1/sms-campaign-contact
  *
  * Ingests a contact gathered during an SMS campaign conversation and routes it:
- *   - broker_id provided  → assigned to that broker's Inbox (kanban board, status: "inbox")
- *   - broker_id omitted/null → unassigned pool (Distribution Center, broker_id: null)
+ *   - team_member_id provided  → assigned to that teamMember's Inbox (kanban board, status: "inbox")
+ *   - team_member_id omitted/null → unassigned pool (Distribution Center, team_member_id: null)
  *
  * import_source is always set to "NTS SMS Campaign".
  *
@@ -54,28 +54,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine routing: assigned vs unassigned
-    const hasBroker = body.broker_id && typeof body.broker_id === "string" && body.broker_id.trim() !== "";
+    const hasTeamMember = body.team_member_id && typeof body.team_member_id === "string" && body.team_member_id.trim() !== "";
 
-    if (hasBroker) {
-      // Validate broker exists and is active
-      const { data: broker, error: brokerLookupError } = await supabaseAdmin
-        .from("brokers")
+    if (hasTeamMember) {
+      // Validate teamMember exists and is active
+      const { data: teamMember, error: teamMemberLookupError } = await supabaseAdmin
+        .from("team_members")
         .select("id, is_active")
-        .eq("id", body.broker_id.trim())
+        .eq("id", body.team_member_id.trim())
         .single();
 
-      if (brokerLookupError || !broker) {
-        await logRequest({ status: 404 }, "Broker not found");
+      if (teamMemberLookupError || !teamMember) {
+        await logRequest({ status: 404 }, "Team member not found");
         return NextResponse.json(
-          { error: "Broker not found. Use GET /api/v1/brokers to retrieve valid broker IDs." },
+          { error: "Team member not found. Use GET /api/v1/team-members to retrieve valid team member IDs." },
           { status: 404 },
         );
       }
 
-      if (!broker.is_active) {
-        await logRequest({ status: 422 }, "Broker is inactive");
+      if (!teamMember.is_active) {
+        await logRequest({ status: 422 }, "TeamMember is inactive");
         return NextResponse.json(
-          { error: "The specified broker is inactive and cannot receive new contacts." },
+          { error: "The specified team member is inactive and cannot receive new contacts." },
           { status: 422 },
         );
       }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     // Strip routing/protected fields from body to prevent overrides
     const {
-      broker_id: _brokerId,
+      team_member_id: _teamMemberId,
       status: _status,
       on_kanban_board: _onKanban,
       import_source: _importSource,
@@ -95,10 +95,10 @@ export async function POST(request: NextRequest) {
 
     const now = new Date().toISOString();
 
-    const customerData = hasBroker
+    const customerData = hasTeamMember
       ? {
           ...contactFields,
-          broker_id: body.broker_id.trim(),
+          team_member_id: body.team_member_id.trim(),
           import_source: IMPORT_SOURCE,
           status: "inbox",
           on_kanban_board: true,
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         }
       : {
           ...contactFields,
-          broker_id: null,
+          team_member_id: null,
           import_source: IMPORT_SOURCE,
           status: "unassigned",
           on_kanban_board: false,
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         data,
-        routed_to: hasBroker ? "broker_inbox" : "distribution_center",
+        routed_to: hasTeamMember ? "broker_inbox" : "distribution_center",
         import_source: IMPORT_SOURCE,
       },
       {

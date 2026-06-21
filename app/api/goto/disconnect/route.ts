@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 // DELETE /api/goto/disconnect
-// Removes the broker's GoTo connection
+// Removes the team member's GoTo connection
 export async function DELETE(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -30,7 +30,7 @@ export async function DELETE(request: NextRequest) {
 }
 
 // GET /api/goto/disconnect
-// Returns the current GoTo connection status for the authenticated broker
+// Returns the current GoTo connection status for the authenticated team member
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {

@@ -1,6 +1,6 @@
 /**
  * One-time migration script to normalize legacy @nationwidetransportservices.com emails
- * to @ntslogistics.com in Supabase Auth and brokers table.
+ * to @ntslogistics.com in Supabase Auth and team_members table.
  * 
  * Run this BEFORE re-enabling email normalization in login.
  * 
@@ -73,15 +73,15 @@ async function migrateLegacyEmails() {
           throw new Error(`Auth update failed: ${updateAuthError.message}`);
         }
 
-        // Update email in brokers table
-        const { error: updateBrokerError } = await supabase
-          .from('brokers')
+        // Update email in team_members table
+        const { error: updateTeamMemberError } = await supabase
+          .from('team_members')
           .update({ email: newEmail })
           .eq('id', user.id);
 
-        if (updateBrokerError) {
-          console.warn(`   ⚠️  Broker table update failed: ${updateBrokerError.message}`);
-          // Don't fail the migration if broker table update fails
+        if (updateTeamMemberError) {
+          console.warn(`   ⚠️  TeamMember table update failed: ${updateTeamMemberError.message}`);
+          // Don't fail the migration if teamMember table update fails
         }
 
         console.log(`   ✅ Successfully migrated`);

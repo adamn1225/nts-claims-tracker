@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     const rows: Record<string, unknown>[] = [];
     for (let i = 1; i < lines.length; i++) {
         const cols = parseCsvLine(lines[i]);
-        const row: Record<string, unknown> = { list_id: listId, broker_id: user.id };
+        const row: Record<string, unknown> = { list_id: listId, team_member_id: user.id };
         fields.forEach((field, idx) => {
             if (!field) return;
             const value = cols[idx] ?? "";

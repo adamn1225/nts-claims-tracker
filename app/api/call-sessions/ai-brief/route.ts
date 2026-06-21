@@ -13,7 +13,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * Returns: { brief: string }
  *
  * Summarizes any prior dialer_call_logs for this contact (matched by id OR
- * by phone/email if id absent), so the broker can read context before dialing.
+ * by phone/email if id absent), so the team member can read context before dialing.
  */
 export async function POST(request: NextRequest) {
     const supabase = await createClient();
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         const { data } = await supabase
             .from("dialer_call_logs")
             .select("outcome, notes, ai_feedback, contact_snapshot, created_at")
-            .eq("broker_id", user.id)
+            .eq("team_member_id", user.id)
             .order("created_at", { ascending: false })
             .limit(50);
         logs = (data ?? []).filter((row) => {
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
             {
                 role: "system",
                 content:
-                    "You are a sales coach for freight brokers at Nationwide Transport Services. Read past call notes and produce a tight 3-5 sentence pre-call brief: (1) where the relationship stands, (2) what the broker should pick up on, (3) the suggested opener. No fluff, no headers.",
+                    "You are a sales coach for freight team members at Nationwide Transport Services. Read past call notes and produce a tight 3-5 sentence pre-call brief: (1) where the relationship stands, (2) what the team member should pick up on, (3) the suggested opener. No fluff, no headers.",
             },
             {
                 role: "user",

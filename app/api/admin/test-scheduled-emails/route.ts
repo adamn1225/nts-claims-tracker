@@ -22,13 +22,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: broker } = await supabase
-      .from("brokers")
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("is_admin")
       .eq("id", user.id)
       .single();
 
-    if (!broker?.is_admin) {
+    if (!teamMember?.is_admin) {
       return NextResponse.json(
         { error: "Admin access required" },
         { status: 403 },
@@ -49,14 +49,14 @@ export async function POST(request: Request) {
         title,
         due_date,
         customer_id,
-        broker_id,
+        team_member_id,
         customers (
           id,
           business_name,
           contact_name,
           email
         ),
-        brokers (
+        teamMembers (
           id,
           email,
           first_name,
@@ -87,16 +87,16 @@ export async function POST(request: Request) {
     for (const task of tasks || []) {
       try {
         const customer = task.customers as any;
-        const broker = task.brokers as any;
+        const teamMember = task.teamMembers as any;
 
-        if (!broker?.email) {
+        if (!teamMember?.email) {
           results.failed++;
-          results.errors.push(`Task ${task.id}: No broker email`);
+          results.errors.push(`Task ${task.id}: No team member email`);
           continue;
         }
 
         const emailResult = await sendEmail({
-          to: broker.email,
+          to: teamMember.email,
           subject: `[TEST] Upcoming Task: ${task.title}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

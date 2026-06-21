@@ -13,8 +13,8 @@ import { createClient } from "@/lib/supabase/client";
 export default function ListViewPage() {
   const {
     customers,
-    currentBrokerId,
-    currentBroker,
+    currentTeamMemberId,
+    currentTeamMember,
     canReassign,
     showCustomerModal,
     editingCustomer,
@@ -33,7 +33,7 @@ export default function ListViewPage() {
   const [reassignCustomer, setReassignCustomer] = useState<{
     id: string;
     name: string;
-    brokerId: string;
+    teamMemberId: string;
   } | null>(null);
 
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -43,8 +43,8 @@ export default function ListViewPage() {
   // Filter to only show customers in workspace (same as Kanban board)
   const workspaceCustomers = customers.filter((c) => c.on_kanban_board);
 
-  const handleReassign = (customerId: string, customerName: string, brokerId: string) => {
-    setReassignCustomer({ id: customerId, name: customerName, brokerId });
+  const handleReassign = (customerId: string, customerName: string, teamMemberId: string) => {
+    setReassignCustomer({ id: customerId, name: customerName, teamMemberId });
     setShowReassignModal(true);
   };
 
@@ -73,7 +73,7 @@ export default function ListViewPage() {
     try {
       const { data, error } = await supabase.from("tasks").insert({
         ...taskData,
-        broker_id: currentBrokerId,
+        team_member_id: currentTeamMemberId,
         customer_id: selectedCustomer?.id,
       }).select().single();
 
@@ -151,7 +151,7 @@ export default function ListViewPage() {
         }}
         onSave={handleSaveCustomer}
         customer={editingCustomer}
-        brokerId={currentBrokerId}
+        teamMemberId={currentTeamMemberId}
       />
 
       {/* Task Modal */}
@@ -161,7 +161,7 @@ export default function ListViewPage() {
           onClose={() => setShowTaskModal(false)}
           onSave={handleSaveTask}
           preselectedCustomer={selectedCustomer || undefined}
-          brokerId={currentBrokerId}
+          teamMemberId={currentTeamMemberId}
         />
       )}
 
@@ -175,7 +175,7 @@ export default function ListViewPage() {
           }}
           customerId={reassignCustomer.id}
           customerName={reassignCustomer.name}
-          currentBrokerId={reassignCustomer.brokerId}
+          currentTeamMemberId={reassignCustomer.teamMemberId}
           onSuccessAction={handleReassignSuccess}
         />
       )}

@@ -16,7 +16,7 @@ const tokenHints = [
   "{{first_name}}",
   "{{last_name}}",
   "{{company}}",
-  "{{broker_name}}",
+  "{{team_member_name}}",
   "{{broker_phone}}",
   "{{broker_email}}",
 ];
@@ -76,7 +76,7 @@ export default function UserEmailTemplateEditor() {
       id,
       name: "New Template",
       subject: "{{first_name}}, ...",
-      body: "<p>Hi {{first_name}},</p><p>Write your message here...</p><p>Best,<br/>{{broker_name}}<br/>{{broker_phone}}</p>",
+      body: "<p>Hi {{first_name}},</p><p>Write your message here...</p><p>Best,<br/>{{team_member_name}}<br/>{{broker_phone}}</p>",
       description: "",
       template_type: "external",
       is_system: false,
@@ -161,7 +161,7 @@ export default function UserEmailTemplateEditor() {
       .replaceAll("{{first_name}}", "Alex")
       .replaceAll("{{last_name}}", "Johnson")
       .replaceAll("{{company}}", "Acme Corp")
-      .replaceAll("{{broker_name}}", "Your Name")
+      .replaceAll("{{team_member_name}}", "Your Name")
       .replaceAll("{{broker_phone}}", "Your Phone")
       .replaceAll("{{broker_email}}", "your@email.com");
 
@@ -302,7 +302,7 @@ export default function UserEmailTemplateEditor() {
                   disabled={selected.is_system}
                   rows={14}
                   className="w-full rounded-lg border border-slate-200 p-3 font-mono text-xs leading-relaxed focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:bg-slate-50 disabled:text-slate-500"
-                  placeholder="<p>Hi {{first_name}},</p>&#10;<p>Your message here...</p>&#10;<p>Best,<br/>{{broker_name}}</p>"
+                  placeholder="<p>Hi {{first_name}},</p>&#10;<p>Your message here...</p>&#10;<p>Best,<br/>{{team_member_name}}</p>"
                 />
               </div>
               <div className="flex gap-2">
@@ -352,7 +352,7 @@ export default function UserEmailTemplateEditor() {
                       .replaceAll("{{first_name}}", "Alex")
                       .replaceAll("{{last_name}}", "Johnson")
                       .replaceAll("{{company}}", "Acme Corp")
-                      .replaceAll("{{broker_name}}", "Your Name")}
+                      .replaceAll("{{team_member_name}}", "Your Name")}
                   </p>
                 </div>
                 <div
@@ -362,7 +362,7 @@ export default function UserEmailTemplateEditor() {
                       .replaceAll("{{first_name}}", "Alex")
                       .replaceAll("{{last_name}}", "Johnson")
                       .replaceAll("{{company}}", "Acme Corp")
-                      .replaceAll("{{broker_name}}", "Your Name")
+                      .replaceAll("{{team_member_name}}", "Your Name")
                       .replaceAll("{{broker_phone}}", "Your Phone")
                       .replaceAll("{{broker_email}}", "your@email.com"),
                   }}

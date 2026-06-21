@@ -1,17 +1,17 @@
 /**
- * API v1 - Brokers Endpoint
+ * API v1 - TeamMembers Endpoint
  *
- * GET /api/v1/brokers - List active broker profiles (for customer assignment in external integrations)
+ * GET /api/v1/team-members - List active team member profiles (for customer assignment in external integrations)
  *
- * Returns safe, non-sensitive fields only. Use the returned broker `id` as `broker_id`
+ * Returns safe, non-sensitive fields only. Use the returned teamMember `id` as `team_member_id`
  * when creating or updating customers via POST /api/v1/customers.
  *
  * Query params:
  *   ?office_location=Dallas   - filter by office location (partial match)
  *   ?search=john              - search first_name, last_name, or email
- *   ?include_inactive=true    - include inactive brokers (default: false)
+ *   ?include_inactive=true    - include inactive teamMembers (default: false)
  *
- * Required scope: brokers:read
+ * Required scope: teamMembers:read
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -30,13 +30,13 @@ const supabaseAdmin = createClient(
 );
 
 /**
- * GET /api/v1/brokers
- * Returns active broker profiles for use in customer assignment.
+ * GET /api/v1/team-members
+ * Returns active team member profiles for use in customer assignment.
  * Sensitive fields (is_admin, is_manager, phone) are excluded.
  */
 export async function GET(request: NextRequest) {
   const authResult = await withApiAuth(request, {
-    table: "brokers",
+    table: "teamMembers",
     action: "read",
   });
 
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     // Only expose fields needed for customer assignment — never admin flags
     let query = supabaseAdmin
-      .from("brokers")
+      .from("team_members")
       .select("id, first_name, last_name, email, office_location, territory, is_active")
       .order("first_name", { ascending: true });
 
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       await logRequest({ status: 500 }, error.message);
       return NextResponse.json(
-        { error: "Failed to fetch brokers", details: error.message },
+        { error: "Failed to fetch team members", details: error.message },
         { status: 500 },
       );
     }

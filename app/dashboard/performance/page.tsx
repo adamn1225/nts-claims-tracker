@@ -70,8 +70,8 @@ interface CallDetail {
 
 interface CoachingCall {
   id: string;
-  brokerName: string;
-  brokerEmail: string;
+  teamMemberName: string;
+  teamMemberEmail: string;
   gotoUserKey: string;
   startTime: string;
   duration: number;
@@ -251,12 +251,12 @@ function PerformancePageContent() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/auth/login"); return; }
-    const { data: broker } = await supabase
-      .from("brokers")
+    const { data: teamMember } = await supabase
+      .from("team_members")
       .select("is_admin, is_sales_coach")
       .eq("id", user.id)
       .single();
-    const hasAccess = Boolean(broker?.is_admin || (broker as { is_sales_coach?: boolean })?.is_sales_coach);
+    const hasAccess = Boolean(teamMember?.is_admin || (teamMember as { is_sales_coach?: boolean })?.is_sales_coach);
     if (!hasAccess) { router.push("/dashboard"); return; }
     fetchUsers();
   }
@@ -1356,7 +1356,7 @@ function PerformancePageContent() {
 
                                 <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-xs text-slate-500">
                                   <p className="font-semibold uppercase tracking-widest text-slate-400">Review Context</p>
-                                  <p className="mt-2">Agent: <span className="font-medium text-slate-700">{selectedCoachingUser?.agentName ?? selectedCoachingCall.brokerName}</span></p>
+                                  <p className="mt-2">Agent: <span className="font-medium text-slate-700">{selectedCoachingUser?.agentName ?? selectedCoachingCall.teamMemberName}</span></p>
                                   <p className="mt-1">Phone: <span className="font-medium text-slate-700">{selectedCoachingCall.customerPhone || "Unknown"}</span></p>
                                   <p className="mt-1">Calls analyzed in run: <span className="font-medium text-slate-700">{coachingData.analyzed}</span></p>
                                 </div>

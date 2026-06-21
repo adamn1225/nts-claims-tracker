@@ -23,7 +23,7 @@ export async function GET() {
     const { data: tasks, error: tasksError } = await supabase
       .from("tasks")
       .select("*")
-      .eq("broker_id", user.id)
+      .eq("team_member_id", user.id)
       .gte("created_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()) // Last 2 hours
       .order("created_at", { ascending: false });
 
@@ -31,7 +31,7 @@ export async function GET() {
     const { data: notifications, error: notificationsError } = await supabase
       .from("notifications")
       .select("*")
-      .eq("broker_id", user.id)
+      .eq("team_member_id", user.id)
       .gte("created_at", new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()) // Last 2 hours
       .order("created_at", { ascending: false });
 

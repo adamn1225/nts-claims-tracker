@@ -29,8 +29,8 @@ export const API_SCOPES = [
   "unassigned_contacts:write",
   "unassigned_contacts:create",
   "unassigned_contacts:delete",
-  // Brokers
-  "brokers:read",
+  // TeamMembers
+  "team_members:read",
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];
@@ -54,7 +54,7 @@ export const SCOPE_PRESETS = {
     "unassigned_contacts:read",
     "unassigned_contacts:write",
     "unassigned_contacts:create",
-    "brokers:read",
+    "team_members:read",
   ] as ApiScope[],
   admin: [...API_SCOPES] as ApiScope[],
 };

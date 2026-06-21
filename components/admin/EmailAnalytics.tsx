@@ -51,7 +51,7 @@ export default function EmailAnalytics() {
         },
         {
           id: "2",
-          to: "broker@example.com",
+          to: "teammember@example.com",
           subject: "🚨 URGENT: Task Reminder: Decision Day - XYZ Company",
           status: "sent",
           provider: "SendGrid",
@@ -251,7 +251,7 @@ export default function EmailAnalytics() {
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
         <strong>📊 Analytics Note:</strong> Email delivery tracking helps admins
         monitor system health. High success rates mean your notifications are
-        reaching brokers reliably. If you see failures, check your email
+        reaching teamMembers reliably. If you see failures, check your email
         provider configuration.
       </div>
     </div>
