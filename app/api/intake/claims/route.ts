@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { joinName } from "@/lib/parse-name";
+import type { Json } from "@/lib/database.types";
 
 /**
  * POST /api/intake/claims
@@ -72,8 +73,10 @@ export async function POST(request: Request) {
   if (formData.get("acknowledge") !== "on")
     return jsonError("Please confirm the acknowledgment checkbox.", 400);
 
-  // Build the structured payload that triage staff will review.
-  const payload: Record<string, unknown> = {
+  // Build the structured payload that triage staff will review. Typed as
+  // the Supabase `Json` so it satisfies the `claim_intake_submissions.payload`
+  // jsonb column without an `as unknown` cast.
+  const payload: Json = {
     submitter: {
       first_name: submitterFirstName,
       last_name: submitterLastName,
@@ -190,7 +193,9 @@ export async function POST(request: Request) {
       id: submissionId,
       source: "web_form",
       payload,
-      attachments: attachments as unknown as never, // jsonb
+      // AttachmentMeta is structurally compatible with Json (all leaves are
+      // string | number) but TS can't prove the index signature.
+      attachments: attachments as unknown as Json,
       submitter_name: submitterName,
       submitter_email: submitterEmail,
       submitter_phone: submitterPhone || null,

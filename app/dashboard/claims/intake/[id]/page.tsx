@@ -298,7 +298,14 @@ export default async function IntakeSubmissionDetailPage({
                 <span className="font-mono text-xs">{submission.id}</span>
               }
             />
-            <KV label="Submitter IP" value={submission.submitter_ip} />
+            <KV
+              label="Submitter IP"
+              value={
+                submission.submitter_ip
+                  ? String(submission.submitter_ip)
+                  : null
+              }
+            />
             <KV
               label="User agent"
               value={
