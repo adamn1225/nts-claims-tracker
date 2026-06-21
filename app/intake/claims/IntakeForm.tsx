@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
+import {
+  buildSummaryGroups,
+  PrintEmailActions,
+  ReviewSummary,
+  type IntakeSnapshot,
+  type SummaryFile,
+  type SummaryGroup,
+} from "./ReviewSummary";
 
 type LookupRow = { id: string; name: string };
 
@@ -68,6 +76,32 @@ export default function IntakeForm({
   const formRef = useRef<HTMLFormElement>(null);
   const currentStep = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
+
+  // Snapshot of the user's typed values, captured each time they land on the
+  // review step so the Review & submit summary always shows fresh data.
+  const [reviewSnapshot, setReviewSnapshot] = useState<IntakeSnapshot>({});
+  const [reviewGroups, setReviewGroups] = useState<SummaryGroup[]>([]);
+
+  // Rebuild the review snapshot whenever the user navigates onto the last
+  // step. We read directly from the live form (uncontrolled inputs) so we
+  // don't have to lift any state up.
+  useEffect(() => {
+    if (!isLastStep) return;
+    const form = formRef.current;
+    if (!form) return;
+    const fd = new FormData(form);
+    const snap: IntakeSnapshot = {};
+    for (const [key, value] of fd.entries()) {
+      if (typeof value === "string") snap[key] = value;
+    }
+    setReviewSnapshot(snap);
+    setReviewGroups(buildSummaryGroups(snap, freightTypes, trailerTypes));
+  }, [isLastStep, freightTypes, trailerTypes, files]);
+
+  const reviewFiles: SummaryFile[] = files.map((f) => ({
+    name: f.file.name,
+    type: f.documentType,
+  }));
 
   function goToStep(idx: number) {
     const next = Math.max(0, Math.min(STEPS.length - 1, idx));
@@ -232,6 +266,33 @@ export default function IntakeForm({
         setError(message);
         setSubmitting(false);
         return;
+      }
+
+      // Hand off the submission snapshot to the success page so it can show a
+      // printable / emailable receipt without round-tripping to the server.
+      try {
+        if (typeof window !== "undefined") {
+          const fd = new FormData(formEl);
+          const snap: IntakeSnapshot = {};
+          for (const [k, v] of fd.entries()) {
+            if (typeof v === "string") snap[k] = v;
+          }
+          window.sessionStorage.setItem(
+            `intake-receipt:${result.reference}`,
+            JSON.stringify({
+              reference: result.reference,
+              snapshot: snap,
+              files: files.map((f) => ({
+                name: f.file.name,
+                type: f.documentType,
+              })),
+              freightTypes,
+              trailerTypes,
+            }),
+          );
+        }
+      } catch {
+        // sessionStorage can throw in privacy modes — non-fatal.
       }
 
       router.push(
@@ -599,12 +660,21 @@ export default function IntakeForm({
               )}
             </Section>
 
-            <Section title="Review & submit">
-              <p className="text-sm text-slate-600">
-                Use the sidebar to jump back and double-check any step before
-                submitting. After you submit, you&apos;ll see a reference number
-                you can quote in follow-up emails.
-              </p>
+            <Section
+              title="Review & submit"
+              description="Double-check the details below — use the sidebar to jump back and fix anything before you submit. You can also print or email yourself a copy."
+            >
+              <ReviewSummary
+                groups={reviewGroups}
+                files={reviewFiles}
+              />
+
+              <PrintEmailActions
+                groups={reviewGroups}
+                files={reviewFiles}
+                recipientEmail={reviewSnapshot.submitter_email}
+              />
+
               <label className="flex items-start gap-3 text-sm text-slate-700">
                 <input
                   type="checkbox"

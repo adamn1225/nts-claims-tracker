@@ -1,3 +1,5 @@
+import IntakeReceipt from "./IntakeReceipt";
+
 export default async function IntakeSuccessPage({
   searchParams,
 }: {
@@ -6,7 +8,7 @@ export default async function IntakeSuccessPage({
   const { ref } = await searchParams;
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+    <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
@@ -62,6 +64,8 @@ export default async function IntakeSuccessPage({
           </div>
         </div>
       </div>
+
+      {ref && <IntakeReceipt reference={ref} />}
     </main>
   );
 }
