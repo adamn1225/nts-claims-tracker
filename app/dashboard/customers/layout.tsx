@@ -54,9 +54,11 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
         if (data && data.length > 0) {
           setStatuses(data);
         }
-      } catch (err) {
-        console.error("Error fetching statuses:", err);
-        // Fallback to the CEO's 6 default kanban columns (per email spec).
+      } catch {
+        // Expected during the legacy-to-claims transition: the
+        // `get_user_statuses` RPC may not exist yet. Fall back to the CEO's
+        // 6 default kanban columns (per email spec) silently — no console
+        // noise because the fallback IS the intended UX right now.
         // Inbox is the protected landing column for all newly-assigned claims.
         // Mirrors the seed in supabase/migrations/20260620000006_seeds_and_rls.sql.
         setStatuses([

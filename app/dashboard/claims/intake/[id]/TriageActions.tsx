@@ -39,7 +39,7 @@ export default function TriageActions({ submissionId }: Props) {
       }
       // Navigate to the new claim (the kanban will reflect it on next load).
       if (result.claimId) {
-        router.push(`/dashboard/customers/${result.claimId}`);
+        router.push(`/dashboard/claims/${result.claimId}`);
       } else {
         router.refresh();
       }

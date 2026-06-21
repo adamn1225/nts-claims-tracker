@@ -166,7 +166,7 @@ function ClaimCard({ claim, isDragOverlay = false }: ClaimCardProps) {
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <Link
-            href={`/dashboard/customers/${claim.id}`}
+            href={`/dashboard/claims/${claim.id}`}
             onClick={(e) => e.stopPropagation()}
             className="block font-mono text-sm font-semibold text-slate-900 hover:text-primary"
           >

@@ -153,7 +153,7 @@ export default async function IntakeSubmissionDetailPage({
         <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
           Promoted to claim{" "}
           <Link
-            href={`/dashboard/customers/${submission.promoted_claim_id}`}
+            href={`/dashboard/claims/${submission.promoted_claim_id}`}
             className="font-mono font-semibold hover:underline"
           >
             {promotedClaimNumber}
