@@ -639,7 +639,7 @@ export default function IntakeForm({
                         onChange={(e) =>
                           updateFileType(i, e.target.value as DocumentTypeValue)
                         }
-                        className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:w-auto sm:py-1.5"
                       >
                         {DOCUMENT_TYPES.map((dt) => (
                           <option key={dt.value} value={dt.value}>
@@ -650,7 +650,7 @@ export default function IntakeForm({
                       <button
                         type="button"
                         onClick={() => removeFile(i)}
-                        className="rounded-md border border-slate-300 px-2 py-1.5 text-sm text-slate-700 hover:border-danger hover:bg-danger/5 hover:text-danger"
+                        className="inline-flex min-h-10 w-full items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:border-danger hover:bg-danger/5 hover:text-danger sm:w-auto sm:py-1.5"
                       >
                         Remove
                       </button>
@@ -707,7 +707,7 @@ export default function IntakeForm({
               type="button"
               onClick={goBack}
               disabled={stepIndex === 0}
-              className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
             >
               ← Back
             </button>
@@ -720,7 +720,7 @@ export default function IntakeForm({
               <button
                 type="button"
                 onClick={goNext}
-                className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:w-auto sm:py-2.5"
               >
                 Continue →
               </button>
@@ -728,7 +728,7 @@ export default function IntakeForm({
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:py-2.5"
               >
                 {submitting ? "Submitting…" : "Submit claim"}
               </button>
@@ -780,7 +780,9 @@ function Stepper({
 }) {
   return (
     <nav aria-label="Form steps" className="lg:sticky lg:top-6 lg:self-start">
-      {/* Mobile / embed: horizontal pills */}
+      {/* Mobile / embed: horizontal pills. Scrolls within its own box; we
+          keep it inside the main padding so the page doesn't gain a
+          horizontal scrollbar on phones. */}
       <ol className="flex gap-2 overflow-x-auto pb-2 lg:hidden">
         {steps.map((s, i) => {
           const isCurrent = i === stepIndex;
@@ -790,7 +792,7 @@ function Stepper({
                 type="button"
                 onClick={() => onSelect(i)}
                 className={[
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                  "min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium transition",
                   isCurrent
                     ? "border-primary bg-primary text-white"
                     : i <= maxReached

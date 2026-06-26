@@ -301,9 +301,11 @@ export default async function IntakeSubmissionDetailPage({
             <KV
               label="Submitter IP"
               value={
-                submission.submitter_ip
-                  ? String(submission.submitter_ip)
-                  : null
+                submission.submitter_ip ? (
+                  <span className="break-all font-mono text-xs text-slate-600">
+                    {String(submission.submitter_ip)}
+                  </span>
+                ) : null
               }
             />
             <KV
@@ -358,7 +360,7 @@ function KV({
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
         {label}
       </dt>
-      <dd className="text-slate-900">{display}</dd>
+      <dd className="min-w-0 wrap-break-word text-slate-900">{display}</dd>
     </div>
   );
 }

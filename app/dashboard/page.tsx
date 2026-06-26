@@ -343,6 +343,28 @@ export default function DashboardPage() {
     }>
   >([]);
   const [pinnedCustomers, setPinnedCustomers] = useState<Customer[]>([]);
+  // Lightweight stats read from the `claims` table so the dashboard reflects
+  // the same data the kanban/list views show. Legacy `customers`-based
+  // metrics still run alongside until those callers are migrated.
+  type RecentClaim = {
+    id: string;
+    claim_number: string;
+    bol_number: string | null;
+    status_name: string | null;
+    status_color: string | null;
+    is_closed: boolean;
+    party_name: string | null;
+    last_activity_at: string | null;
+  };
+  const [claimStats, setClaimStats] = useState<{
+    openCount: number;
+    totalCount: number;
+    recent: RecentClaim[];
+  }>({
+    openCount: 0,
+    totalCount: 0,
+    recent: [],
+  });
   const [weeklyTasks, setWeeklyTasks] = useState<Record<string, number>>({
     Monday: 0,
     Tuesday: 0,
@@ -363,6 +385,7 @@ export default function DashboardPage() {
         fetchRecentActivity(viewingTeamMember.id),
         fetchPinnedCustomers(viewingTeamMember.id),
         fetchWeeklyTasks(viewingTeamMember.id),
+        fetchClaimStats(),
       ]);
 
       setIsLoading(false);
@@ -535,6 +558,86 @@ export default function DashboardPage() {
     }
   };
 
+  /**
+   * Loads the same claims the kanban/list views show, then derives the
+   * open-claim count and a top-N "recent claims" list for the dashboard.
+   *
+   * RLS is enforced server-side, so we don't pre-filter by owner here —
+   * claims staff see their own + assigned, managers/admins see all, brokers
+   * see only claims tied to their customers.
+   */
+  const fetchClaimStats = async () => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("claims")
+      .select(
+        `
+          id,
+          claim_number,
+          bol_number,
+          last_activity_at,
+          status:claim_statuses!claims_status_id_fkey (
+            name, color, is_closed
+          ),
+          parties:claim_parties (
+            role,
+            contact_name,
+            company:companies ( legal_name, dba_name )
+          )
+        `,
+      )
+      .order("last_activity_at", { ascending: false });
+
+    if (error || !data) return;
+
+    type RawClaim = {
+      id: string;
+      claim_number: string;
+      bol_number: string | null;
+      last_activity_at: string | null;
+      status: { name: string; color: string | null; is_closed: boolean } | null;
+      parties: Array<{
+        role: string;
+        contact_name: string | null;
+        company: { legal_name: string | null; dba_name: string | null } | null;
+      }>;
+    };
+
+    const rows = data as unknown as RawClaim[];
+
+    const pickParty = (claim: RawClaim) => {
+      const preferred = claim.parties.find((p) => p.role === "shipper")
+        ?? claim.parties.find((p) => p.role === "customer")
+        ?? claim.parties[0];
+      if (!preferred) return null;
+      return (
+        preferred.company?.dba_name ||
+        preferred.company?.legal_name ||
+        preferred.contact_name ||
+        null
+      );
+    };
+
+    const recent: RecentClaim[] = rows.slice(0, 5).map((c) => ({
+      id: c.id,
+      claim_number: c.claim_number,
+      bol_number: c.bol_number,
+      status_name: c.status?.name ?? null,
+      status_color: c.status?.color ?? null,
+      is_closed: c.status?.is_closed ?? false,
+      party_name: pickParty(c),
+      last_activity_at: c.last_activity_at,
+    }));
+
+    const openCount = rows.filter((c) => !(c.status?.is_closed ?? false)).length;
+
+    setClaimStats({
+      openCount,
+      totalCount: rows.length,
+      recent,
+    });
+  };
+
   const fetchWeeklyTasks = async (userId: string) => {
     const supabase = createClient();
 
@@ -643,8 +746,12 @@ export default function DashboardPage() {
             <KpiTile
               accent="info"
               label="Open Claims"
-              value={metrics.totalCustomers}
-              sub="Across every stage"
+              value={claimStats.openCount}
+              sub={
+                claimStats.totalCount > claimStats.openCount
+                  ? `${claimStats.totalCount - claimStats.openCount} closed`
+                  : "Across every stage"
+              }
               icon={FolderOpen}
               href="/dashboard/customers/kanban"
             />
@@ -833,42 +940,72 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Pinned Customers - Compact */}
+          {/* Recent Claims — pulls directly from the `claims` table so the
+              dashboard mirrors the kanban/list views. Replaces the legacy
+              "Pinned Claims" block (no per-claim pin column yet). */}
           <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-slate-900">
-                Pinned Claims
+                Recent Claims
               </h2>
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                {metrics.pinnedCustomers}
+                {claimStats.totalCount}
               </span>
             </div>
             <div className="space-y-2">
-              {pinnedCustomers.length > 0 ? (
-                pinnedCustomers.map((customer) => (
-                  <Link
-                    key={customer.id}
-                    href={`/dashboard/customers?id=${customer.id}`}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 transition-all hover:border-primary/60 hover:bg-primary/5"
-                  >
-                    <div className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">
-                        {customer.business_name}
-                      </p>
-                      <p className="truncate text-xs text-slate-600">
-                        {getCustomerDisplayName(customer) || "No contact"}
-                      </p>
-                    </div>
-                  </Link>
-                ))
+              {claimStats.recent.length > 0 ? (
+                claimStats.recent.map((claim) => {
+                  const dotColor =
+                    claim.status_color === "success"
+                      ? "bg-success"
+                      : claim.status_color === "danger"
+                        ? "bg-danger"
+                        : claim.status_color === "warning"
+                          ? "bg-warning"
+                          : claim.status_color === "primary"
+                            ? "bg-primary"
+                            : claim.status_color === "accent"
+                              ? "bg-accent"
+                              : claim.status_color === "critical"
+                                ? "bg-violet-500"
+                                : claim.status_color === "info"
+                                  ? "bg-info"
+                                  : "bg-slate-400";
+                  return (
+                    <Link
+                      key={claim.id}
+                      href={`/dashboard/claims/${claim.id}`}
+                      className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 transition-all hover:border-primary/60 hover:bg-primary/5"
+                    >
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${dotColor}`}
+                        title={claim.status_name ?? undefined}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate font-mono text-sm font-semibold text-slate-900">
+                            {claim.claim_number}
+                          </p>
+                          {claim.status_name && (
+                            <span className="truncate text-[11px] text-slate-500">
+                              {claim.status_name}
+                            </span>
+                          )}
+                        </div>
+                        <p className="truncate text-xs text-slate-600">
+                          {claim.party_name || (claim.bol_number ? `BOL ${claim.bol_number}` : "No party on file")}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })
               ) : (
                 <p className="py-2 text-center text-sm text-slate-500">
-                  No pinned claims
+                  No claims yet
                 </p>
               )}
               <Link
-                href="/dashboard/customers"
+                href="/dashboard/customers/kanban"
                 className="block pt-2 text-center text-xs text-primary-text hover:underline"
               >
                 View all claims →

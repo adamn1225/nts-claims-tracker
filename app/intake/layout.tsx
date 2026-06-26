@@ -23,6 +23,11 @@ export default function IntakeLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">{children}</div>
+    // `overflow-x-clip` prevents any stray-wide child (e.g. an
+    // overflow-x-auto pill row, long unbreakable file names) from creating
+    // a horizontal page scroll on phones or inside iframes.
+    <div className="min-h-screen overflow-x-clip bg-slate-50 text-slate-900">
+      {children}
+    </div>
   );
 }
