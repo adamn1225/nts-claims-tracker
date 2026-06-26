@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
   Building2,
   CalendarClock,
+  ChevronLeft,
+  ChevronRight,
   DollarSign,
   FileText,
   Flag,
@@ -267,7 +269,7 @@ function Column({ status, claims }: ColumnProps) {
 
       <div
         ref={setNodeRef}
-        className={`flex min-h-[200px] flex-1 flex-col gap-2 rounded-b-lg border border-t-0 border-slate-200 bg-slate-50/70 p-2 transition ${
+        className={`flex min-h-50 flex-1 flex-col gap-2 rounded-b-lg border border-t-0 border-slate-200 bg-slate-50/70 p-2 transition ${
           isOver ? "ring-2 ring-primary/40 ring-offset-1" : ""
         }`}
       >
@@ -310,6 +312,46 @@ export default function ClaimsKanbanBoard({
     null,
   );
 
+  // Horizontal scroll plumbing: the board can be wider than the viewport, so
+  // we expose arrow buttons + numbered "jump to column" shortcuts instead of
+  // forcing the user down to the native scrollbar.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const columnRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Edge state so the arrow buttons can disable/hide when there's nowhere
+  // further to scroll in that direction.
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollEdges = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    // 1px tolerance absorbs sub-pixel rounding at the extremes.
+    setCanScrollLeft(scrollLeft > 1);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+  }, []);
+
+  const scrollByColumn = useCallback((direction: -1 | 1) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    // One "page" ~= ~75% of the visible width so neighbouring columns stay
+    // partially in view as an orientation anchor.
+    container.scrollBy({
+      left: direction * container.clientWidth * 0.75,
+      behavior: "smooth",
+    });
+  }, []);
+
+  const jumpToColumn = useCallback((index: number) => {
+    const container = scrollRef.current;
+    const target = Object.values(columnRefs.current)[index];
+    if (!container || !target) return;
+    // Align the target column to the left edge of the scroll viewport.
+    const left = target.offsetLeft - container.offsetLeft;
+    container.scrollTo({ left, behavior: "smooth" });
+  }, []);
+
   // Status columns come straight from the DB so re-ordering / renaming /
   // toggling is_active is a DB-only operation.
   useEffect(() => {
@@ -350,6 +392,52 @@ export default function ClaimsKanbanBoard({
     }
     return grouped;
   }, [claims, statuses]);
+
+  // Keyboard column jumping: press 1–9 to scroll that column into view, and
+  // [ / ] (or ← / →) to page left/right. Ignored while typing in a field so
+  // we never steal keystrokes from the search box or any modal input.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+      ) {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key >= "1" && e.key <= "9") {
+        const index = Number(e.key) - 1;
+        if (index < statuses.length) {
+          e.preventDefault();
+          jumpToColumn(index);
+        }
+      } else if (e.key === "[" || e.key === "ArrowLeft") {
+        scrollByColumn(-1);
+      } else if (e.key === "]" || e.key === "ArrowRight") {
+        scrollByColumn(1);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [statuses.length, jumpToColumn, scrollByColumn]);
+
+  // Keep the arrow buttons' enabled state in sync with the actual scroll
+  // position. Recomputes on scroll, on resize, and whenever the rendered
+  // columns change (which can alter the total scroll width).
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    updateScrollEdges();
+    container.addEventListener("scroll", updateScrollEdges, { passive: true });
+    window.addEventListener("resize", updateScrollEdges);
+    return () => {
+      container.removeEventListener("scroll", updateScrollEdges);
+      window.removeEventListener("resize", updateScrollEdges);
+    };
+  }, [updateScrollEdges, statuses, claimsByStatus, isLoading]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -417,6 +505,58 @@ export default function ClaimsKanbanBoard({
         </div>
       )}
 
+      {/* Column navigator — arrow paging + numbered jump shortcuts so the user
+          never has to hunt for the native scrollbar at the bottom of the board. */}
+      {!isLoading && statuses.length > 0 && (
+        <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => scrollByColumn(-1)}
+            disabled={!canScrollLeft}
+            aria-label="Scroll columns left"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-600"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            {statuses.map((status, index) => (
+              <button
+                key={status.id}
+                type="button"
+                onClick={() => jumpToColumn(index)}
+                title={`${status.name}${index < 9 ? ` (press ${index + 1})` : ""}`}
+                className="group inline-flex shrink-0 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-slate-900"
+              >
+                {index < 9 && (
+                  <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-slate-100 text-[10px] font-semibold text-slate-500 group-hover:bg-primary/10 group-hover:text-primary">
+                    {index + 1}
+                  </span>
+                )}
+                <span className="whitespace-nowrap">{status.name}</span>
+                <span className="rounded-full bg-slate-100 px-1.5 text-[10px] font-semibold text-slate-500">
+                  {(claimsByStatus[status.id] ?? []).length}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => scrollByColumn(1)}
+            disabled={!canScrollRight}
+            aria-label="Scroll columns right"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-600"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+
+          <span className="ml-1 hidden shrink-0 whitespace-nowrap text-[11px] text-slate-400 lg:inline">
+            Tip: press 1–9 to jump · ← → to scroll
+          </span>
+        </div>
+      )}
+
       {isLoading && statuses.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -428,13 +568,23 @@ export default function ClaimsKanbanBoard({
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex flex-1 gap-3 overflow-x-auto pb-4">
+          <div
+            ref={scrollRef}
+            className="flex flex-1 gap-3 overflow-x-auto pb-4"
+          >
             {statuses.map((status) => (
-              <Column
+              <div
                 key={status.id}
-                status={status}
-                claims={claimsByStatus[status.id] ?? []}
-              />
+                ref={(el) => {
+                  columnRefs.current[status.id] = el;
+                }}
+                className="flex"
+              >
+                <Column
+                  status={status}
+                  claims={claimsByStatus[status.id] ?? []}
+                />
+              </div>
             ))}
             {claimsByStatus["__orphan__"]?.length ? (
               <Column

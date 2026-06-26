@@ -41,7 +41,7 @@ import {
   X,
   ToolCase,
   TrendingUp,
-  LayoutGrid,
+  ClipboardList,
   List,
   Star,
   HelpCircle,
@@ -79,7 +79,7 @@ const navigation: NavigationItem[] = [
   {
     name: "Claims Track",
     href: "/dashboard/customers/kanban",
-    icon: LayoutGrid,
+    icon: ClipboardList,
     description: "Drag-and-drop claims pipeline",
   },
   {
