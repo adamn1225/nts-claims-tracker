@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import ClaimTransactionsPanel from "@/components/claims/ClaimTransactionsPanel";
+import ClaimActivityTimeline from "@/components/claims/ClaimActivityTimeline";
+import ClaimIntegrationsPanel from "@/components/claims/ClaimIntegrationsPanel";
+import ClaimDocumentsPanel from "@/components/claims/ClaimDocumentsPanel";
+import ClaimHeaderActions from "@/components/claims/ClaimHeaderActions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,21 +17,6 @@ const PARTY_ROLE_LABELS: Record<string, string> = {
   accounts_payable: "Accounts payable",
   insurer: "Insurance carrier",
   broker: "Broker",
-  other: "Other",
-};
-
-const DOCUMENT_TYPE_LABELS: Record<string, string> = {
-  bill_of_lading: "Bill of Lading (BOL)",
-  proof_of_delivery: "Proof of Delivery (POD)",
-  damage_photo: "Damage photo",
-  pickup_photo: "Pickup photo",
-  delivery_photo: "Delivery photo",
-  repair_estimate: "Repair estimate",
-  replacement_invoice: "Replacement invoice",
-  witness_statement: "Witness statement",
-  presentation_of_loss: "Presentation of loss",
-  release: "Release",
-  settlement_agreement: "Settlement agreement",
   other: "Other",
 };
 
@@ -120,7 +110,8 @@ export default async function ClaimDetailPage({
           id, role, contact_name, contact_email, contact_phone,
           acknowledged_at, last_response_at, notes,
           company:companies (
-            id, legal_name, dba_name, primary_phone, primary_email, has_active_hold
+            id, legal_name, dba_name, primary_phone, primary_email,
+            has_active_hold, dot_number, mc_number
           )
         ),
         owner:profiles!claims_owner_id_fkey (
@@ -142,12 +133,6 @@ export default async function ClaimDetailPage({
   }
   if (!claim) notFound();
 
-  const { data: documents } = await supabase
-    .from("claim_documents")
-    .select("id, filename, document_type, mime_type, size_bytes, uploaded_at")
-    .eq("claim_id", id)
-    .order("uploaded_at", { ascending: false });
-
   const parties = (claim.parties ?? []) as Array<{
     id: string;
     role: string;
@@ -164,6 +149,8 @@ export default async function ClaimDetailPage({
       primary_phone: string | null;
       primary_email: string | null;
       has_active_hold: boolean | null;
+      dot_number: string | null;
+      mc_number: string | null;
     } | null;
   }>;
 
@@ -191,6 +178,44 @@ export default async function ClaimDetailPage({
     INTAKE_SOURCE_LABELS[claim.intake_source] ?? claim.intake_source;
 
   const daysOpen = daysBetween(claim.opened_at, claim.closed_at);
+
+  // Role gates writes to notes / transactions / integrations. Brokers stay
+  // read-only per the security model in copilot-instructions.md.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  const canEdit =
+    profile?.role === "admin" ||
+    profile?.role === "manager" ||
+    profile?.role === "claims_staff";
+
+  // Users the current person can hand a claim off to. Brokers don't own
+  // claims so filter to internal roles.
+  const { data: assignableUsers } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, email, role, office_location")
+    .eq("is_active", true)
+    .in("role", ["admin", "manager", "claims_staff"])
+    .order("first_name");
+
+  const carrierIntegrationParties = parties
+    .filter((p) => p.role === "carrier" && p.company)
+    .map((p) => ({
+      id: p.id,
+      company_id: p.company!.id,
+      company_name:
+        p.company!.dba_name || p.company!.legal_name || "Unnamed carrier",
+      dot_number: p.company!.dot_number,
+      mc_number: p.company!.mc_number,
+    }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new column
+  const centralDispatchOrder = (claim as any).central_dispatch_order_number as
+    | string
+    | null
+    | undefined;
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
@@ -228,6 +253,30 @@ export default async function ClaimDetailPage({
         {claim.summary && (
           <p className="mt-2 text-sm text-slate-600">{claim.summary}</p>
         )}
+
+        {/* Owner assignment + filing status controls */}
+        <div className="mt-3">
+          <ClaimHeaderActions
+            claimId={claim.id}
+            currentOwnerId={claim.owner_id}
+            currentOwnerName={ownerName}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new col
+            currentFilingStatus={(claim as any).filing_status ?? null}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new col
+            currentFiledAt={(claim as any).filed_at ?? null}
+            assignableUsers={
+              (assignableUsers ?? []) as Array<{
+                id: string;
+                first_name: string | null;
+                last_name: string | null;
+                email: string | null;
+                role: string | null;
+                office_location: string | null;
+              }>
+            }
+            canEdit={canEdit}
+          />
+        </div>
       </div>
 
       {/* ---- Top stats ---- */}
@@ -302,31 +351,7 @@ export default async function ClaimDetailPage({
             </Card>
           )}
 
-          <Card title={`Documents (${documents?.length ?? 0})`}>
-            {!documents || documents.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                No documents uploaded yet.
-              </p>
-            ) : (
-              <ul className="divide-y divide-slate-200">
-                {documents.map((d) => (
-                  <li key={d.id} className="flex items-center gap-3 py-2.5">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">
-                        {d.filename}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {DOCUMENT_TYPE_LABELS[d.document_type] ??
-                          d.document_type}
-                        {" • "}
-                        {fmtDateTime(d.uploaded_at)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          <ClaimDocumentsPanel claimId={claim.id} canEdit={canEdit} />
         </div>
 
         {/* ---- Right column: parties + timestamps ---- */}
@@ -414,8 +439,25 @@ export default async function ClaimDetailPage({
               <Row label="Closed" value={fmtDateTime(claim.closed_at)} />
             </Dl>
           </Card>
+
+          <ClaimIntegrationsPanel
+            claimId={claim.id}
+            carrierParties={carrierIntegrationParties}
+            existingCentralDispatchOrder={centralDispatchOrder ?? null}
+            canEdit={canEdit}
+          />
         </div>
       </div>
+
+      {/* ---- Full-width sections: transactions + activity timeline ---- */}
+      <ClaimTransactionsPanel
+        claimId={claim.id}
+        currency={claim.currency}
+        damageClaimAmount={claim.damage_claim_amount}
+        canEdit={canEdit}
+      />
+
+      <ClaimActivityTimeline claimId={claim.id} canEdit={canEdit} />
     </main>
   );
 }

@@ -59,6 +59,13 @@ export type Database = {
             foreignKeyName: "ai_chat_history_claim_id_fkey"
             columns: ["claim_id"]
             isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
+          {
+            foreignKeyName: "ai_chat_history_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
             referencedRelation: "claims"
             referencedColumns: ["id"]
           },
@@ -321,6 +328,13 @@ export type Database = {
             foreignKeyName: "carrier_holds_related_claim_id_fkey"
             columns: ["related_claim_id"]
             isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
+          {
+            foreignKeyName: "carrier_holds_related_claim_id_fkey"
+            columns: ["related_claim_id"]
+            isOneToOne: false
             referencedRelation: "claims"
             referencedColumns: ["id"]
           },
@@ -333,6 +347,75 @@ export type Database = {
           },
           {
             foreignKeyName: "carrier_holds_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carrier_verifications: {
+        Row: {
+          company_id: string
+          dba_name: string | null
+          dot_number: string | null
+          fetched_at: string
+          id: string
+          insurance_carrier: string | null
+          insurance_expiry: string | null
+          legal_name: string | null
+          mc_number: string | null
+          notes: string | null
+          operating_status: string | null
+          raw_response: Json | null
+          requested_by: string | null
+          source: Database["public"]["Enums"]["carrier_verification_source"]
+          status: Database["public"]["Enums"]["carrier_verification_status"]
+        }
+        Insert: {
+          company_id: string
+          dba_name?: string | null
+          dot_number?: string | null
+          fetched_at?: string
+          id?: string
+          insurance_carrier?: string | null
+          insurance_expiry?: string | null
+          legal_name?: string | null
+          mc_number?: string | null
+          notes?: string | null
+          operating_status?: string | null
+          raw_response?: Json | null
+          requested_by?: string | null
+          source: Database["public"]["Enums"]["carrier_verification_source"]
+          status?: Database["public"]["Enums"]["carrier_verification_status"]
+        }
+        Update: {
+          company_id?: string
+          dba_name?: string | null
+          dot_number?: string | null
+          fetched_at?: string
+          id?: string
+          insurance_carrier?: string | null
+          insurance_expiry?: string | null
+          legal_name?: string | null
+          mc_number?: string | null
+          notes?: string | null
+          operating_status?: string | null
+          raw_response?: Json | null
+          requested_by?: string | null
+          source?: Database["public"]["Enums"]["carrier_verification_source"]
+          status?: Database["public"]["Enums"]["carrier_verification_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_verifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrier_verifications_requested_by_fkey"
             columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -411,6 +494,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_documents_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
           },
           {
             foreignKeyName: "claim_documents_claim_id_fkey"
@@ -512,6 +602,13 @@ export type Database = {
             foreignKeyName: "claim_intake_submissions_promoted_claim_id_fkey"
             columns: ["promoted_claim_id"]
             isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
+          {
+            foreignKeyName: "claim_intake_submissions_promoted_claim_id_fkey"
+            columns: ["promoted_claim_id"]
+            isOneToOne: false
             referencedRelation: "claims"
             referencedColumns: ["id"]
           },
@@ -562,6 +659,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_notes_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
           },
           {
             foreignKeyName: "claim_notes_claim_id_fkey"
@@ -620,6 +724,13 @@ export type Database = {
             foreignKeyName: "claim_parties_claim_id_fkey"
             columns: ["claim_id"]
             isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
+          {
+            foreignKeyName: "claim_parties_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
             referencedRelation: "claims"
             referencedColumns: ["id"]
           },
@@ -656,6 +767,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "claim_pins_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
           {
             foreignKeyName: "claim_pins_claim_id_fkey"
             columns: ["claim_id"]
@@ -720,6 +838,13 @@ export type Database = {
             foreignKeyName: "claim_settlements_claim_id_fkey"
             columns: ["claim_id"]
             isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
+          {
+            foreignKeyName: "claim_settlements_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
             referencedRelation: "claims"
             referencedColumns: ["id"]
           },
@@ -767,6 +892,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_status_history_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
           },
           {
             foreignKeyName: "claim_status_history_claim_id_fkey"
@@ -836,10 +968,111 @@ export type Database = {
         }
         Relationships: []
       }
+      claim_transactions: {
+        Row: {
+          amount: number
+          claim_id: string
+          created_at: string
+          currency: string
+          from_party_id: string | null
+          gl_code: string | null
+          id: string
+          logged_by: string | null
+          notes: string | null
+          payment_source: Database["public"]["Enums"]["payment_source"]
+          reference_number: string | null
+          related_document_id: string | null
+          to_party_id: string | null
+          transaction_date: string
+          transaction_type: Database["public"]["Enums"]["claim_transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          claim_id: string
+          created_at?: string
+          currency?: string
+          from_party_id?: string | null
+          gl_code?: string | null
+          id?: string
+          logged_by?: string | null
+          notes?: string | null
+          payment_source?: Database["public"]["Enums"]["payment_source"]
+          reference_number?: string | null
+          related_document_id?: string | null
+          to_party_id?: string | null
+          transaction_date?: string
+          transaction_type: Database["public"]["Enums"]["claim_transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          claim_id?: string
+          created_at?: string
+          currency?: string
+          from_party_id?: string | null
+          gl_code?: string | null
+          id?: string
+          logged_by?: string | null
+          notes?: string | null
+          payment_source?: Database["public"]["Enums"]["payment_source"]
+          reference_number?: string | null
+          related_document_id?: string | null
+          to_party_id?: string | null
+          transaction_date?: string
+          transaction_type?: Database["public"]["Enums"]["claim_transaction_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_transactions_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
+          {
+            foreignKeyName: "claim_transactions_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_transactions_from_party_id_fkey"
+            columns: ["from_party_id"]
+            isOneToOne: false
+            referencedRelation: "claim_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_transactions_logged_by_fkey"
+            columns: ["logged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_transactions_related_document_id_fkey"
+            columns: ["related_document_id"]
+            isOneToOne: false
+            referencedRelation: "claim_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_transactions_to_party_id_fkey"
+            columns: ["to_party_id"]
+            isOneToOne: false
+            referencedRelation: "claim_parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claims: {
         Row: {
           acknowledged_at: string | null
           bol_number: string | null
+          central_dispatch_order_number: string | null
           claim_number: string
           closed_at: string | null
           created_at: string
@@ -850,6 +1083,8 @@ export type Database = {
           destination_city: string | null
           destination_postal_code: string | null
           destination_state: string | null
+          filed_at: string | null
+          filing_status: Database["public"]["Enums"]["claim_filing_status"]
           freight_type_id: string | null
           id: string
           incident_date: string | null
@@ -857,6 +1092,7 @@ export type Database = {
           intake_submission_id: string | null
           internal_description: string | null
           last_activity_at: string
+          mcp_verification_id: string | null
           opened_at: string
           origin_city: string | null
           origin_postal_code: string | null
@@ -878,6 +1114,7 @@ export type Database = {
         Insert: {
           acknowledged_at?: string | null
           bol_number?: string | null
+          central_dispatch_order_number?: string | null
           claim_number: string
           closed_at?: string | null
           created_at?: string
@@ -888,6 +1125,8 @@ export type Database = {
           destination_city?: string | null
           destination_postal_code?: string | null
           destination_state?: string | null
+          filed_at?: string | null
+          filing_status?: Database["public"]["Enums"]["claim_filing_status"]
           freight_type_id?: string | null
           id?: string
           incident_date?: string | null
@@ -895,6 +1134,7 @@ export type Database = {
           intake_submission_id?: string | null
           internal_description?: string | null
           last_activity_at?: string
+          mcp_verification_id?: string | null
           opened_at?: string
           origin_city?: string | null
           origin_postal_code?: string | null
@@ -916,6 +1156,7 @@ export type Database = {
         Update: {
           acknowledged_at?: string | null
           bol_number?: string | null
+          central_dispatch_order_number?: string | null
           claim_number?: string
           closed_at?: string | null
           created_at?: string
@@ -926,6 +1167,8 @@ export type Database = {
           destination_city?: string | null
           destination_postal_code?: string | null
           destination_state?: string | null
+          filed_at?: string | null
+          filing_status?: Database["public"]["Enums"]["claim_filing_status"]
           freight_type_id?: string | null
           id?: string
           incident_date?: string | null
@@ -933,6 +1176,7 @@ export type Database = {
           intake_submission_id?: string | null
           internal_description?: string | null
           last_activity_at?: string
+          mcp_verification_id?: string | null
           opened_at?: string
           origin_city?: string | null
           origin_postal_code?: string | null
@@ -978,6 +1222,13 @@ export type Database = {
             columns: ["intake_submission_id"]
             isOneToOne: false
             referencedRelation: "claim_intake_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_mcp_verification_id_fkey"
+            columns: ["mcp_verification_id"]
+            isOneToOne: false
+            referencedRelation: "carrier_verifications"
             referencedColumns: ["id"]
           },
           {
@@ -1092,6 +1343,51 @@ export type Database = {
           },
         ]
       }
+      company_notes: {
+        Row: {
+          author_id: string | null
+          body: string
+          company_id: string
+          created_at: string
+          id: string
+          is_pinned: boolean
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          company_id: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       correspondence_log: {
         Row: {
           ai_action_items: Json | null
@@ -1160,6 +1456,13 @@ export type Database = {
           to_addresses?: string[] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "correspondence_log_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
           {
             foreignKeyName: "correspondence_log_claim_id_fkey"
             columns: ["claim_id"]
@@ -1565,6 +1868,47 @@ export type Database = {
           },
         ]
       }
+      list_saved_views: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          is_default: boolean
+          name: string
+          scope: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          name: string
+          scope?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          name?: string
+          scope?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "list_saved_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -1806,6 +2150,13 @@ export type Database = {
             foreignKeyName: "tasks_claim_id_fkey"
             columns: ["claim_id"]
             isOneToOne: false
+            referencedRelation: "claim_financial_summary"
+            referencedColumns: ["claim_id"]
+          },
+          {
+            foreignKeyName: "tasks_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
             referencedRelation: "claims"
             referencedColumns: ["id"]
           },
@@ -1915,7 +2266,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      claim_financial_summary: {
+        Row: {
+          claim_id: string | null
+          claim_number: string | null
+          concession_total: number | null
+          damage_claim_amount: number | null
+          direct_payment_total: number | null
+          outbound_total: number | null
+          paid_total: number | null
+          recovery_total: number | null
+          transaction_count: number | null
+          unpaid_total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_see_claim: { Args: { target_claim_id: string }; Returns: boolean }
@@ -1966,6 +2331,22 @@ export type Database = {
         | "payment_hold"
         | "dispatch_hold"
         | "monitoring_only"
+      carrier_verification_source:
+        | "descartes_mcp"
+        | "mycarrierpackets"
+        | "central_dispatch"
+        | "manual"
+      carrier_verification_status:
+        | "pending"
+        | "verified"
+        | "flagged"
+        | "expired"
+        | "failed"
+      claim_filing_status:
+        | "not_filed"
+        | "filed_not_acknowledged"
+        | "acknowledged"
+        | "closed"
       claim_intake_source:
         | "web_form"
         | "branded_link"
@@ -1990,6 +2371,13 @@ export type Database = {
         | "withdrawn"
         | "recovered"
         | "concession"
+      claim_transaction_type:
+        | "inbound_payment"
+        | "outbound_payment"
+        | "concession"
+        | "adjustment"
+        | "recovery"
+        | "direct_payment"
       claim_value_bucket: "current" | "credit_high_value" | "legal"
       company_kind:
         | "shipper"
@@ -2038,6 +2426,16 @@ export type Database = {
         | "rejected"
         | "duplicate"
       intake_token_kind: "branded_link" | "api"
+      payment_source:
+        | "carrier"
+        | "insurance"
+        | "nts"
+        | "broker"
+        | "shipper"
+        | "customer"
+        | "factoring"
+        | "unknown"
+        | "other"
       task_priority: "low" | "normal" | "high" | "critical"
       task_status:
         | "open"
@@ -2225,6 +2623,25 @@ export const Constants = {
         "dispatch_hold",
         "monitoring_only",
       ],
+      carrier_verification_source: [
+        "descartes_mcp",
+        "mycarrierpackets",
+        "central_dispatch",
+        "manual",
+      ],
+      carrier_verification_status: [
+        "pending",
+        "verified",
+        "flagged",
+        "expired",
+        "failed",
+      ],
+      claim_filing_status: [
+        "not_filed",
+        "filed_not_acknowledged",
+        "acknowledged",
+        "closed",
+      ],
       claim_intake_source: [
         "web_form",
         "branded_link",
@@ -2251,6 +2668,14 @@ export const Constants = {
         "withdrawn",
         "recovered",
         "concession",
+      ],
+      claim_transaction_type: [
+        "inbound_payment",
+        "outbound_payment",
+        "concession",
+        "adjustment",
+        "recovery",
+        "direct_payment",
       ],
       claim_value_bucket: ["current", "credit_high_value", "legal"],
       company_kind: [
@@ -2305,6 +2730,17 @@ export const Constants = {
         "duplicate",
       ],
       intake_token_kind: ["branded_link", "api"],
+      payment_source: [
+        "carrier",
+        "insurance",
+        "nts",
+        "broker",
+        "shipper",
+        "customer",
+        "factoring",
+        "unknown",
+        "other",
+      ],
       task_priority: ["low", "normal", "high", "critical"],
       task_status: ["open", "in_progress", "blocked", "completed", "cancelled"],
       task_type: [

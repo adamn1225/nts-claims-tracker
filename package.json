@@ -10,6 +10,8 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "db:types": "npx --yes supabase gen types typescript --project-id zbyeuopslmdpzprvizxd --schema public > lib/database.types.ts",
+    "db:types:linked": "npx --yes supabase gen types typescript --linked --schema public > lib/database.types.ts",
+    "db:types:dburl": "npx --yes supabase gen types typescript --db-url \"$DIRECT_URL\" --schema public > lib/database.types.ts",
     "db:link": "npx supabase link --project-ref zbyeuopslmdpzprvizxd",
     "db:reset": "npx supabase db reset",
     "db:push": "npx supabase db push",

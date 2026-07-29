@@ -223,6 +223,35 @@ export async function POST(request: Request) {
   // Short, human-friendly reference shown on the success page.
   const reference = `INT-${submissionId.slice(0, 8).toUpperCase()}`;
 
+  // Fire-and-forget notifications. We don't await these against the user's
+  // POST because the form has already succeeded — email failures should
+  // never surface to the submitter.
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    request.headers.get("origin") ||
+    "https://claims.ntslogistics.com";
+
+  const claimAmountRaw = strField(formData, "claim_amount");
+  const notificationSummary = {
+    reference,
+    submissionId,
+    submitterName,
+    submitterEmail,
+    submitterCompany,
+    damageDescription,
+    claimAmount: claimAmountRaw ? formatMoneyish(claimAmountRaw) : null,
+    attachmentCount: attachments.length,
+    appUrl,
+  };
+
+  // Dynamically import to keep the module tree lean on cold starts.
+  import("@/lib/intake-notifications")
+    .then(({ notifyClaimsStaffOfNewIntake, sendIntakeAcknowledgment }) => {
+      void notifyClaimsStaffOfNewIntake(notificationSummary);
+      void sendIntakeAcknowledgment(notificationSummary);
+    })
+    .catch((err) => console.error("[intake] notify import failed", err));
+
   return NextResponse.json({
     ok: true,
     reference,
@@ -267,4 +296,18 @@ function extractIp(request: Request): string | null {
   const real = request.headers.get("x-real-ip");
   if (real) return real.trim();
   return null;
+}
+
+function formatMoneyish(raw: string): string {
+  const n = Number(raw.replace(/[^0-9.-]/g, ""));
+  if (!Number.isFinite(n)) return raw;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }).format(n);
+  } catch {
+    return `$${n.toLocaleString()}`;
+  }
 }

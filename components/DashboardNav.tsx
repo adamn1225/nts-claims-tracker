@@ -83,6 +83,18 @@ const navigation: NavigationItem[] = [
     description: "Drag-and-drop claims pipeline",
   },
   {
+    name: "Claims List",
+    href: "/dashboard/claims/list",
+    icon: List,
+    description: "FreightClaims-style table view",
+  },
+  {
+    name: "Companies",
+    href: "/dashboard/companies",
+    icon: Building2,
+    description: "Shippers, carriers, factoring, insurers",
+  },
+  {
     name: "Claim Intake",
     href: "/dashboard/claims/intake",
     icon: FolderInput,
@@ -108,6 +120,13 @@ const navigation: NavigationItem[] = [
     href: "/dashboard/tasks",
     icon: ListTodo,
     description: "Follow-ups & reminders",
+  },
+  {
+    name: "Reports",
+    href: "/dashboard/reports",
+    icon: BarChart3,
+    description: "Claims analytics & breakdowns",
+    requiresRole: ["claims_staff", "manager", "admin"] as const,
   },
   // {
   //   name: "Call Sessions",
