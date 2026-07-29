@@ -1074,6 +1074,7 @@ export type Database = {
           bol_number: string | null
           central_dispatch_order_number: string | null
           claim_number: string
+          claim_type: Database["public"]["Enums"]["claim_type"] | null
           closed_at: string | null
           created_at: string
           created_by: string | null
@@ -1116,6 +1117,7 @@ export type Database = {
           bol_number?: string | null
           central_dispatch_order_number?: string | null
           claim_number: string
+          claim_type?: Database["public"]["Enums"]["claim_type"] | null
           closed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -1158,6 +1160,7 @@ export type Database = {
           bol_number?: string | null
           central_dispatch_order_number?: string | null
           claim_number?: string
+          claim_type?: Database["public"]["Enums"]["claim_type"] | null
           closed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -2378,6 +2381,21 @@ export type Database = {
         | "adjustment"
         | "recovery"
         | "direct_payment"
+      claim_type:
+        | "cargo_damage"
+        | "concealed_damage"
+        | "cargo_shortage"
+        | "cargo_loss"
+        | "cargo_theft"
+        | "refused_shipment"
+        | "wrong_delivery"
+        | "late_delivery"
+        | "service_failure"
+        | "overage"
+        | "temperature_excursion"
+        | "contamination"
+        | "billing_dispute"
+        | "other"
       claim_value_bucket: "current" | "credit_high_value" | "legal"
       company_kind:
         | "shipper"
@@ -2420,6 +2438,10 @@ export type Database = {
         | "claim_form"
         | "correspondence_attachment"
         | "other"
+        | "ownership_form"
+        | "police_report"
+        | "short_pay_notice"
+        | "non_pay_notice"
       intake_submission_status:
         | "pending_review"
         | "promoted"
@@ -2677,6 +2699,22 @@ export const Constants = {
         "recovery",
         "direct_payment",
       ],
+      claim_type: [
+        "cargo_damage",
+        "concealed_damage",
+        "cargo_shortage",
+        "cargo_loss",
+        "cargo_theft",
+        "refused_shipment",
+        "wrong_delivery",
+        "late_delivery",
+        "service_failure",
+        "overage",
+        "temperature_excursion",
+        "contamination",
+        "billing_dispute",
+        "other",
+      ],
       claim_value_bucket: ["current", "credit_high_value", "legal"],
       company_kind: [
         "shipper",
@@ -2722,6 +2760,10 @@ export const Constants = {
         "claim_form",
         "correspondence_attachment",
         "other",
+        "ownership_form",
+        "police_report",
+        "short_pay_notice",
+        "non_pay_notice",
       ],
       intake_submission_status: [
         "pending_review",
