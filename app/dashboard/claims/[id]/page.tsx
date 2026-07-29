@@ -264,6 +264,8 @@ export default async function ClaimDetailPage({
             currentFilingStatus={(claim as any).filing_status ?? null}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new col
             currentFiledAt={(claim as any).filed_at ?? null}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new col
+            currentClaimType={(claim as any).claim_type ?? null}
             assignableUsers={
               (assignableUsers ?? []) as Array<{
                 id: string;

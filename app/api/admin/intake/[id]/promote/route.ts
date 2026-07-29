@@ -59,6 +59,7 @@ type SubmissionPayload = {
     description?: string | null;
     claim_amount?: number | null;
     shipment_value?: number | null;
+    claim_type?: string | null;
   };
 };
 
@@ -178,6 +179,12 @@ export async function POST(
       status_id: inboxStatus.id,
       damage_claim_amount: payload.damage?.claim_amount ?? null,
       shipment_value: payload.damage?.shipment_value ?? null,
+      // `claim_type` was added in migration 20260729000002 and may not be in
+      // lib/database.types.ts yet; the .insert() call is loosely typed.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(payload.damage?.claim_type
+        ? ({ claim_type: payload.damage.claim_type } as any)
+        : {}),
       freight_type_id: payload.shipment?.freight_type_id || null,
       trailer_type_id: payload.shipment?.trailer_type_id || null,
       origin_city: payload.origin?.city ?? null,

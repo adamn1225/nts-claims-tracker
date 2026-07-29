@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ChevronDown, Loader2, UserCheck } from "lucide-react";
+import { CheckCircle2, ChevronDown, Loader2, Tag, UserCheck } from "lucide-react";
+import { CLAIM_TYPES, claimTypeLabel } from "@/lib/constants/claim-types";
 
 type Owner = {
   id: string;
@@ -28,6 +29,7 @@ export interface ClaimHeaderActionsProps {
   currentOwnerName: string;
   currentFilingStatus: FilingStatus | null;
   currentFiledAt: string | null;
+  currentClaimType: string | null;
   assignableUsers: Owner[];
   canEdit: boolean;
 }
@@ -47,12 +49,14 @@ export default function ClaimHeaderActions({
   currentOwnerName,
   currentFilingStatus,
   currentFiledAt,
+  currentClaimType,
   assignableUsers,
   canEdit,
 }: ClaimHeaderActionsProps) {
   const router = useRouter();
   const [assigning, setAssigning] = useState(false);
   const [updatingFiling, setUpdatingFiling] = useState(false);
+  const [updatingType, setUpdatingType] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ownerOpen, setOwnerOpen] = useState(false);
 
@@ -110,6 +114,26 @@ export default function ClaimHeaderActions({
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setUpdatingFiling(false);
+    }
+  };
+
+  const changeClaimType = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const next = e.target.value || null;
+    setUpdatingType(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/claims/${claimId}/claim-type`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claim_type: next }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Update failed");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUpdatingType(false);
     }
   };
 
@@ -206,6 +230,34 @@ export default function ClaimHeaderActions({
           <span className="text-[11px] text-slate-500">
             filed {new Date(currentFiledAt).toLocaleDateString()}
           </span>
+        )}
+      </div>
+
+      {/* Claim type */}
+      <div className="flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+          <Tag className="h-2.5 w-2.5" />
+          {claimTypeLabel(currentClaimType)}
+        </span>
+        {canEdit && (
+          <div className="relative">
+            <select
+              value={currentClaimType ?? ""}
+              onChange={changeClaimType}
+              disabled={updatingType}
+              className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs disabled:opacity-50"
+            >
+              <option value="">— Set claim type —</option>
+              {CLAIM_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            {updatingType && (
+              <Loader2 className="pointer-events-none absolute right-1.5 top-1.5 h-3 w-3 animate-spin text-slate-400" />
+            )}
+          </div>
         )}
       </div>
 

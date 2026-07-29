@@ -12,9 +12,11 @@ import {
   Loader2,
   Package,
   ShieldAlert,
+  Tag,
   Truck,
   Users,
 } from "lucide-react";
+import { claimTypeLabel } from "@/lib/constants/claim-types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,6 +36,7 @@ type ClaimRow = {
   freight_type_id: string | null;
   trailer_type_id: string | null;
   filing_status: string | null;
+  claim_type: string | null;
 };
 
 type StatusRow = {
@@ -191,7 +194,8 @@ export default function ClaimsReportsPage() {
       .select(
         `id, claim_number, opened_at, closed_at, status_id,
          damage_claim_amount, shipment_value, value_bucket, currency,
-         owner_id, freight_type_id, trailer_type_id, filing_status`,
+         owner_id, freight_type_id, trailer_type_id, filing_status,
+         claim_type`,
       );
     if (sinceIso) claimsQuery = claimsQuery.gte("opened_at", sinceIso);
     if (valueBucketFilter)
@@ -360,19 +364,57 @@ export default function ClaimsReportsPage() {
   }, [claims, owners]);
 
   const byFreightType = useMemo(() => {
-    const rows = new Map<string, { name: string; count: number; total: number }>();
+    type Row = {
+      name: string;
+      count: number;
+      total: number;
+      closed: number;
+      open: number;
+      closedAmount: number;
+    };
+    const rows = new Map<string, Row>();
     for (const c of claims) {
       const ft = c.freight_type_id
         ? freightTypes.find((f) => f.id === c.freight_type_id)
         : null;
       const name = ft?.name || "— No type";
-      const bucket = rows.get(name) ?? { name, count: 0, total: 0 };
+      const bucket =
+        rows.get(name) ?? {
+          name,
+          count: 0,
+          total: 0,
+          closed: 0,
+          open: 0,
+          closedAmount: 0,
+        };
       bucket.count += 1;
       bucket.total += Number(c.damage_claim_amount ?? 0);
+      const status = c.status_id ? claimStatusMap.get(c.status_id) : null;
+      if (status?.is_closed || c.closed_at) {
+        bucket.closed += 1;
+        bucket.closedAmount += Number(c.damage_claim_amount ?? 0);
+      } else {
+        bucket.open += 1;
+      }
       rows.set(name, bucket);
     }
     return Array.from(rows.values()).sort((a, b) => b.total - a.total);
-  }, [claims, freightTypes]);
+  }, [claims, freightTypes, claimStatusMap]);
+
+  const byClaimType = useMemo(() => {
+    const rows = new Map<
+      string,
+      { name: string; count: number; total: number }
+    >();
+    for (const c of claims) {
+      const t = c.claim_type || "";
+      const bucket = rows.get(t) ?? { name: t, count: 0, total: 0 };
+      bucket.count += 1;
+      bucket.total += Number(c.damage_claim_amount ?? 0);
+      rows.set(t, bucket);
+    }
+    return Array.from(rows.values()).sort((a, b) => b.total - a.total);
+  }, [claims]);
 
   const byCarrier = useMemo(() => {
     const rows = new Map<
@@ -648,12 +690,26 @@ export default function ClaimsReportsPage() {
         <Section icon={Truck} title="Top carriers (by exposure)">
           <BreakdownTable rows={byCarrier} keyLabel="Carrier" primaryKey="name" />
         </Section>
-        <Section icon={Package} title="By freight type">
+        <Section
+          icon={Tag}
+          title="By claim type"
+          subtitle="Cause-of-loss breakdown — helps surface cargo-specific patterns."
+        >
           <BreakdownTable
-            rows={byFreightType}
-            keyLabel="Freight type"
+            rows={byClaimType.map((r) => ({ ...r, name: claimTypeLabel(r.name) }))}
+            keyLabel="Claim type"
             primaryKey="name"
           />
+        </Section>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <Section
+          icon={Package}
+          title="By freight type"
+          subtitle="Deep-dive with open vs closed split, closure rate, and avg claim amount per cargo type."
+        >
+          <FreightTypeTable rows={byFreightType} />
         </Section>
       </div>
     </main>
@@ -762,6 +818,63 @@ function BreakdownTable({
                       style={{ width: `${pct}%` }}
                     />
                   </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function FreightTypeTable({
+  rows,
+}: {
+  rows: Array<{
+    name: string;
+    count: number;
+    total: number;
+    open: number;
+    closed: number;
+    closedAmount: number;
+  }>;
+}) {
+  if (rows.length === 0) {
+    return <p className="text-sm text-slate-500">No data yet.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-xs">
+        <thead>
+          <tr className="text-left text-slate-500">
+            <th className="py-1 pr-3 font-medium">Freight type</th>
+            <th className="py-1 pr-3 text-right font-medium">Claims</th>
+            <th className="py-1 pr-3 text-right font-medium">Open</th>
+            <th className="py-1 pr-3 text-right font-medium">Closed</th>
+            <th className="py-1 pr-3 text-right font-medium">Closure rate</th>
+            <th className="py-1 pr-3 text-right font-medium">Avg claim</th>
+            <th className="py-1 text-right font-medium">Exposure</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const closureRate =
+              row.count > 0 ? Math.round((row.closed / row.count) * 100) : 0;
+            const average = row.count > 0 ? row.total / row.count : 0;
+            return (
+              <tr key={row.name} className="border-t border-slate-100">
+                <td className="py-1.5 pr-3 font-medium text-slate-800">
+                  {row.name}
+                </td>
+                <td className="py-1.5 pr-3 text-right">{row.count}</td>
+                <td className="py-1.5 pr-3 text-right">{row.open}</td>
+                <td className="py-1.5 pr-3 text-right">{row.closed}</td>
+                <td className="py-1.5 pr-3 text-right">{closureRate}%</td>
+                <td className="py-1.5 pr-3 text-right">{fmtMoney(average)}</td>
+                <td className="py-1.5 text-right font-medium">
+                  {fmtMoney(row.total)}
                 </td>
               </tr>
             );

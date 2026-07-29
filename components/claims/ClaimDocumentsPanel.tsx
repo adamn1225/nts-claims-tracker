@@ -12,7 +12,8 @@ import {
   Upload,
 } from "lucide-react";
 
-// Kept in sync with the `document_type` enum in the initial claims migration.
+// Kept in sync with the `document_type` enum in the initial claims migration
+// + additions from migration 20260729000002.
 const DOCUMENT_TYPES = [
   { value: "bill_of_lading", label: "Bill of Lading (BOL)" },
   { value: "proof_of_delivery", label: "Proof of Delivery (POD)" },
@@ -24,6 +25,10 @@ const DOCUMENT_TYPES = [
   { value: "replacement_invoice", label: "Replacement invoice" },
   { value: "witness_statement", label: "Witness statement" },
   { value: "presentation_of_loss", label: "Presentation of loss" },
+  { value: "ownership_form", label: "Ownership form" },
+  { value: "police_report", label: "Police report" },
+  { value: "short_pay_notice", label: "Short-pay notice" },
+  { value: "non_pay_notice", label: "Non-pay notice" },
   { value: "release", label: "Release" },
   { value: "settlement_agreement", label: "Settlement agreement" },
   { value: "payment_confirmation", label: "Payment confirmation" },
@@ -130,6 +135,10 @@ export default function ClaimDocumentsPanel({
     const n = f.name.toLowerCase();
     if (n.includes("bol") || n.includes("bill of lading")) return "bill_of_lading";
     if (n.includes("pod") || n.includes("delivery receipt")) return "proof_of_delivery";
+    if (n.includes("police")) return "police_report";
+    if (n.includes("title") || n.includes("registration") || n.includes("ownership")) return "ownership_form";
+    if (n.includes("short-pay") || n.includes("shortpay") || n.includes("short pay")) return "short_pay_notice";
+    if (n.includes("non-pay") || n.includes("nonpay")) return "non_pay_notice";
     if (n.includes("damage")) return "damage_photo";
     if (n.includes("pickup")) return "pickup_photo";
     if (n.includes("delivery")) return "delivery_photo";

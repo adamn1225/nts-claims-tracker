@@ -64,6 +64,39 @@ const EXTRACTION_SCHEMAS: Record<string, string[]> = {
     "date_of_loss",
     "shipper_of_record",
   ],
+  ownership_form: [
+    "owner_name",
+    "vehicle_or_asset_description",
+    "vin_or_serial",
+    "title_number",
+    "state_of_issue",
+    "issue_date",
+  ],
+  police_report: [
+    "report_number",
+    "agency",
+    "officer_name",
+    "incident_date",
+    "incident_location",
+    "narrative_summary",
+    "vehicles_involved",
+    "citations_issued",
+  ],
+  short_pay_notice: [
+    "carrier_name",
+    "invoice_number",
+    "invoice_amount",
+    "short_pay_amount",
+    "reason_code",
+    "notice_date",
+  ],
+  non_pay_notice: [
+    "carrier_name",
+    "invoice_number",
+    "invoice_amount",
+    "reason_code",
+    "notice_date",
+  ],
 };
 
 export async function POST(

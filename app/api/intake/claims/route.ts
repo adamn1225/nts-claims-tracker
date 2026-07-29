@@ -117,6 +117,7 @@ export async function POST(request: Request) {
       description: damageDescription,
       claim_amount: numField(formData, "damage_claim_amount"),
       shipment_value: numField(formData, "shipment_value"),
+      claim_type: strField(formData, "claim_type") || null,
     },
   };
 

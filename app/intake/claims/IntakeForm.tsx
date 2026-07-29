@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
+import { CLAIM_TYPES } from "@/lib/constants/claim-types";
 import {
   buildSummaryGroups,
   PrintEmailActions,
@@ -564,6 +565,22 @@ export default function IntakeForm({
             </Section>
 
             <Section title="What happened?">
+              <Select
+                label="What type of claim is this?"
+                name="claim_type"
+                required
+                hint="Helps our team route the claim to the right specialist and improves reporting on cargo-specific patterns."
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Select a claim type…
+                </option>
+                {CLAIM_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </Select>
               <Textarea
                 label="Describe the damage, loss, or service failure"
                 name="damage_description"
