@@ -1,19 +1,17 @@
 "use client";
 
-import { Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
 import ClaimsListView from "@/components/ClaimsListView";
+import ClaimIntakeModal from "@/components/ClaimIntakeModal";
 import { useClaims } from "../useClaims";
 
 function ListViewContent() {
-  const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { claims, isLoading, error, refetch } = useClaims();
 
-  // Same intake flow as the kanban view — claims enter through the public
-  // intake form → triage queue → promote. The internal "create claim" modal
-  // will replace this in a follow-up.
+  // Show the claim intake modal directly from the list view.
   const handleAddClaim = () => {
-    router.push("/dashboard/claims/intake");
+    setIsModalOpen(true);
   };
 
   return (
@@ -25,6 +23,7 @@ function ListViewContent() {
         onRefresh={refetch}
         onAddClaim={handleAddClaim}
       />
+      <ClaimIntakeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }

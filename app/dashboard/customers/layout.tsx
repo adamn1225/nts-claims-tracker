@@ -2,7 +2,8 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import ClaimIntakeModal from "@/components/ClaimIntakeModal";
 import {
   LayoutGrid,
   List,
@@ -22,8 +23,11 @@ type Timezone = "all" | "EST" | "CST" | "MST" | "PST";
 
 function CustomersLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { searchQuery, setSearchQuery, statusFilter, toggleStatus, timezoneFilter, setTimezoneFilter, timezoneMode, setTimezoneMode } = useCustomerSearch();
   const supabase = createClient();
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
 
   const isKanban = pathname?.includes("/kanban");
   const isList = pathname?.includes("/list");
@@ -62,12 +66,12 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
         // Inbox is the protected landing column for all newly-assigned claims.
         // Mirrors the seed in supabase/migrations/20260620000006_seeds_and_rls.sql.
         setStatuses([
-          { id: "inbox",                  name: "Inbox",                  color: "slate"  },
-          { id: "claim_started",          name: "Claim Started",          color: "blue"   },
-          { id: "processing_claim",       name: "Processing Claim",       color: "amber"  },
-          { id: "claim_denied",           name: "Claim Denied",           color: "red"    },
+          { id: "inbox", name: "Inbox", color: "slate" },
+          { id: "claim_started", name: "Claim Started", color: "blue" },
+          { id: "processing_claim", name: "Processing Claim", color: "amber" },
+          { id: "claim_denied", name: "Claim Denied", color: "red" },
           { id: "claim_awaiting_payment", name: "Claim Awaiting Payment", color: "orange" },
-          { id: "claim_closed",           name: "Claim Closed",           color: "green"  },
+          { id: "claim_closed", name: "Claim Closed", color: "green" },
         ]);
       } finally {
         setLoadingStatuses(false);
@@ -78,6 +82,23 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
     // Refetch when pathname changes (navigating between Kanban/List/Calendar)
     // to ensure deleted statuses don't persist
   }, [supabase, pathname]);
+
+  useEffect(() => {
+    const shouldOpen = searchParams.get("action") === "new";
+    setIsClaimModalOpen(shouldOpen);
+  }, [searchParams]);
+
+  const closeClaimModal = () => {
+    setIsClaimModalOpen(false);
+    const nextParams = new URLSearchParams(Array.from(searchParams.entries()));
+    nextParams.delete("action");
+    const target = pathname
+      ? nextParams.toString()
+        ? `${pathname}?${nextParams.toString()}`
+        : pathname
+      : "/dashboard/customers/kanban";
+    router.replace(target);
+  };
 
   const getStatusColor = (color: string, isSelected: boolean) => {
     const colors: Record<string, { selected: string; unselected: string }> = {
@@ -130,8 +151,8 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                 <Link
                   href="/dashboard/customers/kanban"
                   className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${isKanban
-                      ? "bg-white text-primary-text shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-primary-text shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5" />
@@ -140,8 +161,8 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                 <Link
                   href="/dashboard/customers/list"
                   className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${isList
-                      ? "bg-white text-primary-text shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-primary-text shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                   <List className="h-3.5 w-3.5" />
@@ -155,8 +176,8 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                 <Link
                   href="/dashboard/customers/calendar"
                   className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${isCalendar
-                      ? "bg-white text-primary-text shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-primary-text shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
                   <CalendarIcon className="h-3.5 w-3.5" />
@@ -173,6 +194,7 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                 <span className="text-sm">New Claim</span>
               </Link>
             </div>
+            <ClaimIntakeModal isOpen={isClaimModalOpen} onClose={closeClaimModal} />
 
             {/* Filters Row: Search + Timezone + Status */}
             <div className="flex flex-col sm:flex-row gap-3">
@@ -187,8 +209,8 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                       onClick={() => setTimezoneMode("address")}
                       title="Filter by customer address state (more accurate)"
                       className={`flex items-center gap-1 px-2.5 py-1.5 transition-colors ${timezoneMode === "address"
-                          ? "bg-blue-500 text-white"
-                          : "bg-white text-blue-700 hover:bg-blue-50"
+                        ? "bg-blue-500 text-white"
+                        : "bg-white text-blue-700 hover:bg-blue-50"
                         }`}
                     >
                       <MapPin className="h-3 w-3" />
@@ -198,8 +220,8 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                       onClick={() => setTimezoneMode("phone")}
                       title="Filter by phone area code (useful when address is missing)"
                       className={`flex items-center gap-1 px-2.5 py-1.5 border-l-2 border-blue-200 transition-colors ${timezoneMode === "phone"
-                          ? "bg-blue-500 text-white"
-                          : "bg-white text-blue-700 hover:bg-blue-50"
+                        ? "bg-blue-500 text-white"
+                        : "bg-white text-blue-700 hover:bg-blue-50"
                         }`}
                     >
                       <Phone className="h-3 w-3" />

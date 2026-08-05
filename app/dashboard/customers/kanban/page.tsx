@@ -1,20 +1,17 @@
 "use client";
 
-import { Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
 import ClaimsKanbanBoard from "@/components/ClaimsKanbanBoard";
+import ClaimIntakeModal from "@/components/ClaimIntakeModal";
 import { useClaims } from "../useClaims";
 
 function KanbanViewContent() {
-  const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { claims, isLoading, error, refetch, moveClaimToStatus } = useClaims();
 
-  // Phase 1: the "New Claim" button routes to the intake triage queue.
-  // The internal claim-creation modal (with party selection, intake source,
-  // value bucket, etc.) will replace this in a follow-up. Until then, all
-  // new claims enter via the public form → triage → promote flow.
+  // Show the new claim intake modal directly from the board.
   const handleAddClaim = () => {
-    router.push("/dashboard/claims/intake");
+    setIsModalOpen(true);
   };
 
   return (
@@ -27,6 +24,7 @@ function KanbanViewContent() {
         onAddClaim={handleAddClaim}
         onMoveClaim={moveClaimToStatus}
       />
+      <ClaimIntakeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }
