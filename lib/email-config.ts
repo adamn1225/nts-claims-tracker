@@ -17,11 +17,6 @@ export interface EmailConfig {
     priority: number;
   }>;
   sendgrid_api_key?: string;
-  smtp_host?: string;
-  smtp_port?: number;
-  smtp_user?: string;
-  smtp_password?: string;
-  smtp_secure?: boolean;
 }
 
 // Cached config to avoid DB hits on every email
@@ -71,12 +66,6 @@ export async function getEmailConfig(): Promise<EmailConfig> {
         sendgrid_api_key: data.sendgrid_api_key
           ? decrypt(data.sendgrid_api_key)
           : process.env.SENDGRID_API_KEY,
-        // Remove SMTP fallback - SendGrid only
-        smtp_host: undefined,
-        smtp_port: undefined,
-        smtp_user: undefined,
-        smtp_password: undefined,
-        smtp_secure: false,
       };
 
       cachedConfig = decryptedConfig;
@@ -99,12 +88,6 @@ export async function getEmailConfig(): Promise<EmailConfig> {
       { id: "sendgrid", name: "SendGrid API", enabled: true, priority: 1 },
     ],
     sendgrid_api_key: process.env.SENDGRID_API_KEY,
-    // SendGrid only - no SMTP fallback
-    smtp_host: undefined,
-    smtp_port: undefined,
-    smtp_user: undefined,
-    smtp_password: undefined,
-    smtp_secure: false,
   };
 
   console.log("⚠️  Using email config from environment variables");

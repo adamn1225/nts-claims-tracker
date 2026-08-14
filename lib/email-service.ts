@@ -1,5 +1,5 @@
 /**
- * Email Service - Centralized email sending using SendGrid with Zoho SMTP fallback
+ * Email Service - Centralized email sending using SendGrid
  * Handles all email notifications for the NTS Claims Tracker
  *
  * @packageDocumentation
@@ -7,7 +7,6 @@
  */
 
 import "server-only";
-import nodemailer from "nodemailer";
 import { getEmailConfig } from "./email-config";
 
 interface EmailOptions {
@@ -86,11 +85,11 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
               // SendGrid requires text/plain first, then text/html
               ...(options.text
                 ? [
-                    {
-                      type: "text/plain",
-                      value: options.text,
-                    },
-                  ]
+                  {
+                    type: "text/plain",
+                    value: options.text,
+                  },
+                ]
                 : []),
               {
                 type: "text/html",
@@ -109,42 +108,6 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
           throw new Error(`${provider.name} failed: ${response.status}`);
         }
       }
-
-      if (
-        provider.id === "smtp" &&
-        config.smtp_host &&
-        config.smtp_user &&
-        config.smtp_password
-      ) {
-        console.log(
-          `📤 Attempting to send email via ${provider.name} to:`,
-          options.to,
-        );
-
-        const smtpTransporter = nodemailer.createTransport({
-          host: config.smtp_host,
-          port: config.smtp_port || 587,
-          secure: config.smtp_secure || false,
-          auth: {
-            user: config.smtp_user,
-            pass: config.smtp_password,
-          },
-        });
-
-        await smtpTransporter.verify();
-        console.log(`${provider.name} connection verified`);
-
-        await smtpTransporter.sendMail({
-          from: `"${from.name}" <${config.smtp_user}>`,
-          to: options.to,
-          subject: options.subject,
-          html: options.html,
-          text: options.text,
-        });
-
-        console.log(`✅ Email sent successfully via ${provider.name}`);
-        return true;
-      }
     } catch (error) {
       console.error(`❌ ${provider.name} error:`, error);
       // Continue to next provider
@@ -155,11 +118,6 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   console.error("❌ All email providers failed. Config check:");
   console.error(
     `  - SendGrid API key: ${config.sendgrid_api_key ? "Set (length: " + config.sendgrid_api_key.length + ")" : "MISSING"}`,
-  );
-  console.error(`  - SMTP Host: ${config.smtp_host || "MISSING"}`);
-  console.error(`  - SMTP User: ${config.smtp_user || "MISSING"}`);
-  console.error(
-    `  - SMTP Password: ${config.smtp_password ? "Set" : "MISSING"}`,
   );
   console.error(
     `  - Enabled providers: ${enabledProviders.map((p) => p.id).join(", ")}`,

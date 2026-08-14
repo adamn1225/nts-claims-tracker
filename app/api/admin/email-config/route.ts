@@ -55,17 +55,11 @@ export async function GET(request: Request) {
               enabled: true,
               priority: 1,
             },
-            { id: "smtp", name: "SMTP (Zoho)", enabled: true, priority: 2 },
-            { id: "mailjet", name: "Mailjet", enabled: false, priority: 3 },
+            { id: "mailjet", name: "Mailjet", enabled: false, priority: 2 },
           ],
           sendgrid_api_key: process.env.SENDGRID_API_KEY
             ? maskValue(process.env.SENDGRID_API_KEY, 10)
             : "",
-          smtp_host: process.env.AUTH_SMTP_HOST || "",
-          smtp_port: parseInt(process.env.AUTH_SMTP_PORT || "587"),
-          smtp_user: process.env.AUTH_SMTP_USER || "",
-          smtp_password: process.env.AUTH_SMTP_PASSWORD ? "••••••••" : "",
-          smtp_secure: false,
           mailjet_api_key: "",
           mailjet_secret_key: "",
         },
@@ -83,9 +77,6 @@ export async function GET(request: Request) {
           10,
         );
       }
-      if (config.smtp_password) {
-        decryptedConfig.smtp_password = "••••••••"; // Always mask password
-      }
       if (config.mailjet_api_key) {
         decryptedConfig.mailjet_api_key = maskValue(
           decrypt(config.mailjet_api_key),
@@ -101,7 +92,6 @@ export async function GET(request: Request) {
       decryptedConfig.sendgrid_api_key = config.sendgrid_api_key
         ? "••••••••"
         : "";
-      decryptedConfig.smtp_password = config.smtp_password ? "••••••••" : "";
       decryptedConfig.mailjet_api_key = config.mailjet_api_key
         ? "••••••••"
         : "";
@@ -164,11 +154,6 @@ export async function POST(request: Request) {
       bcc_emails,
       provider_priority,
       sendgrid_api_key,
-      smtp_host,
-      smtp_port,
-      smtp_user,
-      smtp_password,
-      smtp_secure,
       mailjet_api_key,
       mailjet_secret_key,
     } = body;
@@ -188,19 +173,12 @@ export async function POST(request: Request) {
       cc_emails: cc_emails || [],
       bcc_emails: bcc_emails || [],
       provider_priority: provider_priority || [],
-      smtp_host: smtp_host || null,
-      smtp_port: smtp_port ? parseInt(smtp_port.toString()) : null,
-      smtp_user: smtp_user || null,
-      smtp_secure: smtp_secure || false,
     };
 
     // Encrypt sensitive fields (only if changed - not if masked)
     try {
       if (sendgrid_api_key && !sendgrid_api_key.includes("•")) {
         configData.sendgrid_api_key = encrypt(sendgrid_api_key);
-      }
-      if (smtp_password && smtp_password !== "••••••••") {
-        configData.smtp_password = encrypt(smtp_password);
       }
       if (mailjet_api_key && !mailjet_api_key.includes("•")) {
         configData.mailjet_api_key = encrypt(mailjet_api_key);
@@ -254,7 +232,6 @@ export async function POST(request: Request) {
         ...result,
         // Mask sensitive fields in response
         sendgrid_api_key: result.sendgrid_api_key ? "••••••••" : null,
-        smtp_password: result.smtp_password ? "••••••••" : null,
         mailjet_api_key: result.mailjet_api_key ? "••••••••" : null,
         mailjet_secret_key: result.mailjet_secret_key ? "••••••••" : null,
       },

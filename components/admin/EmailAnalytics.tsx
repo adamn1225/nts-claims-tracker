@@ -57,14 +57,6 @@ export default function EmailAnalytics() {
           provider: "SendGrid",
           timestamp: new Date(Date.now() - 3600000).toISOString(),
         },
-        {
-          id: "3",
-          to: "test@fail.com",
-          subject: "Task Reminder: Weekly check-in",
-          status: "failed",
-          provider: "SMTP (fallback)",
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-        },
       ]);
 
       setLoading(false);
@@ -212,22 +204,6 @@ export default function EmailAnalytics() {
             </div>
             <div className="mt-1 text-xs text-slate-500">
               98.7% success rate
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-200 p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-medium text-slate-900">SMTP (Zoho)</span>
-              <span className="text-sm text-slate-600">5 / 10 sent</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full bg-yellow-500"
-                style={{ width: "50%" }}
-              ></div>
-            </div>
-            <div className="mt-1 text-xs text-slate-500">
-              50% success rate (fallback only)
             </div>
           </div>
 

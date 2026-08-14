@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 interface EmailProvider {
-  id: "sendgrid" | "smtp" | "mailjet";
+  id: "sendgrid" | "mailjet";
   name: string;
   enabled: boolean;
   priority: number;
@@ -21,8 +21,7 @@ export default function EmailSettings() {
   const [saving, setSaving] = useState(false);
   const [providers, setProviders] = useState<EmailProvider[]>([
     { id: "sendgrid", name: "SendGrid API", enabled: true, priority: 1 },
-    { id: "smtp", name: "SMTP (Zoho)", enabled: true, priority: 2 },
-    { id: "mailjet", name: "Mailjet", enabled: false, priority: 3 },
+    { id: "mailjet", name: "Mailjet", enabled: false, priority: 2 },
   ]);
 
   const [fromEmail, setFromEmail] = useState("");
@@ -41,12 +40,6 @@ export default function EmailSettings() {
 
   // SendGrid settings
   const [sendgridApiKey, setSendgridApiKey] = useState("");
-
-  // SMTP settings
-  const [smtpHost, setSmtpHost] = useState("");
-  const [smtpPort, setSmtpPort] = useState("587");
-  const [smtpUser, setSmtpUser] = useState("");
-  const [smtpPassword, setSmtpPassword] = useState("");
 
   // Mailjet settings
   const [mailjetApiKey, setMailjetApiKey] = useState("");
@@ -71,10 +64,6 @@ export default function EmailSettings() {
         setBccEmails(config.bcc_emails?.join(", ") || "");
         setProviders(config.provider_priority || providers);
         setSendgridApiKey(config.sendgrid_api_key || "");
-        setSmtpHost(config.smtp_host || "");
-        setSmtpPort(config.smtp_port?.toString() || "587");
-        setSmtpUser(config.smtp_user || "");
-        setSmtpPassword(config.smtp_password || "");
         setMailjetApiKey(config.mailjet_api_key || "");
         setMailjetSecretKey(config.mailjet_secret_key || "");
       }
@@ -163,23 +152,18 @@ export default function EmailSettings() {
           from_name: fromName,
           cc_emails: ccEmails
             ? ccEmails
-                .split(",")
-                .map((e) => e.trim())
-                .filter(Boolean)
+              .split(",")
+              .map((e) => e.trim())
+              .filter(Boolean)
             : [],
           bcc_emails: bccEmails
             ? bccEmails
-                .split(",")
-                .map((e) => e.trim())
-                .filter(Boolean)
+              .split(",")
+              .map((e) => e.trim())
+              .filter(Boolean)
             : [],
           provider_priority: providers,
           sendgrid_api_key: sendgridApiKey,
-          smtp_host: smtpHost,
-          smtp_port: parseInt(smtpPort),
-          smtp_user: smtpUser,
-          smtp_password: smtpPassword,
-          smtp_secure: false,
           mailjet_api_key: mailjetApiKey,
           mailjet_secret_key: mailjetSecretKey,
         }),
@@ -294,11 +278,10 @@ export default function EmailSettings() {
           {providers.map((provider, index) => (
             <div
               key={provider.id}
-              className={`flex items-center gap-3 rounded-lg border p-3 ${
-                provider.enabled
-                  ? "border-slate-200 bg-white"
-                  : "border-slate-100 bg-slate-50"
-              }`}
+              className={`flex items-center gap-3 rounded-lg border p-3 ${provider.enabled
+                ? "border-slate-200 bg-white"
+                : "border-slate-100 bg-slate-50"
+                }`}
             >
               <input
                 type="checkbox"
@@ -373,61 +356,6 @@ export default function EmailSettings() {
           </div>
         </details>
 
-        {/* SMTP */}
-        <details className="mb-3 rounded-lg border border-slate-200">
-          <summary className="cursor-pointer bg-slate-50 p-3 font-medium text-slate-900">
-            SMTP Settings (Zoho, Gmail, etc.)
-          </summary>
-          <div className="grid gap-3 p-3 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Host
-              </label>
-              <input
-                value={smtpHost}
-                onChange={(e) => setSmtpHost(e.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                placeholder="smtp.zoho.com"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Port
-              </label>
-              <input
-                value={smtpPort}
-                onChange={(e) => setSmtpPort(e.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                placeholder="587"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Username
-              </label>
-              <input
-                type="email"
-                value={smtpUser}
-                onChange={(e) => setSmtpUser(e.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                placeholder="your-email@domain.com"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Password / App Password
-              </label>
-              <input
-                type="password"
-                value={smtpPassword}
-                onChange={(e) => setSmtpPassword(e.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-        </details>
-
         {/* Mailjet */}
         <details className="rounded-lg border border-slate-200">
           <summary className="cursor-pointer bg-slate-50 p-3 font-medium text-slate-900">
@@ -485,13 +413,12 @@ export default function EmailSettings() {
         </div>
         {testMessage && (
           <div
-            className={`mt-3 flex items-center gap-2 rounded-lg p-3 text-sm ${
-              testStatus === "success"
-                ? "bg-green-50 text-green-800"
-                : testStatus === "error"
-                  ? "bg-red-50 text-red-800"
-                  : "bg-blue-50 text-blue-800"
-            }`}
+            className={`mt-3 flex items-center gap-2 rounded-lg p-3 text-sm ${testStatus === "success"
+              ? "bg-green-50 text-green-800"
+              : testStatus === "error"
+                ? "bg-red-50 text-red-800"
+                : "bg-blue-50 text-blue-800"
+              }`}
           >
             {testStatus === "success" ? (
               <CheckCircle2 className="h-4 w-4" />
@@ -508,13 +435,12 @@ export default function EmailSettings() {
         {/* Save Status Message */}
         {saveMessage && (
           <div
-            className={`flex items-center gap-2 text-sm ${
-              saveStatus === "success"
-                ? "text-green-700"
-                : saveStatus === "error"
-                  ? "text-red-700"
-                  : ""
-            }`}
+            className={`flex items-center gap-2 text-sm ${saveStatus === "success"
+              ? "text-green-700"
+              : saveStatus === "error"
+                ? "text-red-700"
+                : ""
+              }`}
           >
             {saveStatus === "success" ? (
               <CheckCircle2 className="h-4 w-4" />
