@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ClaimIntakeModal from "@/components/ClaimIntakeModal";
@@ -328,7 +328,9 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
 export default function CustomersLayout({ children }: { children: ReactNode }) {
   return (
     <CustomerSearchProvider>
-      <CustomersLayoutContent>{children}</CustomersLayoutContent>
+      <Suspense fallback={null}>
+        <CustomersLayoutContent>{children}</CustomersLayoutContent>
+      </Suspense>
     </CustomerSearchProvider>
   );
 }
