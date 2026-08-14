@@ -50,7 +50,7 @@ export default function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:p-4">
       <div
         ref={modalRef}
-        className={`w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-xl`}
+        className={`w-fit ${sizeClasses[size]} max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-xl`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
