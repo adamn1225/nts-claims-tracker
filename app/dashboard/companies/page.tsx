@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Building2, Loader2, Search, ShieldOff, Truck } from "lucide-react";
+import { Building2, Loader2, Plus, Search, ShieldOff, Truck } from "lucide-react";
+import CompanyFormModal from "@/components/companies/CompanyFormModal";
 
 type CompanyRow = {
   id: string;
@@ -53,6 +54,7 @@ export default function CompaniesDirectoryPage() {
   const [kindFilter, setKindFilter] = useState<string>("all");
   const [showInactive, setShowInactive] = useState(false);
   const [holdsOnly, setHoldsOnly] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -137,6 +139,14 @@ export default function CompaniesDirectoryPage() {
             insurer ever linked to a claim.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowForm(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-text"
+        >
+          <Plus className="h-4 w-4" />
+          Add company
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-4">
@@ -299,6 +309,13 @@ export default function CompaniesDirectoryPage() {
           </div>
         )}
       </div>
+
+      <CompanyFormModal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        company={null}
+        onSaved={() => load()}
+      />
     </main>
   );
 }

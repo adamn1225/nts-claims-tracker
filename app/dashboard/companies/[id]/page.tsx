@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CompanyNotesPanel from "@/components/companies/CompanyNotesPanel";
 import CompanyHoldsPanel from "@/components/companies/CompanyHoldsPanel";
+import EditCompanyButton from "@/components/companies/EditCompanyButton";
 
 export const dynamic = "force-dynamic";
 
@@ -131,33 +132,36 @@ export default async function CompanyDetailPage({
             ← All companies
           </Link>
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold text-slate-900">
-            {company.dba_name || company.legal_name}
-          </h1>
-          {company.dba_name && company.legal_name !== company.dba_name && (
-            <span className="text-sm text-slate-500">
-              ({company.legal_name})
-            </span>
-          )}
-          {company.has_active_hold && (
-            <span className="rounded-full bg-danger/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-danger">
-              Do not pay
-            </span>
-          )}
-          {!company.is_active && (
-            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
-              Inactive
-            </span>
-          )}
-          {(company.kinds ?? []).map((k) => (
-            <span
-              key={k}
-              className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
-            >
-              {KIND_LABELS[k] ?? k}
-            </span>
-          ))}
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold text-slate-900">
+              {company.dba_name || company.legal_name}
+            </h1>
+            {company.dba_name && company.legal_name !== company.dba_name && (
+              <span className="text-sm text-slate-500">
+                ({company.legal_name})
+              </span>
+            )}
+            {company.has_active_hold && (
+              <span className="rounded-full bg-danger/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-danger">
+                Do not pay
+              </span>
+            )}
+            {!company.is_active && (
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Inactive
+              </span>
+            )}
+            {(company.kinds ?? []).map((k: string) => (
+              <span
+                key={k}
+                className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
+              >
+                {KIND_LABELS[k] ?? k}
+              </span>
+            ))}
+          </div>
+          <EditCompanyButton company={company} />
         </div>
       </div>
 
@@ -284,15 +288,14 @@ export default async function CompanyDetailPage({
                           {v.source.replace(/_/g, " ")}
                         </span>
                         <span
-                          className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                            v.status === "verified"
-                              ? "bg-success/10 text-success"
-                              : v.status === "flagged"
-                                ? "bg-warning/10 text-warning-text"
-                                : v.status === "failed" || v.status === "expired"
-                                  ? "bg-danger/10 text-danger"
-                                  : "bg-slate-200 text-slate-700"
-                          }`}
+                          className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${v.status === "verified"
+                            ? "bg-success/10 text-success"
+                            : v.status === "flagged"
+                              ? "bg-warning/10 text-warning-text"
+                              : v.status === "failed" || v.status === "expired"
+                                ? "bg-danger/10 text-danger"
+                                : "bg-slate-200 text-slate-700"
+                            }`}
                         >
                           {v.status}
                         </span>
