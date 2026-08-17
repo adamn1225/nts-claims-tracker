@@ -334,12 +334,8 @@ export async function GET(request: NextRequest) {
 
   console.log("[GoTo OAuth] ✅ Successfully saved connection to database");
 
-  // Admin auth flows originate from the Performance Dashboard — redirect back
-  // there so the user can immediately verify the new token works.
-  // Regular (personal) auth flows redirect to Settings as before.
-  const successPath = isAdminAuth
-    ? "/dashboard/performance?goto_connected=true"
-    : "/dashboard/settings?goto_connected=true";
+  // Redirect back to Settings after a successful GoTo connection.
+  const successPath = "/dashboard/settings?goto_connected=true";
 
   const successRedirect = NextResponse.redirect(appUrl(successPath));
   // Copy session cookies to preserve authentication

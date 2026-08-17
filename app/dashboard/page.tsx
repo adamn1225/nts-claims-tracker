@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTeamMemberView } from "@/contexts/TeamMemberViewContext";
-import type { Customer, Task } from "@/lib/types";
 import { getCustomerDisplayName } from "@/lib/customer-utils";
 import {
   TrendingUp,
@@ -325,14 +324,9 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showOverdueAlert, setShowOverdueAlert] = useState(true);
   const [metrics, setMetrics] = useState({
-    totalCustomers: 0,
-    activeClients: 0,
-    prospects: 0,
-    wonThisMonth: 0,
     tasksToday: 0,
     overdueTasks: 0,
     followUpsThisWeek: 0,
-    pinnedCustomers: 0,
   });
   const [recentActivity, setRecentActivity] = useState<
     Array<{
@@ -342,7 +336,6 @@ export default function DashboardPage() {
       time: string;
     }>
   >([]);
-  const [pinnedCustomers, setPinnedCustomers] = useState<Customer[]>([]);
   // Lightweight stats read from the `claims` table so the dashboard reflects
   // the same data the kanban/list views show. Legacy `customers`-based
   // metrics still run alongside until those callers are migrated.
@@ -383,7 +376,6 @@ export default function DashboardPage() {
       await Promise.all([
         fetchMetrics(viewingTeamMember.id),
         fetchRecentActivity(viewingTeamMember.id),
-        fetchPinnedCustomers(viewingTeamMember.id),
         fetchWeeklyTasks(viewingTeamMember.id),
         fetchClaimStats(),
       ]);
@@ -396,30 +388,6 @@ export default function DashboardPage() {
 
   const fetchMetrics = async (userId: string) => {
     const supabase = createClient();
-
-    // Get all customers
-    const { data: allCustomers } = await supabase
-      .from("customers")
-      .select("id, status, is_pinned, created_at")
-      .eq("team_member_id", userId);
-
-    const totalCustomers = allCustomers?.length || 0;
-    const activeClients =
-      allCustomers?.filter((c) => c.status === "active").length || 0;
-    const prospects =
-      allCustomers?.filter((c) => c.status === "prospect").length || 0;
-    const pinnedCustomers =
-      allCustomers?.filter((c) => c.is_pinned).length || 0;
-
-    // Won this month
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const wonThisMonth =
-      allCustomers?.filter((c) => {
-        return c.status === "won" && new Date(c.created_at) >= startOfMonth;
-      }).length || 0;
 
     // Get all tasks
     const { data: allTasks } = await supabase
@@ -469,14 +437,9 @@ export default function DashboardPage() {
       }).length || 0;
 
     setMetrics({
-      totalCustomers,
-      activeClients,
-      prospects,
-      wonThisMonth,
       tasksToday,
       overdueTasks,
       followUpsThisWeek,
-      pinnedCustomers,
     });
   };
 
@@ -539,22 +502,6 @@ export default function DashboardPage() {
       });
 
       setRecentActivity(activities);
-    }
-  };
-
-  const fetchPinnedCustomers = async (userId: string) => {
-    const supabase = createClient();
-
-    const { data } = await supabase
-      .from("customers")
-      .select("*")
-      .eq("team_member_id", userId)
-      .eq("is_pinned", true)
-      .order("pin_order", { ascending: true })
-      .limit(3);
-
-    if (data) {
-      setPinnedCustomers(data);
     }
   };
 
@@ -778,11 +725,11 @@ export default function DashboardPage() {
             />
             <KpiTile
               accent="primary"
-              label="Pinned"
-              value={metrics.pinnedCustomers}
-              sub="Watched claims"
+              label="Total Claims"
+              value={claimStats.totalCount}
+              sub="All claims"
               icon={Star}
-              href="/dashboard/customers"
+              href="/dashboard/customers/kanban"
             />
           </div>
         </div>
@@ -868,7 +815,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-         {/* Recent Activity - Compact */}
+          {/* Recent Activity - Compact */}
           <div className="mt-4 rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
@@ -930,9 +877,8 @@ export default function DashboardPage() {
               {Object.entries(weeklyTasks).map(([day, count]) => (
                 <div key={day} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 transition-colors hover:bg-slate-50">
                   <span className="text-sm text-slate-700">{day}</span>
-                  <span className={`text-sm font-semibold ${
-                    count > 0 ? "text-primary-text" : "text-slate-400"
-                  }`}>
+                  <span className={`text-sm font-semibold ${count > 0 ? "text-primary-text" : "text-slate-400"
+                    }`}>
                     {count}
                   </span>
                 </div>

@@ -4,7 +4,7 @@ import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type RoleViewMode = "admin" | "teamMember" | "manager" | "sales_coach";
+type RoleViewMode = "admin" | "teamMember" | "manager";
 
 const ROLE_VIEW_STORAGE_KEY = "nts:role-view-mode";
 
@@ -79,7 +79,6 @@ export default function RoleViewSwitcher() {
                 <option value="admin">Admin</option>
                 <option value="teamMember">TeamMember</option>
                 <option value="manager">Manager</option>
-                <option value="sales_coach">Sales Coach</option>
             </select>
         </div>
     );

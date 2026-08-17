@@ -109,21 +109,6 @@ export async function GET(req: NextRequest) {
         );
       }
       // For an existing teamMember, a failed UPDATE is non-fatal — they can still log in.
-    } else {
-      // Seed default pipeline statuses for brand-new teamMembers (no-op if they already exist)
-      const { count } = await supabase
-        .from("customer_statuses")
-        .select("*", { count: "exact", head: true })
-        .eq("team_member_id", userId);
-
-      if (count === 0) {
-        await supabase.from("customer_statuses").insert([
-          { team_member_id: userId, name: "Prospect", color: "blue",  order: 0, is_system: false, created_by: userId },
-          { team_member_id: userId, name: "Active",   color: "green", order: 1, is_system: false, created_by: userId },
-          { team_member_id: userId, name: "Won",      color: "amber", order: 2, is_system: false, created_by: userId },
-          { team_member_id: userId, name: "Lost",     color: "slate", order: 3, is_system: false, created_by: userId },
-        ]);
-      }
     }
 
     const magicLink = magicLinkData.properties.action_link;

@@ -172,7 +172,7 @@ export function getProfileChecklist(
     },
     {
       key: "goto",
-      label: "Connect GoTo (Power Dialer)",
+      label: "Connect GoTo (click-to-call)",
       done: extras.gotoConnected,
       href: "/dashboard/settings#goto-integration",
     },

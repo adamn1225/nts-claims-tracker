@@ -62,10 +62,10 @@ type NavigationItem = {
   icon: React.ComponentType<{ className?: string }>;
   description: string;
   children?: NavigationItem[];
-  requiresRole?: readonly ("manager" | "admin" | "sales_coach" | "claims_staff")[];
+  requiresRole?: readonly ("manager" | "admin" | "claims_staff")[];
 };
 
-type RoleViewMode = "admin" | "teamMember" | "manager" | "sales_coach";
+type RoleViewMode = "admin" | "teamMember" | "manager";
 
 const ROLE_VIEW_STORAGE_KEY = "app:role-view-mode";
 
@@ -159,7 +159,7 @@ const navigation: NavigationItem[] = [
     href: "/dashboard/updates/create",
     icon: Megaphone,
     description: "Share new features & announcements",
-    requiresRole: ["manager", "admin", "sales_coach"] as const,
+    requiresRole: ["manager", "admin"] as const,
   },
   {
     name: "Manager Console",
@@ -187,7 +187,6 @@ export default function DashboardNav() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isManager, setIsManager] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isSalesCoach, setIsSalesCoach] = useState(false);
   const [isClaimsStaff, setIsClaimsStaff] = useState(false);
   const [roleViewMode, setRoleViewMode] = useState<RoleViewMode>("admin");
   const [loading, setLoading] = useState(true);
@@ -232,7 +231,6 @@ export default function DashboardNav() {
           setIsAdmin(role === "admin");
           setIsManager(role === "manager");
           setIsClaimsStaff(role === "claims_staff");
-          setIsSalesCoach(false); // Not represented in the claims-tracker user_role enum
           setFirstName(profileRes.data.first_name || "");
           setLastName(profileRes.data.last_name || "");
           setOfficeLocation(profileRes.data.office_location || "");
@@ -281,9 +279,6 @@ export default function DashboardNav() {
   const effectiveIsManager = isAdmin
     ? roleViewMode === "manager"
     : isManager;
-  const effectiveIsSalesCoach = isAdmin
-    ? roleViewMode === "sales_coach"
-    : isSalesCoach;
   // Admins always have an effective claims_staff capability so role-view
   // switching reveals claims-staff-only items when the admin previews them.
   const effectiveIsClaimsStaff = isAdmin || isManager || isClaimsStaff;
@@ -443,14 +438,7 @@ export default function DashboardNav() {
                   item.requiresRole.length === 1 &&
                   item.requiresRole.includes("manager")
                 ) {
-                  if (!effectiveIsManager || effectiveIsAdmin || effectiveIsSalesCoach) {
-                    return null;
-                  }
-                } else if (
-                  item.requiresRole.length === 1 &&
-                  item.requiresRole.includes("sales_coach")
-                ) {
-                  if (!effectiveIsSalesCoach) {
+                  if (!effectiveIsManager || effectiveIsAdmin) {
                     return null;
                   }
                 } else {
@@ -458,7 +446,6 @@ export default function DashboardNav() {
                   const hasRequiredRole =
                     (item.requiresRole.includes("manager") && effectiveIsManager) ||
                     (item.requiresRole.includes("admin") && effectiveIsAdmin) ||
-                    (item.requiresRole.includes("sales_coach") && effectiveIsSalesCoach) ||
                     (item.requiresRole.includes("claims_staff") && effectiveIsClaimsStaff);
 
                   if (!hasRequiredRole) {
@@ -506,10 +493,10 @@ export default function DashboardNav() {
                     className={`h-5 w-5 shrink-0 ${isRaceTrack
                       ? "text-primary"
                       : active
-                      ? "text-primary"
-                      : isPipeline
-                        ? "text-primary/70"
-                        : "text-slate-400"
+                        ? "text-primary"
+                        : isPipeline
+                          ? "text-primary/70"
+                          : "text-slate-400"
                       }`}
                   />
                   {!isCollapsed && (

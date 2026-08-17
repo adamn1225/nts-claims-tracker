@@ -243,7 +243,7 @@ export async function POST(request: Request) {
                       <p style="font-size: 16px; color: #1e293b; margin: 0 0 20px;">Hi ${firstName},</p>
                       
                       <p style="font-size: 16px; color: #1e293b; margin: 0 0 20px;">
-                        You've been invited to join the NTS Claims Tracker CRM! This system will help you manage your book of business, track customer follow-ups, and never miss an opportunity.
+                        You've been invited to join the NTS Claims Tracker! This system will help you track cargo and transportation claims from intake through settlement, with documents, correspondence, and carrier holds in one place.
                       </p>
                       
                       <div style="background-color: #f2f2f2; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0;">
@@ -266,9 +266,9 @@ export async function POST(request: Request) {
                       
                       <h3 style="color: #1e293b; font-size: 18px; margin: 30px 0 15px;">Getting Started</h3>
                       <ul style="color: #475569; font-size: 15px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                        <li>Add your customers and prospects to build your book of business</li>
-                        <li>Create tasks and set reminders for follow-ups</li>
-                        <li>Track customer status through the pipeline</li>
+                        <li>Log claims from intake and track them through the board</li>
+                        <li>Track document requests, acknowledgments, and follow-ups</li>
+                        <li>Monitor carrier holds, do-not-pay flags, and settlements</li>
                         <li>Use the interactive tour (shown on first login) to learn the basics</li>
                       </ul>
                       
@@ -278,7 +278,7 @@ export async function POST(request: Request) {
                       
                       <p style="font-size: 16px; color: #1e293b; margin: 20px 0 0;">
                         Best regards,<br>
-                        <strong>NTS Sales Team</strong>
+                        <strong>NTS Claims Team</strong>
                       </p>
                     </td>
                   </tr>
@@ -287,7 +287,7 @@ export async function POST(request: Request) {
                   <tr>
                     <td style="background-color: #f8fafc; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
                       <p style="color: #64748b; font-size: 13px; margin: 0;">
-                        Nationwide Transport Services | Freight TeamMember CRM
+                        Nationwide Transport Services | Claims Team
                       </p>
                     </td>
                   </tr>

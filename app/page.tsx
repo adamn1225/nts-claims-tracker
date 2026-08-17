@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TrendingUp, Target, Zap } from "lucide-react";
+import { Bell, FileText, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 
 export default function Home() {
@@ -16,13 +16,13 @@ export default function Home() {
         {/* Logo */}
         <div className="mx-auto mb-6 flex items-center justify-center sm:mb-8">
           <div className="relative h-24 w-24 sm:h-32 sm:w-32 md:h-56 md:w-56">
-        <Image
-          src="/NTS-logo.svg"
-          alt="NTS Logo"
-          fill
-          className="object-contain drop-shadow-2xl"
-          priority
-        />
+            <Image
+              src="/NTS-logo.svg"
+              alt="NTS Logo"
+              fill
+              className="object-contain drop-shadow-2xl"
+              priority
+            />
           </div>
         </div>
 
@@ -36,50 +36,49 @@ export default function Home() {
         </p>
 
         <p className="mx-auto mb-8 max-w-2xl px-2 text-sm leading-relaxed text-slate-300 sm:mb-10 sm:text-lg">
-          Turn every customer interaction into opportunity. Track your book of
-          business, never miss a follow-up, and close more deals—all in one
-          powerful platform.
+          Every cargo and transportation claim in one place — from intake and
+          documentation through carrier review, settlement, and closure.
         </p>
 
         {/* Feature highlights */}
         <div className="mb-8 w-full max-w-lg gap-3 space-y-3 sm:mb-10 sm:grid sm:grid-cols-3 sm:space-y-0 sm:gap-6">
           <div className="flex flex-col items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/30 p-3 backdrop-blur-sm sm:p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E85D04]/20 shrink-0">
-          <Target className="h-5 w-5 text-[#E85D04]" />
-        </div>
-        <p className="text-xs font-semibold text-white sm:text-sm">Stay Organized</p>
-        <p className="text-xs text-slate-400">
-          Never lose track of a prospect
-        </p>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E85D04]/20 shrink-0">
+              <FileText className="h-5 w-5 text-[#E85D04]" />
+            </div>
+            <p className="text-xs font-semibold text-white sm:text-sm">End-to-End Tracking</p>
+            <p className="text-xs text-slate-400">
+              Follow every claim from intake to closure
+            </p>
           </div>
 
           <div className="flex flex-col items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/30 p-3 backdrop-blur-sm sm:p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E85D04]/20 shrink-0">
-          <Zap className="h-5 w-5 text-[#E85D04]" />
-        </div>
-        <p className="text-xs font-semibold text-white sm:text-sm">Work Smarter</p>
-        <p className="text-xs text-slate-400">Automate your follow-ups</p>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E85D04]/20 shrink-0">
+              <Bell className="h-5 w-5 text-[#E85D04]" />
+            </div>
+            <p className="text-xs font-semibold text-white sm:text-sm">Deadline Reminders</p>
+            <p className="text-xs text-slate-400">Never miss an acknowledgment or follow-up</p>
           </div>
 
           <div className="flex flex-col items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/30 p-3 backdrop-blur-sm sm:p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E85D04]/20 shrink-0">
-          <TrendingUp className="h-5 w-5 text-[#E85D04]" />
-        </div>
-        <p className="text-xs font-semibold text-white sm:text-sm">Close More Deals</p>
-        <p className="text-xs text-slate-400">
-          Convert prospects to customers
-        </p>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E85D04]/20 shrink-0">
+              <ShieldCheck className="h-5 w-5 text-[#E85D04]" />
+            </div>
+            <p className="text-xs font-semibold text-white sm:text-sm">Full Visibility</p>
+            <p className="text-xs text-slate-400">
+              Documents, carrier holds, and correspondence
+            </p>
           </div>
         </div>
 
         {/* CTA Button */}
         <div className="w-full max-w-sm px-2">
           <Link
-        href="/auth/login"
-        className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-lg bg-linear-to-r from-[#E85D04] to-[#FFA726] px-6 py-3 text-base font-bold text-white shadow-2xl transition-all duration-300 active:scale-95 hover:scale-105 hover:shadow-[#E85D04]/50 focus:outline-none focus:ring-4 focus:ring-[#E85D04]/50 sm:px-10 sm:py-4 sm:text-lg"
+            href="/auth/login"
+            className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-lg bg-linear-to-r from-[#E85D04] to-[#FFA726] px-6 py-3 text-base font-bold text-white shadow-2xl transition-all duration-300 active:scale-95 hover:scale-105 hover:shadow-[#E85D04]/50 focus:outline-none focus:ring-4 focus:ring-[#E85D04]/50 sm:px-10 sm:py-4 sm:text-lg"
           >
-        <span className="relative z-10">Start Tracking Sales</span>
-        <div className="absolute inset-0 bg-linear-to-r from-[#C74E03] to-[#E85D04] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <span className="relative z-10">Sign in to Claims Tracker</span>
+            <div className="absolute inset-0 bg-linear-to-r from-[#C74E03] to-[#E85D04] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           </Link>
         </div>
 

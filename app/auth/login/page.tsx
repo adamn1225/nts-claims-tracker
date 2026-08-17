@@ -44,7 +44,7 @@ export default function LoginPage() {
 
     // Clear any stale client-side session the server already signed out.
     // This prevents a background token-refresh from racing with the first login attempt.
-    supabase.auth.signOut({ scope: "local" }).catch(() => {});
+    supabase.auth.signOut({ scope: "local" }).catch(() => { });
   }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -104,7 +104,7 @@ export default function LoginPage() {
             Welcome Back
           </h2>
           <p className="mt-2 text-base text-slate-300">
-            Sign in to manage your book of business
+            Sign in to manage cargo and transportation claims
           </p>
         </div>
 

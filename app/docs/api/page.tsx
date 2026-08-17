@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { 
+import {
   Code, Key, Lock, Zap, CheckCircle2, Copy, Check, Database, ChevronDown, FileText,
   Play, Menu, X, AlertCircle, Loader2, Terminal
 } from "lucide-react";
@@ -10,33 +10,29 @@ const NAV_SECTIONS = [
   { id: "introduction", label: "Introduction" },
   { id: "authentication", label: "Authentication" },
   { id: "schemas", label: "Object Schemas" },
-  { id: "customers", label: "Customers API",  endpoints: [
-    { method: "GET", path: "/api/v1/customers", label: "List Customers" },
-    { method: "GET", path: "/api/v1/customers/:id", label: "Get Customer" },
-    { method: "POST", path: "/api/v1/customers", label: "Create Customer" },
-    { method: "PUT", path: "/api/v1/customers/:id", label: "Update Customer" },
-    { method: "DELETE", path: "/api/v1/customers/:id", label: "Delete Customer" },
-  ]},
-  { id: "teamMembers", label: "TeamMembers API", endpoints: [
-    { method: "GET", path: "/api/v1/team-members", label: "List TeamMembers" },
-  ]},
-  { id: "tasks", label: "Tasks API", endpoints: [
-    { method: "GET", path: "/api/v1/tasks", label: "List Tasks" },
-    { method: "GET", path: "/api/v1/tasks/:id", label: "Get Task" },
-    { method: "POST", path: "/api/v1/tasks", label: "Create Task" },
-    { method: "PUT", path: "/api/v1/tasks/:id", label: "Update Task" },
-    { method: "DELETE", path: "/api/v1/tasks/:id", label: "Delete Task" },
-  ]},
-  { id: "unassigned", label: "Unassigned Contacts", endpoints: [
-    { method: "GET", path: "/api/v1/unassigned_contacts", label: "List Unassigned" },
-    { method: "GET", path: "/api/v1/unassigned_contacts/:id", label: "Get Contact" },
-    { method: "POST", path: "/api/v1/unassigned_contacts", label: "Import Contact" },
-    { method: "PUT", path: "/api/v1/unassigned_contacts/:id", label: "Update Contact" },
-    { method: "DELETE", path: "/api/v1/unassigned_contacts/:id", label: "Delete Contact" },
-  ]},
-  { id: "sms-campaign", label: "SMS Campaign", endpoints: [
-    { method: "POST", path: "/api/v1/sms-campaign-contact", label: "Submit SMS Contact" },
-  ]},
+  {
+    id: "customers", label: "Customers API", endpoints: [
+      { method: "GET", path: "/api/v1/customers", label: "List Customers" },
+      { method: "GET", path: "/api/v1/customers/:id", label: "Get Customer" },
+      { method: "POST", path: "/api/v1/customers", label: "Create Customer" },
+      { method: "PUT", path: "/api/v1/customers/:id", label: "Update Customer" },
+      { method: "DELETE", path: "/api/v1/customers/:id", label: "Delete Customer" },
+    ]
+  },
+  {
+    id: "teamMembers", label: "TeamMembers API", endpoints: [
+      { method: "GET", path: "/api/v1/team-members", label: "List TeamMembers" },
+    ]
+  },
+  {
+    id: "tasks", label: "Tasks API", endpoints: [
+      { method: "GET", path: "/api/v1/tasks", label: "List Tasks" },
+      { method: "GET", path: "/api/v1/tasks/:id", label: "Get Task" },
+      { method: "POST", path: "/api/v1/tasks", label: "Create Task" },
+      { method: "PUT", path: "/api/v1/tasks/:id", label: "Update Task" },
+      { method: "DELETE", path: "/api/v1/tasks/:id", label: "Delete Task" },
+    ]
+  },
   { id: "errors", label: "Error Handling" },
 ];
 
@@ -75,7 +71,7 @@ export default function ApiDocsPage() {
             </div>
             <p className="mt-0.5 text-xs text-slate-500">NTS Claims Tracker</p>
           </div>
-          
+
           <nav className="space-y-0.5">
             {NAV_SECTIONS.map((section) => (
               <div key={section.id}>
@@ -96,18 +92,16 @@ export default function ApiDocsPage() {
                             setActiveEndpoint(key);
                             scrollToSection(section.id);
                           }}
-                          className={`w-full rounded px-2 py-1 text-left text-xs transition-colors ${
-                            activeEndpoint === key
+                          className={`w-full rounded px-2 py-1 text-left text-xs transition-colors ${activeEndpoint === key
                               ? 'bg-orange-50 font-medium text-orange-700'
                               : 'text-slate-600 hover:bg-slate-50'
-                          }`}
+                            }`}
                         >
-                          <span className={`mr-1.5 font-semibold ${
-                            endpoint.method === 'GET' ? 'text-blue-600' :
-                            endpoint.method === 'POST' ? 'text-green-600' :
-                            endpoint.method === 'PUT' ? 'text-amber-600' :
-                            'text-red-600'
-                          }`}>
+                          <span className={`mr-1.5 font-semibold ${endpoint.method === 'GET' ? 'text-blue-600' :
+                              endpoint.method === 'POST' ? 'text-green-600' :
+                                endpoint.method === 'PUT' ? 'text-amber-600' :
+                                  'text-red-600'
+                            }`}>
                             {endpoint.method}
                           </span>
                           {endpoint.label}
@@ -133,8 +127,6 @@ export default function ApiDocsPage() {
             <CustomersSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
             <TeamMembersSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
             <TasksSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
-            <UnassignedSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
-            <SmsCampaignSection activeEndpoint={activeEndpoint} setActiveEndpoint={setActiveEndpoint} />
             <ErrorsSection />
           </div>
         </main>
@@ -270,26 +262,23 @@ function PlaygroundPanel({ baseUrl, activeEndpoint }: { baseUrl: string; activeE
         <div className="flex gap-1 rounded-lg bg-slate-200 p-1">
           <button
             onClick={() => setLanguage("shell")}
-            className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-              language === "shell" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${language === "shell" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              }`}
           >
             <Terminal className="mr-1.5 inline h-3 w-3" />
             Shell
           </button>
           <button
             onClick={() => setLanguage("node")}
-            className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-              language === "node" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${language === "node" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              }`}
           >
             Node
           </button>
           <button
             onClick={() => setLanguage("python")}
-            className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-              language === "python" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors ${language === "python" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              }`}
           >
             Python
           </button>
@@ -532,11 +521,10 @@ function PlaygroundPanel({ baseUrl, activeEndpoint }: { baseUrl: string; activeE
         {response && (
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <span className={`rounded px-2 py-0.5 text-xs font-semibold ${
-                response.status < 300 ? 'bg-green-100 text-green-700' :
-                response.status < 400 ? 'bg-blue-100 text-blue-700' :
-                'bg-red-100 text-red-700'
-              }`}>
+              <span className={`rounded px-2 py-0.5 text-xs font-semibold ${response.status < 300 ? 'bg-green-100 text-green-700' :
+                  response.status < 400 ? 'bg-blue-100 text-blue-700' :
+                    'bg-red-100 text-red-700'
+                }`}>
                 {response.status}
               </span>
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Response</span>
@@ -712,21 +700,21 @@ function SchemasSection() {
       <div className="rounded-lg border border-slate-200 p-4">
         <h3 className="mb-2 font-semibold text-slate-900">Customer Object</h3>
         <p className="text-sm text-slate-600">
-          Key fields: <code className="text-xs">id</code>, <code className="text-xs">business_name</code>, <code className="text-xs">contact_name</code>, 
+          Key fields: <code className="text-xs">id</code>, <code className="text-xs">business_name</code>, <code className="text-xs">contact_name</code>,
           <code className="text-xs">email</code>, <code className="text-xs">phone</code>, <code className="text-xs">city</code>, <code className="text-xs">state</code>, <code className="text-xs">status</code>
         </p>
       </div>
       <div className="mt-3 rounded-lg border border-slate-200 p-4">
         <h3 className="mb-2 font-semibold text-slate-900">Task Object</h3>
         <p className="text-sm text-slate-600">
-          Key fields: <code className="text-xs">id</code>, <code className="text-xs">title</code>, <code className="text-xs">type</code>, 
+          Key fields: <code className="text-xs">id</code>, <code className="text-xs">title</code>, <code className="text-xs">type</code>,
           <code className="text-xs">status</code>, <code className="text-xs">priority</code>, <code className="text-xs">due_date</code>
         </p>
       </div>
       <div className="mt-3 rounded-lg border border-slate-200 p-4">
         <h3 className="mb-2 font-semibold text-slate-900">TeamMember Object</h3>
         <p className="text-sm text-slate-600">
-          Key fields: <code className="text-xs">id</code>, <code className="text-xs">first_name</code>, <code className="text-xs">last_name</code>, 
+          Key fields: <code className="text-xs">id</code>, <code className="text-xs">first_name</code>, <code className="text-xs">last_name</code>,
           <code className="text-xs">email</code>, <code className="text-xs">office_location</code>, <code className="text-xs">territory</code>, <code className="text-xs">is_active</code>
         </p>
         <p className="mt-2 text-xs text-slate-500">
@@ -744,7 +732,7 @@ function CustomersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoin
         <h2 className="text-2xl font-bold text-slate-900">Customers API</h2>
         <CopySectionButton sectionId="customers" />
       </div>
-      
+
       {/* team_member_id behavior explanation */}
       <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
         <h3 className="mb-2 font-semibold text-blue-900">Assigning Customers to TeamMembers</h3>
@@ -756,12 +744,12 @@ function CustomersSection({ activeEndpoint, setActiveEndpoint }: { activeEndpoin
             <li><em>Omit team_member_id</em> - Defaults to the API token owner (backward compatibility)</li>
           </ul>
           <p className="mt-3 text-xs">
-            💡 <strong>Tip:</strong> For bulk imports, use <code className="rounded bg-blue-100 px-1">POST /api/v1/unassigned_contacts</code> 
+            💡 <strong>Tip:</strong> For bulk imports, use <code className="rounded bg-blue-100 px-1">POST /api/v1/unassigned_contacts</code>
             to create contacts in the distribution pool, then assign them later via your admin interface.
           </p>
         </div>
       </div>
-      
+
       <EndpointDoc
         method="GET"
         path="/api/v1/customers"
@@ -1094,18 +1082,16 @@ function EndpointDoc({ method, path, title, description, active, onClick, scope 
 }) {
   return (
     <div
-      className={`mb-4 cursor-pointer rounded-lg border p-4 transition-colors ${
-        active ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'
-      }`}
+      className={`mb-4 cursor-pointer rounded-lg border p-4 transition-colors ${active ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'
+        }`}
       onClick={onClick}
     >
       <div className="mb-2 flex items-center gap-2">
-        <span className={`rounded px-2 py-0.5 text-xs font-semibold ${
-          method === 'GET' ? 'bg-blue-100 text-blue-700' :
-          method === 'POST' ? 'bg-green-100 text-green-700' :
-          method === 'PUT' ? 'bg-amber-100 text-amber-700' :
-          'bg-red-100 text-red-700'
-        }`}>
+        <span className={`rounded px-2 py-0.5 text-xs font-semibold ${method === 'GET' ? 'bg-blue-100 text-blue-700' :
+            method === 'POST' ? 'bg-green-100 text-green-700' :
+              method === 'PUT' ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+          }`}>
           {method}
         </span>
         <code className="text-sm font-mono text-slate-900">{path}</code>

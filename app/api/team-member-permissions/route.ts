@@ -138,7 +138,6 @@ export async function POST(request: NextRequest) {
       "can_manage_email_settings",
       "can_send_email_broadcasts",
       "can_use_ai_email",
-      "can_access_power_dialer",
       "can_use_web_search",
       "can_manage_team",
     ];

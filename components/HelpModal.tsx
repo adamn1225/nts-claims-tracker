@@ -26,76 +26,24 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
   // Function to get page-specific help topics based on current route
   const getHelpTopics = (path: string) => {
     console.log("🎯 HelpModal currentPath:", path);
-    
-    // Power Dialer Help
-    if (path.includes("/power-dialer")) {
-      return [
-        {
-          icon: <Users className="h-5 w-5 text-orange-500" />,
-          title: "Power Dialer Basics",
-          description: "Efficiently work through your customer queue",
-          tips: [
-            "Queue modes: All Customers, Overdue Only, or Custom Filter",
-            "Auto-advance to next customer after logging call outcome",
-            "Use keyboard shortcuts: Space = Call, Enter = Next",
-          ],
-        },
-        {
-          icon: <CheckSquare className="h-5 w-5 text-orange-500" />,
-          title: "Making Calls",
-          description: "Log call outcomes and schedule follow-ups",
-          tips: [
-            "Click outcome buttons: Connected, Left Voicemail, No Answer, Wrong Number",
-            "Quick-schedule next call (1 day, 3 days, 1 week, etc.)",
-            "Add notes during the call for context on next contact",
-          ],
-        },
-      ];
-    }
-
-    // Import/Export Help
-    if (path.includes("/imports")) {
-      return [
-        {
-          icon: <Users className="h-5 w-5 text-orange-500" />,
-          title: "Importing Contacts",
-          description: "Upload CSV files and distribute to your team",
-          tips: [
-            "CSV must have headers: business_name, contact_name, email, phone",
-            "Drag and drop or click to upload files",
-            "Preview data before importing to catch formatting issues",
-          ],
-        },
-        {
-          icon: <CheckSquare className="h-5 w-5 text-orange-500" />,
-          title: "Distributing Leads",
-          description: "Assign imported contacts to team members",
-          tips: [
-            "Select contacts → Choose team member → Distribute",
-            "Use 'Even Distribution' to auto-balance across team members",
-            "Filter by industry, state, or source before distributing",
-          ],
-        },
-      ];
-    }
 
     // Kanban Board Help
     if (path.includes("/kanban")) {
       return [
         {
           icon: <Users className="h-5 w-5 text-orange-500" />,
-          title: "Managing Customers",
-          description: "Organize your book of business visually",
+          title: "Managing Claims",
+          description: "Track claims through every stage",
           tips: [
             "Drag cards between columns to update status",
-            "Pin important customers to keep them at the top",
-            "Click a card to view full details and contact history",
+            "Pin high-priority claims to keep them at the top",
+            "Click a card to view full details and claim history",
           ],
         },
         {
           icon: <CheckSquare className="h-5 w-5 text-orange-500" />,
           title: "Filtering & Search",
-          description: "Find customers quickly",
+          description: "Find claims quickly",
           tips: [
             "Filter by status badges (top of page)",
             "Filter by import source to group similar leads",
@@ -198,8 +146,6 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
 
   // Get page name for context badge
   const getPageName = (path: string): string => {
-    if (path.includes("/power-dialer")) return "Power Dialer";
-    if (path.includes("/imports")) return "Import/Export";
     if (path.includes("/kanban")) return "Kanban Board";
     if (path.includes("/tasks")) return "Tasks";
     if (path.includes("/calendar")) return "Calendar";
@@ -258,98 +204,98 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
         </div>
 
         {/* Content */}
-          <>
-            {/* Help Topics Content */}
-            <div className="px-6 py-4">
-              {/* Page Context Badge */}
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
-                <span className="h-2 w-2 rounded-full bg-orange-500"></span>
-                Help for: {pageName}
-              </div>
-
-              {/* Introduction */}
-              <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
-                <p className="text-sm text-slate-700">
-                  <strong className="text-orange-900">
-                    Welcome to NTS Claims Tracker!
-                  </strong>
-                  <br />
-                  This CRM helps freight team members manage customer relationships,
-                  track tasks, and never miss a follow-up. Here are some quick tips
-                  to get started.
-                </p>
-              </div>
-
-              {/* Quick Help Topics */}
-              <div className="space-y-6">
-                {quickHelpTopics.map((topic, index) => (
-                  <div
-                    key={index}
-                    className="rounded-lg border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md"
-                  >
-                    <div className="mb-3 flex items-start gap-3">
-                      <div className="mt-0.5">{topic.icon}</div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900">
-                          {topic.title}
-                        </h3>
-                        <p className="mt-1 text-sm text-slate-600">
-                          {topic.description}
-                        </p>
-                      </div>
-                    </div>
-                    <ul className="ml-8 space-y-1.5">
-                      {topic.tips.map((tip, tipIndex) => (
-                        <li
-                          key={tipIndex}
-                          className="text-sm text-slate-700 before:mr-2 before:content-['•']"
-                        >
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-
-              {/* Keyboard Shortcuts Hint */}
-              <div className="mt-6 rounded-lg bg-slate-50 p-4">
-                <h3 className="mb-2 flex items-center gap-2 font-semibold text-slate-900">
-                  💡 Pro Tips
-                </h3>
-                <ul className="space-y-1.5 text-sm text-slate-700">
-                  <li className="before:mr-2 before:content-['•']">
-                    Use the global search (top bar) to find customers quickly
-                  </li>
-                  <li className="before:mr-2 before:content-['•']">
-                    Pin your most important customers to keep them at the top
-                  </li>
-                  <li className="before:mr-2 before:content-['•']">
-                    Set task priorities to focus on what matters most
-                  </li>
-                  <li className="before:mr-2 before:content-['•']">
-                    Restart the interactive tour from the full Help page
-                  </li>
-                </ul>
-              </div>
+        <>
+          {/* Help Topics Content */}
+          <div className="px-6 py-4">
+            {/* Page Context Badge */}
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
+              <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+              Help for: {pageName}
             </div>
 
-            {/* Footer */}
-            <div className="sticky bottom-0 border-t border-slate-200 bg-white px-6 py-4">
-              <button
-                onClick={handleViewFullHelp}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-3 font-medium text-white transition-colors hover:bg-orange-600"
-              >
-                <Book className="h-4 w-4" />
-                <span>View Full Help Documentation</span>
-                <ExternalLink className="h-4 w-4" />
-              </button>
-              <p className="mt-3 text-center text-xs text-slate-500">
-                Need more help? Visit the full help page for detailed guides, video
-                tutorials, and best practices.
+            {/* Introduction */}
+            <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
+              <p className="text-sm text-slate-700">
+                <strong className="text-orange-900">
+                  Welcome to NTS Claims Tracker!
+                </strong>
+                <br />
+                This CRM helps freight team members manage customer relationships,
+                track tasks, and never miss a follow-up. Here are some quick tips
+                to get started.
               </p>
             </div>
-          </>
+
+            {/* Quick Help Topics */}
+            <div className="space-y-6">
+              {quickHelpTopics.map((topic, index) => (
+                <div
+                  key={index}
+                  className="rounded-lg border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md"
+                >
+                  <div className="mb-3 flex items-start gap-3">
+                    <div className="mt-0.5">{topic.icon}</div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-slate-900">
+                        {topic.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {topic.description}
+                      </p>
+                    </div>
+                  </div>
+                  <ul className="ml-8 space-y-1.5">
+                    {topic.tips.map((tip, tipIndex) => (
+                      <li
+                        key={tipIndex}
+                        className="text-sm text-slate-700 before:mr-2 before:content-['•']"
+                      >
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            {/* Keyboard Shortcuts Hint */}
+            <div className="mt-6 rounded-lg bg-slate-50 p-4">
+              <h3 className="mb-2 flex items-center gap-2 font-semibold text-slate-900">
+                💡 Pro Tips
+              </h3>
+              <ul className="space-y-1.5 text-sm text-slate-700">
+                <li className="before:mr-2 before:content-['•']">
+                  Use the global search (top bar) to find customers quickly
+                </li>
+                <li className="before:mr-2 before:content-['•']">
+                  Pin your most important customers to keep them at the top
+                </li>
+                <li className="before:mr-2 before:content-['•']">
+                  Set task priorities to focus on what matters most
+                </li>
+                <li className="before:mr-2 before:content-['•']">
+                  Restart the interactive tour from the full Help page
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="sticky bottom-0 border-t border-slate-200 bg-white px-6 py-4">
+            <button
+              onClick={handleViewFullHelp}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-3 font-medium text-white transition-colors hover:bg-orange-600"
+            >
+              <Book className="h-4 w-4" />
+              <span>View Full Help Documentation</span>
+              <ExternalLink className="h-4 w-4" />
+            </button>
+            <p className="mt-3 text-center text-xs text-slate-500">
+              Need more help? Visit the full help page for detailed guides, video
+              tutorials, and best practices.
+            </p>
+          </div>
+        </>
       </div>
     </>
   );

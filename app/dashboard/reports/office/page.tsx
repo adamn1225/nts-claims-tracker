@@ -1,11 +1,10 @@
 /**
- * Office Manager Reports Page - Office-specific Analytics
+ * Office Manager Reports Page - Claims Analytics
  *
  * Features:
- * - Office-level KPIs
- * - TeamMember breakdown for the manager's office
- * - Drill-down to individual teamMember weekly performance
- * - Overdue tasks and follow-up tracking
+ * - Office-level claims KPIs
+ * - Team member claims breakdown for the manager's office
+ * - Overdue task tracking
  *
  * Access: Office managers only (is_manager = true)
  */
@@ -17,32 +16,38 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   Users,
-  TrendingUp,
   AlertCircle,
   Loader2,
   Calendar,
-  BarChart3,
+  CheckCircle2,
+  FileText,
+  DollarSign,
 } from "lucide-react";
 
 type TeamMemberStats = {
   team_member_id: string;
   team_member_name: string;
-  office_location: string;
-  total_customers: number;
-  prospect_count: number;
-  active_count: number;
-  won_count: number;
-  lost_count: number;
-  win_rate_pct: number;
+  total_claims: number;
+  open_claims: number;
+  closed_claims: number;
+  total_exposure: number;
 };
 
 type OverdueTask = {
   id: string;
   title: string;
   team_member_id: string;
-  customer_id: string;
   due_date: string;
 };
+
+const fmtMoney = (n: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(n);
+
+const NO_MEMBERS_SENTINEL = "00000000-0000-0000-0000-000000000000";
 
 export default function OfficeReportsPage() {
   const router = useRouter();
@@ -55,12 +60,15 @@ export default function OfficeReportsPage() {
   const [managerOffice, setManagerOffice] = useState<string | null>(null);
   const [teamMemberStats, setTeamMemberStats] = useState<TeamMemberStats[]>([]);
   const [overdueTasks, setOverdueTasks] = useState<OverdueTask[]>([]);
-  const [selectedTeamMember, setSelectedTeamMember] = useState<string | null>(null);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<string | null>(
+    null,
+  );
 
   const [officeStats, setOfficeStats] = useState({
-    total_customers: 0,
-    won_count: 0,
-    win_rate_pct: 0,
+    total_claims: 0,
+    open_claims: 0,
+    closed_claims: 0,
+    total_exposure: 0,
     overdue_tasks: 0,
   });
 
@@ -99,7 +107,7 @@ export default function OfficeReportsPage() {
     authorize();
   }, [supabase, router]);
 
-  // Load analytics for manager's office
+  // Load claims analytics for the manager's office
   useEffect(() => {
     if (!isManager || !managerOffice) return;
 
@@ -107,54 +115,86 @@ export default function OfficeReportsPage() {
       try {
         setLoading(true);
 
-        // Get teamMember stats for this office
-        const { data: teamMemberData, error: teamMemberError } = await supabase
-          .from("broker_customer_summary")
-          .select("*")
+        // Team members in this office
+        const { data: members, error: memberError } = await supabase
+          .from("team_members")
+          .select("id, first_name, last_name")
           .eq("office_location", managerOffice);
 
-        if (teamMemberError) throw teamMemberError;
+        if (memberError) throw memberError;
 
-        setTeamMemberStats(teamMemberData || []);
+        const memberIds = (members ?? []).map((m) => m.id);
+        const idFilter = memberIds.length ? memberIds : [NO_MEMBERS_SENTINEL];
 
-        // Calculate office-level stats
-        const totalCustomers = (teamMemberData || []).reduce(
-          (sum, b) => sum + (b.total_customers || 0),
-          0,
+        // Claims assigned to those team members, joined to their status
+        const { data: claims, error: claimError } = await supabase
+          .from("claims")
+          .select(
+            `id, team_member_id, damage_claim_amount, closed_at,
+             status:claim_statuses!claims_status_id_fkey(is_closed)`,
+          )
+          .in("team_member_id", idFilter);
+
+        if (claimError) throw claimError;
+
+        const statsMap = new Map<string, TeamMemberStats>();
+        (members ?? []).forEach((m) => {
+          statsMap.set(m.id, {
+            team_member_id: m.id,
+            team_member_name:
+              [m.first_name, m.last_name].filter(Boolean).join(" ") || m.id,
+            total_claims: 0,
+            open_claims: 0,
+            closed_claims: 0,
+            total_exposure: 0,
+          });
+        });
+
+        type ClaimRow = {
+          team_member_id: string | null;
+          damage_claim_amount: number | null;
+          closed_at: string | null;
+          status: { is_closed: boolean } | { is_closed: boolean }[] | null;
+        };
+
+        const claimRows = (claims as unknown as ClaimRow[] | null) ?? [];
+        claimRows.forEach((c) => {
+          const s = statsMap.get(c.team_member_id ?? "");
+          if (!s) return;
+          s.total_claims += 1;
+          const statusClosed = Array.isArray(c.status)
+            ? c.status.some((st) => st.is_closed)
+            : c.status?.is_closed ?? false;
+          if (statusClosed || c.closed_at) {
+            s.closed_claims += 1;
+          } else {
+            s.open_claims += 1;
+          }
+          s.total_exposure += Number(c.damage_claim_amount ?? 0);
+        });
+
+        const stats = Array.from(statsMap.values()).sort(
+          (a, b) => b.total_claims - a.total_claims,
         );
-        const totalWon = (teamMemberData || []).reduce(
-          (sum, b) => sum + (b.won_count || 0),
-          0,
-        );
-        const totalConverted = (teamMemberData || []).reduce((sum, b) => {
-          const converted =
-            (b.active_count || 0) + (b.won_count || 0) + (b.lost_count || 0);
-          return sum + converted;
-        }, 0);
-        const officeWinRate =
-          totalConverted > 0
-            ? Math.round((totalWon / totalConverted) * 100)
-            : 0;
+        setTeamMemberStats(stats);
 
-        // Get overdue tasks for this office
+        // Overdue tasks for this office
         const { data: taskData, error: taskError } = await supabase
           .from("tasks")
-          .select("id, title, team_member_id, customer_id, due_date")
+          .select("id, title, team_member_id, due_date")
           .eq("status", "overdue")
-          .in(
-            "team_member_id",
-            (teamMemberData || []).map((b) => b.team_member_id),
-          );
+          .in("team_member_id", idFilter);
 
         if (taskError) throw taskError;
 
-        setOverdueTasks(taskData || []);
+        setOverdueTasks(taskData ?? []);
 
         setOfficeStats({
-          total_customers: totalCustomers,
-          won_count: totalWon,
-          win_rate_pct: officeWinRate,
-          overdue_tasks: (taskData || []).length,
+          total_claims: stats.reduce((sum, s) => sum + s.total_claims, 0),
+          open_claims: stats.reduce((sum, s) => sum + s.open_claims, 0),
+          closed_claims: stats.reduce((sum, s) => sum + s.closed_claims, 0),
+          total_exposure: stats.reduce((sum, s) => sum + s.total_exposure, 0),
+          overdue_tasks: (taskData ?? []).length,
         });
 
         setError(null);
@@ -169,14 +209,10 @@ export default function OfficeReportsPage() {
     loadOfficeAnalytics();
   }, [isManager, managerOffice, supabase]);
 
-  // Filter teamMember stats by selected team member
-  const filteredTeamMemberStats = useMemo(() => {
-    if (!selectedTeamMember) return teamMemberStats;
-    return teamMemberStats.filter((b) => b.team_member_id === selectedTeamMember);
-  }, [teamMemberStats, selectedTeamMember]);
-
   const selectedTeamMemberData = useMemo(() => {
-    return teamMemberStats.find((b) => b.team_member_id === selectedTeamMember);
+    return teamMemberStats.find(
+      (b) => b.team_member_id === selectedTeamMember,
+    );
   }, [teamMemberStats, selectedTeamMember]);
 
   if (loading) {
@@ -205,70 +241,66 @@ export default function OfficeReportsPage() {
           {managerOffice} Office Reports
         </h1>
         <p className="mt-1 text-slate-600">
-          Performance metrics for your office
+          Claims metrics for your office
         </p>
       </div>
 
       {/* Office KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total Customers */}
         <div className="rounded-lg border border-slate-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600">Total Customers</p>
+              <p className="text-sm text-slate-600">Total Claims</p>
               <p className="mt-2 text-3xl font-bold text-slate-900">
-                {officeStats.total_customers}
+                {officeStats.total_claims}
               </p>
             </div>
-            <Users className="h-8 w-8 text-orange-500" />
+            <FileText className="h-8 w-8 text-orange-500" />
           </div>
         </div>
 
-        {/* Won Customers */}
         <div className="rounded-lg border border-slate-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600">Won Customers</p>
-              <p className="mt-2 text-3xl font-bold text-green-600">
-                {officeStats.won_count}
-              </p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-
-        {/* Win Rate */}
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-600">Win Rate</p>
+              <p className="text-sm text-slate-600">Open Claims</p>
               <p className="mt-2 text-3xl font-bold text-blue-600">
-                {officeStats.win_rate_pct}%
+                {officeStats.open_claims}
               </p>
             </div>
-            <BarChart3 className="h-8 w-8 text-blue-500" />
+            <AlertCircle className="h-8 w-8 text-blue-500" />
           </div>
         </div>
 
-        {/* Overdue Tasks */}
         <div className="rounded-lg border border-slate-200 bg-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600">Overdue Tasks</p>
-              <p className="mt-2 text-3xl font-bold text-red-600">
-                {officeStats.overdue_tasks}
+              <p className="text-sm text-slate-600">Closed Claims</p>
+              <p className="mt-2 text-3xl font-bold text-green-600">
+                {officeStats.closed_claims}
               </p>
             </div>
-            <AlertCircle className="h-8 w-8 text-red-500" />
+            <CheckCircle2 className="h-8 w-8 text-green-500" />
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-600">Total Exposure</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">
+                {fmtMoney(officeStats.total_exposure)}
+              </p>
+            </div>
+            <DollarSign className="h-8 w-8 text-amber-500" />
           </div>
         </div>
       </div>
 
-      {/* TeamMember Performance Breakdown */}
+      {/* TeamMember Claims Breakdown */}
       <div className="rounded-lg border border-slate-200 bg-white">
         <div className="border-b border-slate-200 p-6">
           <h2 className="text-lg font-semibold text-slate-900">
-            TeamMember Performance
+            TeamMember Claims
           </h2>
           <p className="mt-1 text-sm text-slate-600">
             Click a team member to view detailed metrics
@@ -283,19 +315,16 @@ export default function OfficeReportsPage() {
                   TeamMember Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
-                  Total Customers
+                  Total Claims
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
-                  Prospects
+                  Open
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
-                  Active
+                  Closed
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
-                  Won
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700">
-                  Win Rate
+                  Exposure
                 </th>
               </tr>
             </thead>
@@ -310,29 +339,25 @@ export default function OfficeReportsPage() {
                         : teamMember.team_member_id,
                     )
                   }
-                  className={`cursor-pointer transition-colors ${
-                    selectedTeamMember === teamMember.team_member_id
-                      ? "bg-orange-50"
-                      : "hover:bg-slate-50"
-                  }`}
+                  className={`cursor-pointer transition-colors ${selectedTeamMember === teamMember.team_member_id
+                    ? "bg-orange-50"
+                    : "hover:bg-slate-50"
+                    }`}
                 >
                   <td className="px-6 py-4 text-sm font-medium text-slate-900">
                     {teamMember.team_member_name}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-700">
-                    {teamMember.total_customers}
+                    {teamMember.total_claims}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-700">
-                    {teamMember.prospect_count}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-700">
-                    {teamMember.active_count}
+                    {teamMember.open_claims}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-green-600">
-                    {teamMember.won_count}
+                    {teamMember.closed_claims}
                   </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-blue-600">
-                    {teamMember.win_rate_pct}%
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-900">
+                    {fmtMoney(teamMember.total_exposure)}
                   </td>
                 </tr>
               ))}
@@ -350,7 +375,7 @@ export default function OfficeReportsPage() {
                 {selectedTeamMemberData.team_member_name} - Detailed Metrics
               </h3>
               <p className="mt-1 text-sm text-slate-600">
-                This teamMember's full performance breakdown
+                This team member's claims breakdown
               </p>
             </div>
             <button
@@ -363,44 +388,28 @@ export default function OfficeReportsPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg bg-white p-4">
-              <p className="text-xs text-slate-600">Prospect Conversion Rate</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {selectedTeamMemberData.prospect_count > 0
-                  ? Math.round(
-                      ((selectedTeamMemberData.active_count +
-                        selectedTeamMemberData.won_count) /
-                        (selectedTeamMemberData.prospect_count +
-                          selectedTeamMemberData.active_count +
-                          selectedTeamMemberData.won_count)) *
-                        100,
-                    )
-                  : 0}
-                %
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-white p-4">
-              <p className="text-xs text-slate-600">Customer Status Mix</p>
+              <p className="text-xs text-slate-600">Open vs Closed</p>
               <div className="mt-2 space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Prospects:</span>
+                  <span>Open:</span>
                   <span className="font-semibold">
-                    {selectedTeamMemberData.prospect_count}
+                    {selectedTeamMemberData.open_claims}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Active:</span>
-                  <span className="font-semibold">
-                    {selectedTeamMemberData.active_count}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Won:</span>
+                  <span>Closed:</span>
                   <span className="font-semibold text-green-600">
-                    {selectedTeamMemberData.won_count}
+                    {selectedTeamMemberData.closed_claims}
                   </span>
                 </div>
               </div>
+            </div>
+
+            <div className="rounded-lg bg-white p-4">
+              <p className="text-xs text-slate-600">Exposure</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {fmtMoney(selectedTeamMemberData.total_exposure)}
+              </p>
             </div>
           </div>
         </div>
@@ -429,9 +438,11 @@ export default function OfficeReportsPage() {
                       Due: {new Date(task.due_date).toLocaleDateString()}
                     </p>
                   </div>
-                  <button className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                    View Task
-                  </button>
+                  <span className="text-xs font-medium text-slate-500">
+                    {teamMemberStats.find(
+                      (t) => t.team_member_id === task.team_member_id,
+                    )?.team_member_name ?? ""}
+                  </span>
                 </div>
               </div>
             ))}

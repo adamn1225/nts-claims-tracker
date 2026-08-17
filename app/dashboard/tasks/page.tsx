@@ -403,10 +403,10 @@ export default function TasksPage() {
       prev.map((t) =>
         t.id === completingTask.id
           ? {
-              ...t,
-              status: "completed" as TaskStatus,
-              completed_at: new Date().toISOString(),
-            }
+            ...t,
+            status: "completed" as TaskStatus,
+            completed_at: new Date().toISOString(),
+          }
           : t,
       ),
     );
@@ -437,7 +437,7 @@ export default function TasksPage() {
     // Don't use editingTask for duplicates - that's only for actual edits
     // Instead, create a partial task without ID properties
     const { id, created_at, updated_at, completed_at, reminder_sent, reminder_sent_at, last_reminder_sent_date, ...taskData } = task;
-    
+
     const duplicatedTask: Partial<Task> = {
       ...taskData,
       title: `${task.title} (Copy)`,
@@ -490,16 +490,16 @@ export default function TasksPage() {
 
       if (error) {
         console.error("Error updating task:", error);
-        throw new Error(error.message ||"Failed to update task");
+        throw new Error(error.message || "Failed to update task");
       }
-      
+
       // Return updated task (fetch it)
       const { data: updatedTask } = await supabase
         .from("tasks")
         .select("*")
         .eq("id", editingTask.id)
         .single();
-      
+
       if (viewingTeamMember) await fetchTasks(viewingTeamMember.id);
       setEditingTask(null);
       return updatedTask;
@@ -525,7 +525,7 @@ export default function TasksPage() {
       }
 
       console.log("Task created successfully:", data);
-      
+
       // Generate notification records for reminders
       if (data.id && data.reminder_days && data.reminder_days.length > 0) {
         try {
@@ -534,7 +534,7 @@ export default function TasksPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ taskId: data.id }),
           });
-          
+
           if (!response.ok) {
             const errorData = await response.json();
             console.error("Failed to generate notifications:", errorData);
@@ -560,10 +560,10 @@ export default function TasksPage() {
           if (user?.email) {
             const { data: customerData } = data.customer_id
               ? await supabase
-                  .from("customers")
-                  .select("business_name")
-                  .eq("id", data.customer_id)
-                  .single()
+                .from("customers")
+                .select("business_name")
+                .eq("id", data.customer_id)
+                .single()
               : { data: null };
 
             const response = await fetch("/api/send-task-reminder", {
@@ -759,133 +759,119 @@ export default function TasksPage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setFilter("active")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  filter === "active"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === "active"
                     ? "bg-orange-500 text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Active
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
-                    filter === "active"
+                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${filter === "active"
                       ? "bg-orange-600 text-white"
                       : "bg-slate-100 text-slate-900"
-                  }`}
+                    }`}
                 >
                   {stats.active}
                 </span>
               </button>
               <button
                 onClick={() => setFilter("today")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  filter === "today"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === "today"
                     ? "bg-orange-500 text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Today
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
-                    filter === "today"
+                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${filter === "today"
                       ? "bg-orange-600 text-white"
                       : "bg-blue-100 text-blue-900"
-                  }`}
+                    }`}
                 >
                   {stats.today}
                 </span>
               </button>
               <button
                 onClick={() => setFilter("overdue")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  filter === "overdue"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === "overdue"
                     ? "bg-orange-500 text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Overdue
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
-                    filter === "overdue"
+                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${filter === "overdue"
                       ? "bg-orange-600 text-white"
                       : "bg-red-100 text-red-900"
-                  }`}
+                    }`}
                 >
                   {stats.overdue}
                 </span>
               </button>
               <button
                 onClick={() => setFilter("upcoming")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  filter === "upcoming"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === "upcoming"
                     ? "bg-orange-500 text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Upcoming
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
-                    filter === "upcoming"
+                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${filter === "upcoming"
                       ? "bg-orange-600 text-white"
                       : "bg-amber-100 text-amber-900"
-                  }`}
+                    }`}
                 >
                   {stats.upcoming}
                 </span>
               </button>
               <button
                 onClick={() => setFilter("completed")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  filter === "completed"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === "completed"
                     ? "bg-orange-500 text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Completed
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
-                    filter === "completed"
+                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${filter === "completed"
                       ? "bg-orange-600 text-white"
                       : "bg-green-100 text-green-900"
-                  }`}
+                    }`}
                 >
                   {stats.completed}
                 </span>
               </button>
               <button
                 onClick={() => setFilter("archived")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  filter === "archived"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === "archived"
                     ? "bg-orange-500 text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 Archived
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
-                    filter === "archived"
+                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${filter === "archived"
                       ? "bg-orange-600 text-white"
                       : "bg-slate-100 text-slate-900"
-                  }`}
+                    }`}
                 >
                   {stats.archived}
                 </span>
               </button>
               <button
                 onClick={() => setFilter("all")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  filter === "all"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === "all"
                     ? "bg-orange-500 text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 All
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
-                    filter === "all"
+                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${filter === "all"
                       ? "bg-orange-600 text-white"
                       : "bg-slate-100 text-slate-900"
-                  }`}
+                    }`}
                 >
                   {stats.all}
                 </span>
@@ -1122,7 +1108,7 @@ export default function TasksPage() {
                         <CheckCircle2 className="h-5 w-5" />
                       </button>
                     )}
-                   <button
+                    <button
                       onClick={() => handleEditTask(task)}
                       className="rounded p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-orange-600"
                       title="Edit task"
@@ -1347,7 +1333,7 @@ export default function TasksPage() {
               <h3 className="text-lg font-semibold text-slate-900 mb-4">
                 What's Next? Here are some ideas:
               </h3>
-              
+
               <div className="space-y-3">
                 {/* Suggestion 1: Follow up with past clients */}
                 <button
@@ -1355,9 +1341,9 @@ export default function TasksPage() {
                     setShowAllDoneModal(false);
                     setEditingTask({
                       id: "",
-                      title: "Follow up with 10 past clients",
-                      description: "Review past orders and reach out to inactive customers to re-engage them and explore new opportunities.",
-                      type: "follow_up",
+                      title: "Follow up on open claims",
+                      description: "Review open claims and reach out to carriers or shippers for a status update.",
+                      type: "follow_up_carrier",
                       priority: "high",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
@@ -1387,10 +1373,10 @@ export default function TasksPage() {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-slate-900 mb-1">
-                      Follow up with past clients
+                      Follow up on open claims
                     </h4>
                     <p className="text-sm text-slate-600">
-                      Re-engage 10 inactive customers from your past orders. One call could turn into a big opportunity.
+                      Reach out to parties on claims that haven't had a recent update.
                     </p>
                   </div>
                 </button>
@@ -1401,9 +1387,9 @@ export default function TasksPage() {
                     setShowAllDoneModal(false);
                     setEditingTask({
                       id: "",
-                      title: "Make 50 cold calls",
-                      description: "Reach out to new prospects from your unassigned contacts or target list. Goal: 50 calls, 5 meaningful conversations.",
-                      type: "call",
+                      title: "Request missing claim documents",
+                      description: "Request outstanding BOLs, PODs, and photos for claims awaiting documentation.",
+                      type: "request_bol",
                       priority: "high",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
@@ -1433,10 +1419,10 @@ export default function TasksPage() {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-slate-900 mb-1">
-                      Make cold calls to new prospects
+                      Request missing claim documents
                     </h4>
                     <p className="text-sm text-slate-600">
-                      Set a goal of 50 outbound calls today. The more you dial, the more deals you'll close.
+                      Request BOLs, PODs, and photos from parties who haven't submitted them yet.
                     </p>
                   </div>
                 </button>
@@ -1447,9 +1433,9 @@ export default function TasksPage() {
                     setShowAllDoneModal(false);
                     setEditingTask({
                       id: "",
-                      title: "Follow up on pending quotes",
-                      description: "Review all outstanding quotes and reach out to customers who haven't responded yet.",
-                      type: "price_check_in",
+                      title: "Follow up on repair estimates",
+                      description: "Review outstanding repair estimates and follow up with parties who haven't responded.",
+                      type: "request_repair_estimate",
                       priority: "medium",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
@@ -1479,10 +1465,10 @@ export default function TasksPage() {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-slate-900 mb-1">
-                      Follow up on pending quotes
+                      Follow up on repair estimates
                     </h4>
                     <p className="text-sm text-slate-600">
-                      Check in on customers who received quotes but haven't committed yet. Close the deals!
+                      Check in with parties on outstanding repair estimates to keep claims moving.
                     </p>
                   </div>
                 </button>
@@ -1493,9 +1479,9 @@ export default function TasksPage() {
                     setShowAllDoneModal(false);
                     setEditingTask({
                       id: "",
-                      title: "Research and add 20 new prospects",
-                      description: "Find and import 20 new high-quality prospects from your target industries or territories.",
-                      type: "internal_reminder",
+                      title: "Review overdue claims",
+                      description: "Review claims approaching deadlines or with no recent party response.",
+                      type: "internal_review",
                       priority: "medium",
                       due_date: new Date().toISOString().split("T")[0],
                       due_time: null,
@@ -1525,10 +1511,10 @@ export default function TasksPage() {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-slate-900 mb-1">
-                      Research new prospects
+                      Review overdue claims
                     </h4>
                     <p className="text-sm text-slate-600">
-                      Spend time building your pipeline. Add 20 new high-quality prospects to your database.
+                      Review claims with approaching deadlines or no recent party response.
                     </p>
                   </div>
                 </button>

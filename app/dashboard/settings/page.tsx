@@ -138,7 +138,7 @@ function SettingsPageContent() {
     const gotoConnected = searchParams.get("goto_connected");
     const gotoError = searchParams.get("goto_error");
     const sessionExpired = searchParams.get("session_expired");
-    
+
     if (gotoConnected === "true") {
       if (sessionExpired === "true") {
         toast.success(
@@ -163,7 +163,7 @@ function SettingsPageContent() {
       toast.error(messages[gotoError] || "GoTo authorization failed.");
       router.replace("/dashboard/settings");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const scrollToSection = (sectionId: string) => {
@@ -172,7 +172,7 @@ function SettingsPageContent() {
       const offset = 80; // Account for sticky header
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
-      
+
       window.scrollTo({
         top: offsetPosition,
         behavior: "smooth"
@@ -211,7 +211,7 @@ function SettingsPageContent() {
   const [dailyDigestEnabled, setDailyDigestEnabled] = useState(false);
   const [digestTime, setDigestTime] = useState("08:00");
   const [timezone, setTimezone] = useState("America/New_York");
-  
+
   // Microsoft Integration
   const [microsoftIntegrationEnabled, setMicrosoftIntegrationEnabled] = useState(false);
   const [microsoftConnected, setMicrosoftConnected] = useState(false);
@@ -282,14 +282,14 @@ function SettingsPageContent() {
             setMicrosoftIntegrationEnabled(prefs.microsoftIntegrationEnabled ?? false);
           }
         }
-        
+
         // Check if Microsoft account is connected
         const { data: msTokens } = await supabase
           .from('microsoft_tokens')
           .select('id')
           .eq('team_member_id', user.id)
           .single();
-        
+
         setMicrosoftConnected(!!msTokens);
 
         // Check if GoTo Connect account is connected
@@ -302,7 +302,7 @@ function SettingsPageContent() {
         setGotoConnected(!!gotoConn);
         setGotoConnectedAt(gotoConn?.created_at || null);
         setGotoPreferredDeviceId(gotoConn?.preferred_device_id || null);
-        
+
         // Load devices if connected
         if (gotoConn) {
           fetchGotoDevices();
@@ -440,7 +440,7 @@ function SettingsPageContent() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      
+
       if (!user?.email) {
         throw new Error("No authenticated user found");
       }
@@ -453,7 +453,7 @@ function SettingsPageContent() {
 
       setResetEmailSent(true);
       toast.success("Password reset email sent! Check your inbox.");
-      
+
       // Close the password section after a delay
       setTimeout(() => {
         setShowPasswordSection(false);
@@ -466,7 +466,7 @@ function SettingsPageContent() {
       setResetEmailLoading(false);
     }
   };
-  
+
   const handleConnectMicrosoft = async () => {
     setMicrosoftLoading(true);
     try {
@@ -485,7 +485,7 @@ function SettingsPageContent() {
   };
 
   const handleDisconnectGoTo = async () => {
-    if (!confirm('Disconnect your GoTo Connect account? The Power Dialer will stop working.')) return;
+    if (!confirm('Disconnect your GoTo Connect account? Click-to-call will stop working.')) return;
     setGotoLoading(true);
     try {
       const response = await fetch('/api/goto/disconnect', { method: 'DELETE' });
@@ -525,9 +525,9 @@ function SettingsPageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deviceId }),
       });
-      
+
       if (!response.ok) throw new Error('Failed to set preferred device');
-      
+
       setGotoPreferredDeviceId(deviceId);
       toast.success(deviceId ? 'Preferred device updated' : 'Device preference cleared');
     } catch (error) {
@@ -535,22 +535,22 @@ function SettingsPageContent() {
       toast.error('Failed to update device preference');
     }
   };
-  
+
   const handleDisconnectMicrosoft = async () => {
     if (!confirm('Are you sure you want to disconnect your Microsoft account? This will stop syncing tasks to Outlook Calendar.')) {
       return;
     }
-    
+
     setMicrosoftLoading(true);
     try {
       const response = await fetch('/api/microsoft/disconnect', {
         method: 'POST',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to disconnect');
       }
-      
+
       setMicrosoftConnected(false);
       setMicrosoftIntegrationEnabled(false);
       toast.success('Microsoft account disconnected');
@@ -652,10 +652,10 @@ function SettingsPageContent() {
             <section id="goto-integration" className="scroll-mt-20 rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
               <div className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-800">
                 <PhoneOutgoing className="h-5 w-5 text-orange-500" />
-                GoTo Connect (Power Dialer)
+                GoTo Connect
               </div>
               <p className="mb-6 text-sm text-slate-600">
-                Connect your GoTo Connect account first so Power Dialer can place click-to-call sessions from inside NTS Claims Tracker.
+                Connect your GoTo Connect account to place click-to-call sessions from inside NTS Claims Tracker.
               </p>
 
               {gotoConnected ? (
@@ -685,7 +685,7 @@ function SettingsPageContent() {
 
                   <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
                     <PhoneOutgoing className="h-4 w-4 shrink-0" />
-                    <span>The <strong>Power Dialer</strong> is ready. Start a session from the sidebar.</span>
+                    <span>GoTo Connect is ready. Click-to-call is available from claim and party phone numbers.</span>
                   </div>
 
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -706,17 +706,15 @@ function SettingsPageContent() {
                         <div className="flex items-stretch justify-evenly gap-3 w-full">
                           <button
                             onClick={() => handleSetPreferredDevice(null)}
-                            className={`w-full flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition-all ${
-                              !gotoPreferredDeviceId
+                            className={`w-full flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition-all ${!gotoPreferredDeviceId
                                 ? 'border-orange-500 bg-orange-50 shadow-sm'
                                 : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                            }`}
+                              }`}
                           >
-                            <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                              !gotoPreferredDeviceId
+                            <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${!gotoPreferredDeviceId
                                 ? 'border-orange-500 bg-orange-500'
                                 : 'border-slate-300 bg-white'
-                            }`}>
+                              }`}>
                               {!gotoPreferredDeviceId && (
                                 <div className="h-2 w-2 rounded-full bg-white"></div>
                               )}
@@ -731,17 +729,15 @@ function SettingsPageContent() {
                             <button
                               key={device.id}
                               onClick={() => handleSetPreferredDevice(device.id)}
-                              className={`w-full flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition-all ${
-                                gotoPreferredDeviceId === device.id
+                              className={`w-full flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition-all ${gotoPreferredDeviceId === device.id
                                   ? 'border-orange-500 bg-orange-50 shadow-sm'
                                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                              }`}
+                                }`}
                             >
-                              <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                                gotoPreferredDeviceId === device.id
+                              <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${gotoPreferredDeviceId === device.id
                                   ? 'border-orange-500 bg-orange-500'
                                   : 'border-slate-300 bg-white'
-                              }`}>
+                                }`}>
                                 {gotoPreferredDeviceId === device.id && (
                                   <div className="h-2 w-2 rounded-full bg-white"></div>
                                 )}
@@ -934,7 +930,7 @@ function SettingsPageContent() {
                       </div>
                     </div>
                   </label>
-                  
+
                   {dailyDigestEnabled && (
                     <div className="mt-3 ml-8 flex flex-wrap items-center gap-2">
                       <Clock className="h-4 w-4 text-slate-400" />
@@ -968,20 +964,20 @@ function SettingsPageContent() {
               </p>
               <NotificationSettings />
             </section>
-            
+
             {/* Microsoft Integration Section */}
             <section id="microsoft-integration" className="scroll-mt-20 rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
               <div className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-800">
                 <svg className="h-5 w-5 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
+                  <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z" />
                 </svg>
                 Microsoft Integration (Optional)
               </div>
-              
+
               <p className="mb-6 text-sm text-slate-600">
                 Connect your Microsoft account to sync tasks to Outlook Calendar and generate Teams meeting links.
               </p>
-              
+
               {microsoftConnected ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4">
@@ -1004,7 +1000,7 @@ function SettingsPageContent() {
                       {microsoftLoading ? 'Disconnecting...' : 'Disconnect'}
                     </button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <label className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 p-4 transition-all hover:bg-slate-50">
                       <div className="flex-1">
@@ -1021,7 +1017,7 @@ function SettingsPageContent() {
                       />
                     </label>
                   </div>
-                  
+
                   <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <p className="text-sm font-medium text-blue-900 mb-2">Available Features:</p>
                     <ul className="space-y-1 text-sm text-blue-800">
@@ -1073,18 +1069,18 @@ function SettingsPageContent() {
                       </li>
                     </ul>
                   </div>
-                  
+
                   <button
                     onClick={handleConnectMicrosoft}
                     disabled={microsoftLoading}
                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 hover:shadow-md disabled:opacity-50"
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
+                      <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z" />
                     </svg>
                     {microsoftLoading ? 'Connecting...' : 'Connect Microsoft Account'}
                   </button>
-                  
+
                   <p className="text-xs text-slate-500 text-center">
                     Optional - you can continue using the app without Microsoft integration
                   </p>
@@ -1237,15 +1233,14 @@ function SettingsPageContent() {
                               Password Strength
                             </span>
                             <span
-                              className={`text-xs font-semibold ${
-                                calculatePasswordStrength(newPassword).score <= 40
+                              className={`text-xs font-semibold ${calculatePasswordStrength(newPassword).score <= 40
                                   ? "text-rose-600"
                                   : calculatePasswordStrength(newPassword).score <= 60
                                     ? "text-amber-600"
                                     : calculatePasswordStrength(newPassword).score <= 80
                                       ? "text-blue-600"
                                       : "text-emerald-600"
-                              }`}
+                                }`}
                             >
                               {calculatePasswordStrength(newPassword).label}
                             </span>

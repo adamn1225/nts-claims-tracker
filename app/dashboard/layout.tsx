@@ -29,16 +29,13 @@ import TopNav from "@/components/TopNav";
 import TourGuide from "@/components/TourGuide";
 import InactivityTimer from "@/components/InactivityTimer";
 import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
-import FloatingAiCoachButton from "@/components/FloatingAiCoachButton";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import ClockSkewWarning from "@/components/ClockSkewWarning";
 import MaintenanceGate from "@/components/MaintenanceGate";
 import MaintenanceWarningBanner from "@/components/MaintenanceWarningBanner";
-import { AiCoachProvider, useAiCoach } from "@/contexts/AiCoachContext";
-import { AiCoachPanel } from "@/components/ai-coach/AiCoachPanel";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { redirect, useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { TeamMemberViewProvider } from "@/contexts/TeamMemberViewContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { ClickToCallProvider } from "@/contexts/ClickToCallContext";
@@ -46,67 +43,10 @@ import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
 import { dashboardTour } from "@/lib/tour-config";
 import { startNotificationPolling } from "@/lib/notifications/notification-checker";
 
-// Message listener component for dock-back functionality from pop-out window
-function DockBackListener() {
-  const { openCoach, setCurrentCustomer } = useAiCoach();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      // Verify message is from same origin (security)
-      if (event.origin !== window.location.origin) return;
-      
-      if (event.data.type === 'DOCK_AI_COACH') {
-        console.log('🔗 Dock-back message received from pop-out window');
-        const customerId = event.data.customerId;
-        
-        if (customerId) {
-          // Load customer and open coach
-          const { data: customer } = await supabase
-            .from('customers')
-            .select('*')
-            .eq('id', customerId)
-            .single();
-          
-          if (customer) {
-            console.log('✅ Opening AI Coach with customer:', customer.customer_id);
-            setCurrentCustomer(customer);
-            openCoach(customer);
-          } else {
-            openCoach(null);
-          }
-        } else {
-          openCoach(null);
-        }
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [openCoach, setCurrentCustomer, supabase]);
-
-  return null;
-}
-
-function DashboardContent({ children, teamMemberId }: { children: React.ReactNode; teamMemberId: string }) {
-  const pathname = usePathname();
-  const { setCurrentPage } = useAiCoach();
-
-
-
-  // Update AI Coach page context when pathname changes
-  useEffect(() => {
-    if (pathname) {
-      setCurrentPage(pathname);
-    }
-  }, [pathname, setCurrentPage]);
-
+function DashboardContent({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-
-      {/* AI Sales Coach Panel - Opened from Help Modal */}
-      {teamMemberId && <AiCoachPanel />}
     </>
   );
 }
@@ -240,65 +180,57 @@ export default function DashboardLayout({
     <SidebarProvider>
       <TeamMemberViewProvider>
         <ClickToCallProvider>
-          <AiCoachProvider>
-            <OnlinePresenceProvider>
-              <div
-                className="flex h-screen overflow-hidden bg-slate-50"
-                data-tour="welcome"
-              >
-                {/* PWA Install Banner - Mobile Only */}
-                <PwaInstallBanner />
+          <OnlinePresenceProvider>
+            <div
+              className="flex h-screen overflow-hidden bg-slate-50"
+              data-tour="welcome"
+            >
+              {/* PWA Install Banner - Mobile Only */}
+              <PwaInstallBanner />
 
-                {/* Sidebar Navigation - Fixed left on desktop, drawer on mobile */}
-                <DashboardNav />
+              {/* Sidebar Navigation - Fixed left on desktop, drawer on mobile */}
+              <DashboardNav />
 
-                {/* Top Navigation - Search and notifications */}
-                <TopNav
-                  unreadCount={unreadCount}
-                  teamMemberId={teamMemberId}
-                  notificationsPanelOpen={notificationsPanelOpen}
-                  setNotificationsPanelOpen={setNotificationsPanelOpen}
-                />
+              {/* Top Navigation - Search and notifications */}
+              <TopNav
+                unreadCount={unreadCount}
+                teamMemberId={teamMemberId}
+                notificationsPanelOpen={notificationsPanelOpen}
+                setNotificationsPanelOpen={setNotificationsPanelOpen}
+              />
 
-                {/* Main Content Area - Scrollable with padding for mobile header */}
-                <main className="flex-1 overflow-y-auto pt-14 lg:pt-22">
-                  <DashboardContent teamMemberId={teamMemberId}>
-                    {children}
-                  </DashboardContent>
-                </main>
+              {/* Main Content Area - Scrollable with padding for mobile header */}
+              <main className="flex-1 overflow-y-auto pt-14 lg:pt-22">
+                <DashboardContent>
+                  {children}
+                </DashboardContent>
+              </main>
 
-                {/* Floating AI Coach Button - Quick access to AI Sales Assistant */}
-                <FloatingAiCoachButton />
+              {/* Tour Guide */}
+              <TourGuide
+                steps={dashboardTour}
+                isOpen={showTour}
+                onComplete={handleTourComplete}
+                onSkip={handleTourSkip}
+                router={router}
+              />
 
-                {/* Listen for dock-back messages from pop-out window */}
-                <DockBackListener />
+              {/* Inactivity Timer - Auto-logout after 1 hour */}
+              <InactivityTimer />
 
-                {/* Tour Guide */}
-                <TourGuide
-                  steps={dashboardTour}
-                  isOpen={showTour}
-                  onComplete={handleTourComplete}
-                  onSkip={handleTourSkip}
-                  router={router}
-                />
+              {/* Browser Notification Permission Prompt */}
+              <NotificationPermissionPrompt />
 
-                {/* Inactivity Timer - Auto-logout after 1 hour */}
-                <InactivityTimer />
+              {/* Warn if the device clock is skewed (prevents auth sign-outs) */}
+              <ClockSkewWarning />
 
-                {/* Browser Notification Permission Prompt */}
-                <NotificationPermissionPrompt />
+              {/* Advance warning of scheduled maintenance (dismissible) */}
+              <MaintenanceWarningBanner />
 
-                {/* Warn if the device clock is skewed (prevents auth sign-outs) */}
-                <ClockSkewWarning />
-
-                {/* Advance warning of scheduled maintenance (dismissible) */}
-                <MaintenanceWarningBanner />
-
-                {/* Full-screen maintenance page for non-admins when enabled */}
-                <MaintenanceGate />
-              </div>
-              </OnlinePresenceProvider>
-          </AiCoachProvider>
+              {/* Full-screen maintenance page for non-admins when enabled */}
+              <MaintenanceGate />
+            </div>
+          </OnlinePresenceProvider>
         </ClickToCallProvider>
       </TeamMemberViewProvider>
     </SidebarProvider>
