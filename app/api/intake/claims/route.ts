@@ -236,7 +236,7 @@ export async function POST(request: Request) {
   const notificationSummary = {
     reference,
     submissionId,
-    submitterName,
+    submitterName: submitterName ?? "",
     submitterEmail,
     submitterCompany,
     damageDescription,

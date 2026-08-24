@@ -82,12 +82,12 @@ function fmt(iso: string): string {
   return isNaN(d.getTime())
     ? iso
     : d.toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      });
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
 }
 
 export interface ClaimActivityTimelineProps {
@@ -256,7 +256,7 @@ export default function ClaimActivityTimeline({
                     </p>
                   )}
                   {item.kind === "correspondence" &&
-                    item.extra?.requires_human_review && (
+                    Boolean(item.extra?.requires_human_review) && (
                       <p className="mt-1 inline-flex items-center gap-1 rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold text-warning-text">
                         <ArrowRightLeft className="h-2.5 w-2.5" />
                         AI summary — needs review

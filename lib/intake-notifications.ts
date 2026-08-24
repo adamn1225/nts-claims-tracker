@@ -79,8 +79,8 @@ Triage: ${triageUrl}`;
 
     await Promise.all(
       staff
-        .filter((s): s is { email: string; first_name: string | null; role: string } =>
-          Boolean(s.email),
+        .filter(
+          (s): s is typeof s & { email: string } => Boolean(s.email),
         )
         .map((s) =>
           sendEmail({

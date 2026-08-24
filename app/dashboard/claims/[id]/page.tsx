@@ -5,6 +5,7 @@ import ClaimTransactionsPanel from "@/components/claims/ClaimTransactionsPanel";
 import ClaimActivityTimeline from "@/components/claims/ClaimActivityTimeline";
 import ClaimIntegrationsPanel from "@/components/claims/ClaimIntegrationsPanel";
 import ClaimDocumentsPanel from "@/components/claims/ClaimDocumentsPanel";
+import ClaimTasksPanel from "@/components/claims/ClaimTasksPanel";
 import ClaimHeaderActions from "@/components/claims/ClaimHeaderActions";
 
 export const dynamic = "force-dynamic";
@@ -163,8 +164,8 @@ export default async function ClaimDetailPage({
     | null;
   const ownerName = owner
     ? [owner.first_name, owner.last_name].filter(Boolean).join(" ") ||
-      owner.email ||
-      "Unassigned"
+    owner.email ||
+    "Unassigned"
     : "Unassigned";
 
   const freightTypeName =
@@ -391,30 +392,30 @@ export default async function ClaimDetailPage({
                       {(p.contact_name ||
                         p.contact_email ||
                         p.contact_phone) && (
-                        <div className="mt-2 space-y-0.5 text-xs text-slate-600">
-                          {p.contact_name && <p>{p.contact_name}</p>}
-                          {p.contact_email && (
-                            <p>
-                              <a
-                                href={`mailto:${p.contact_email}`}
-                                className="text-accent hover:underline"
-                              >
-                                {p.contact_email}
-                              </a>
-                            </p>
-                          )}
-                          {p.contact_phone && (
-                            <p>
-                              <a
-                                href={`tel:${p.contact_phone}`}
-                                className="text-accent hover:underline"
-                              >
-                                {p.contact_phone}
-                              </a>
-                            </p>
-                          )}
-                        </div>
-                      )}
+                          <div className="mt-2 space-y-0.5 text-xs text-slate-600">
+                            {p.contact_name && <p>{p.contact_name}</p>}
+                            {p.contact_email && (
+                              <p>
+                                <a
+                                  href={`mailto:${p.contact_email}`}
+                                  className="text-accent hover:underline"
+                                >
+                                  {p.contact_email}
+                                </a>
+                              </p>
+                            )}
+                            {p.contact_phone && (
+                              <p>
+                                <a
+                                  href={`tel:${p.contact_phone}`}
+                                  className="text-accent hover:underline"
+                                >
+                                  {p.contact_phone}
+                                </a>
+                              </p>
+                            )}
+                          </div>
+                        )}
                       {p.acknowledged_at && (
                         <p className="mt-2 text-[11px] text-success">
                           Acknowledged {fmtDate(p.acknowledged_at)}
@@ -451,7 +452,22 @@ export default async function ClaimDetailPage({
         </div>
       </div>
 
-      {/* ---- Full-width sections: transactions + activity timeline ---- */}
+      {/* ---- Full-width sections: tasks, transactions + activity timeline ---- */}
+      <ClaimTasksPanel
+        claimId={claim.id}
+        canEdit={canEdit}
+        assignableUsers={
+          (assignableUsers ?? []) as Array<{
+            id: string;
+            first_name: string | null;
+            last_name: string | null;
+            email: string | null;
+            role: string | null;
+            office_location: string | null;
+          }>
+        }
+      />
+
       <ClaimTransactionsPanel
         claimId={claim.id}
         currency={claim.currency}
