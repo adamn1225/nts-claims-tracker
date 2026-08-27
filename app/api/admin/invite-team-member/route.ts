@@ -202,7 +202,7 @@ export async function POST(request: Request) {
         title: "Welcome to NTS Claims Tracker",
         body: `Hi ${firstName}, your account has been created. Check the Help section to get started managing claims.`,
         type: "system",
-        link: "/dashboard/help",
+        link: "/dashboard",
         created_at: new Date().toISOString(),
       });
 

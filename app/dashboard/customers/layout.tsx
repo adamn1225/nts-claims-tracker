@@ -173,16 +173,6 @@ function CustomersLayoutContent({ children }: { children: ReactNode }) {
                   </span>
                 )} */}
                 </Link>
-                <Link
-                  href="/dashboard/customers/calendar"
-                  className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${isCalendar
-                    ? "bg-white text-primary-text shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                    }`}
-                >
-                  <CalendarIcon className="h-3.5 w-3.5" />
-                  <span>Calendar</span>
-                </Link>
               </div>
 
               <Link

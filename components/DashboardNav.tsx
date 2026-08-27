@@ -116,12 +116,6 @@ const navigation: NavigationItem[] = [
   //   requiresRole: ["manager", "admin"] as const,
   // },
   {
-    name: "Tasks",
-    href: "/dashboard/tasks",
-    icon: ListTodo,
-    description: "Follow-ups & reminders",
-  },
-  {
     name: "Reports",
     href: "/dashboard/reports",
     icon: BarChart3,
@@ -149,24 +143,11 @@ const navigation: NavigationItem[] = [
   //   requiresRole: ["manager", "admin", "sales_coach"] as const,
   // },
   {
-    name: "Help",
-    href: "/dashboard/help",
-    icon: HelpCircle,
-    description: "Guides & tutorials",
-  },
-  {
     name: "Post Update",
     href: "/dashboard/updates/create",
     icon: Megaphone,
     description: "Share new features & announcements",
     requiresRole: ["manager", "admin"] as const,
-  },
-  {
-    name: "Manager Console",
-    href: "/dashboard/manager",
-    icon: Users,
-    description: "Manage your team",
-    requiresRole: ["manager"] as const,
   },
   {
     name: "Admin Console",

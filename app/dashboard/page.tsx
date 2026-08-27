@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTeamMemberView } from "@/contexts/TeamMemberViewContext";
-import { getCustomerDisplayName } from "@/lib/customer-utils";
 import {
   TrendingUp,
   TrendingDown,
@@ -375,7 +374,7 @@ export default function DashboardPage() {
       // Fetch all data in parallel
       await Promise.all([
         fetchMetrics(viewingTeamMember.id),
-        fetchRecentActivity(viewingTeamMember.id),
+        fetchRecentActivity(),
         fetchWeeklyTasks(viewingTeamMember.id),
         fetchClaimStats(),
       ]);
@@ -443,65 +442,52 @@ export default function DashboardPage() {
     });
   };
 
-  const fetchRecentActivity = async (userId: string) => {
+  const fetchRecentActivity = async () => {
     const supabase = createClient();
 
-    const { data: contactLogs } = await supabase
-      .from("contact_log")
-      .select(
-        `
-        *,
-        customer:customers(business_name, contact_name)
-      `,
-      )
-      .eq("team_member_id", userId)
-      .order("contact_date", { ascending: false })
-      .limit(3);
+    const { data: logs } = await supabase
+      .from("correspondence_log")
+      .select("channel, direction, subject, body, occurred_at")
+      .order("occurred_at", { ascending: false })
+      .limit(5);
 
-    if (contactLogs) {
-      const activities = contactLogs.map((log: any) => {
-        const getIcon = () => {
-          switch (log.type) {
-            case "call":
-              return Phone;
-            case "email":
-              return Mail;
-            case "meeting":
-              return Calendar;
-            case "quote":
-              return CheckCircle2;
-            default:
-              return Clock;
-          }
-        };
+    if (logs) {
+      const iconForChannel = (channel: string) => {
+        switch (channel) {
+          case "phone":
+            return Phone;
+          case "email":
+            return Mail;
+          case "sms":
+            return Mail;
+          case "letter":
+            return FileText;
+          case "in_person":
+            return Users;
+          default:
+            return Clock;
+        }
+      };
 
-        const getTimeAgo = (dateString: string) => {
-          const date = new Date(dateString);
-          const now = new Date();
-          const diffMs = now.getTime() - date.getTime();
-          const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const timeAgo = (dateString: string) => {
+        const date = new Date(dateString);
+        const diffMs = Date.now() - date.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffHours < 1) return "Just now";
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays === 1) return "1d ago";
+        return `${diffDays}d ago`;
+      };
 
-          if (diffHours < 24) return `${diffHours}h ago`;
-          if (diffDays === 1) return "1d ago";
-          return `${diffDays}d ago`;
-        };
-
-        const customer = Array.isArray(log.customer)
-          ? log.customer[0]
-          : log.customer;
-
-        return {
-          icon: getIcon(),
-          title:
-            log.subject ||
-            `${log.type.charAt(0).toUpperCase() + log.type.slice(1)} with ${customer?.business_name || "customer"}`,
-          subtitle: log.notes || (customer ? getCustomerDisplayName(customer) : ""),
-          time: getTimeAgo(log.contact_date),
-        };
-      });
-
-      setRecentActivity(activities);
+      setRecentActivity(
+        logs.map((log: any) => ({
+          icon: iconForChannel(log.channel),
+          title: log.subject || `${log.direction} ${log.channel}`,
+          subtitle: log.body || "",
+          time: timeAgo(log.occurred_at),
+        })),
+      );
     }
   };
 
@@ -594,15 +580,12 @@ export default function DashboardPage() {
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 5); // Friday
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
 
     const { data: tasks } = await supabase
       .from("tasks")
-      .select("due_date, status")
-      .eq("team_member_id", userId)
-      .gte("due_date", startOfWeek.toISOString().split("T")[0])
-      .lte("due_date", endOfWeek.toISOString().split("T")[0])
-      .neq("status", "cancelled");
+      .select("due_at, status")
+      .eq("assigned_to", userId);
 
     const tasksByDay: Record<string, number> = {
       Monday: 0,
@@ -613,8 +596,10 @@ export default function DashboardPage() {
     };
 
     tasks?.forEach((task) => {
-      const taskDate = new Date(task.due_date);
-      const dayOfWeek = taskDate.getDay();
+      if (!task.due_at) return;
+      if (task.status === "completed" || task.status === "cancelled") return;
+      const taskDate = new Date(task.due_at);
+      if (taskDate < startOfWeek || taskDate >= endOfWeek) return;
       const dayNames = [
         "Sunday",
         "Monday",
@@ -624,8 +609,7 @@ export default function DashboardPage() {
         "Friday",
         "Saturday",
       ];
-      const dayName = dayNames[dayOfWeek];
-
+      const dayName = dayNames[taskDate.getDay()];
       if (dayName in tasksByDay) {
         tasksByDay[dayName]++;
       }
@@ -712,7 +696,7 @@ export default function DashboardPage() {
                   : "On track"
               }
               icon={ListTodo}
-              href="/dashboard/tasks?filter=today"
+              href="/dashboard/customers/kanban"
               badge={metrics.overdueTasks > 0 ? "!" : undefined}
             />
             <KpiTile
@@ -721,7 +705,7 @@ export default function DashboardPage() {
               value={metrics.followUpsThisWeek}
               sub="Upcoming follow-ups"
               icon={Calendar}
-              href="/dashboard/tasks"
+              href="/dashboard/customers/kanban"
             />
             <KpiTile
               accent="primary"
@@ -752,7 +736,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/dashboard/tasks?filter=overdue"
+                  href="/dashboard/customers/kanban"
                   className="shrink-0 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-danger/90"
                 >
                   View Now
@@ -789,27 +773,27 @@ export default function DashboardPage() {
                 </div>
               </Link>
               <Link
-                href="/dashboard/tasks?action=new"
+                href="/dashboard/claims/list"
                 className="group flex items-center gap-3 rounded-lg border border-slate-200 p-3 transition-all hover:border-accent hover:bg-accent/5 hover:shadow-sm"
               >
                 <div className="rounded-lg bg-accent/10 p-2 ring-1 ring-accent/15 transition-all group-hover:bg-accent group-hover:ring-accent">
                   <FileText className="h-4 w-4 text-accent transition-colors group-hover:text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-900">Log Correspondence</p>
-                  <p className="truncate text-xs text-slate-600">Call, email, or note</p>
+                  <p className="text-sm font-semibold text-slate-900">Claims List</p>
+                  <p className="truncate text-xs text-slate-600">All claims in a table</p>
                 </div>
               </Link>
               <Link
-                href="/dashboard/customers/calendar"
+                href="/dashboard/claims/intake"
                 className="group flex items-center gap-3 rounded-lg border border-slate-200 p-3 transition-all hover:border-warning hover:bg-warning/5 hover:shadow-sm"
               >
                 <div className="rounded-lg bg-warning/10 p-2 ring-1 ring-warning/15 transition-all group-hover:bg-warning group-hover:ring-warning">
                   <Calendar className="h-4 w-4 text-warning-text transition-colors group-hover:text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-900">Deadlines</p>
-                  <p className="truncate text-xs text-slate-600">View schedule</p>
+                  <p className="text-sm font-semibold text-slate-900">Review Intake</p>
+                  <p className="truncate text-xs text-slate-600">Triage new submissions</p>
                 </div>
               </Link>
             </div>

@@ -15,11 +15,4 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 // Types from schema
 export type {
   TeamMember,
-  Customer,
-  Task,
-  ContactLog,
-  ShippingFrequency,
-  TaskStatus,
-  TaskType,
-  ContactLogType,
 } from "@/lib/types";

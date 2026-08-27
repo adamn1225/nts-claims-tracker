@@ -19,7 +19,6 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import InviteTeamMemberModal from "./InviteTeamMemberModal";
 import EditTeamMemberModal from "./EditTeamMemberModal";
-import PermissionsModal from "./PermissionsModal";
 import DeleteTeamMemberModal from "./DeleteTeamMemberModal";
 
 type TeamMemberRow = {
@@ -84,7 +83,6 @@ export default function TeamMemberTable() {
   const [query, setQuery] = useState("");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMemberRow | null>(null);
   const [resendingInvite, setResendingInvite] = useState<string | null>(null);
@@ -348,14 +346,14 @@ export default function TeamMemberTable() {
       prev.map((b) =>
         ids.includes(b.id)
           ? {
-              ...b,
-              ...(typeof update.is_active === "boolean"
-                ? { is_active: update.is_active }
-                : {}),
-              ...(typeof update.is_manager === "boolean" && !b.is_admin
-                ? { is_manager: update.is_manager }
-                : {}),
-            }
+            ...b,
+            ...(typeof update.is_active === "boolean"
+              ? { is_active: update.is_active }
+              : {}),
+            ...(typeof update.is_manager === "boolean" && !b.is_admin
+              ? { is_manager: update.is_manager }
+              : {}),
+          }
           : b,
       ),
     );
@@ -657,8 +655,8 @@ export default function TeamMemberTable() {
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors ${showFilters || activeFilterCount > 0
-                  ? "border-orange-500 bg-orange-50 text-orange-700"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                ? "border-orange-500 bg-orange-50 text-orange-700"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
@@ -780,8 +778,8 @@ export default function TeamMemberTable() {
                 <button
                   onClick={() => setOfficeSortBy("name")}
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${officeSortBy === "name"
-                      ? "border-orange-500 bg-orange-50 text-orange-700"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border-orange-500 bg-orange-50 text-orange-700"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     }`}
                 >
                   Alphabetical
@@ -789,8 +787,8 @@ export default function TeamMemberTable() {
                 <button
                   onClick={() => setOfficeSortBy("count")}
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${officeSortBy === "count"
-                      ? "border-orange-500 bg-orange-50 text-orange-700"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border-orange-500 bg-orange-50 text-orange-700"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     }`}
                 >
                   By TeamMember Count
@@ -867,7 +865,6 @@ export default function TeamMemberTable() {
                   resendingInvite={resendingInvite}
                   setSelectedTeamMember={setSelectedTeamMember}
                   setIsEditModalOpen={setIsEditModalOpen}
-                  setIsPermissionsModalOpen={setIsPermissionsModalOpen}
                   toggleAdmin={toggleAdmin}
                   handleDeactivate={handleDeactivate}
                   selectedIds={selectedIds}
@@ -915,7 +912,6 @@ export default function TeamMemberTable() {
                           resendingInvite={resendingInvite}
                           setSelectedTeamMember={setSelectedTeamMember}
                           setIsEditModalOpen={setIsEditModalOpen}
-                          setIsPermissionsModalOpen={setIsPermissionsModalOpen}
                           toggleAdmin={toggleAdmin}
                           handleDeactivate={handleDeactivate}
                           selectedIds={selectedIds}
@@ -943,7 +939,6 @@ export default function TeamMemberTable() {
                           resendingInvite={resendingInvite}
                           setSelectedTeamMember={setSelectedTeamMember}
                           setIsEditModalOpen={setIsEditModalOpen}
-                          setIsPermissionsModalOpen={setIsPermissionsModalOpen}
                           toggleAdmin={toggleAdmin}
                           handleDeactivate={handleDeactivate}
                           selectedIds={selectedIds}
@@ -996,7 +991,6 @@ export default function TeamMemberTable() {
                       resendingInvite={resendingInvite}
                       setSelectedTeamMember={setSelectedTeamMember}
                       setIsEditModalOpen={setIsEditModalOpen}
-                      setIsPermissionsModalOpen={setIsPermissionsModalOpen}
                       toggleAdmin={toggleAdmin}
                       handleDeactivate={handleDeactivate}
                       isDeactivatedSection={true}
@@ -1037,19 +1031,6 @@ export default function TeamMemberTable() {
         onSubmitAction={handleEditSubmit}
       />
 
-      {/* Permissions Modal */}
-      <PermissionsModal
-        isOpen={isPermissionsModalOpen}
-        teamMember={selectedTeamMember}
-        onCloseAction={() => {
-          setIsPermissionsModalOpen(false);
-          setSelectedTeamMember(null);
-        }}
-        onSuccessAction={() => {
-          // Reload teamMembers to refresh display if needed
-        }}
-      />
-
       {/* Hard-Delete Modal */}
       <DeleteTeamMemberModal
         isOpen={isDeleteModalOpen}
@@ -1074,7 +1055,6 @@ function TeamMemberRoleTable({
   resendingInvite,
   setSelectedTeamMember,
   setIsEditModalOpen,
-  setIsPermissionsModalOpen,
   setIsDeleteModalOpen,
   toggleAdmin,
   handleDeactivate,
@@ -1091,7 +1071,6 @@ function TeamMemberRoleTable({
   resendingInvite: string | null;
   setSelectedTeamMember: (teamMember: TeamMemberRow) => void;
   setIsEditModalOpen: (open: boolean) => void;
-  setIsPermissionsModalOpen: (open: boolean) => void;
   setIsDeleteModalOpen?: (open: boolean) => void;
   toggleAdmin: (id: string, current: boolean | null | undefined) => void;
   handleDeactivate: (teamMember: TeamMemberRow) => void;
@@ -1201,10 +1180,10 @@ function TeamMemberRoleTable({
             <td className="px-3 py-2 text-sm">
               <span
                 className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${b.is_admin
-                    ? "border-amber-200 bg-amber-50 text-amber-800"
-                    : b.is_manager
-                      ? "border-blue-200 bg-blue-50 text-blue-800"
-                      : "border-slate-200 bg-slate-50 text-slate-700"
+                  ? "border-amber-200 bg-amber-50 text-amber-800"
+                  : b.is_manager
+                    ? "border-blue-200 bg-blue-50 text-blue-800"
+                    : "border-slate-200 bg-slate-50 text-slate-700"
                   }`}
               >
                 <ShieldCheck className="h-3 w-3" />{" "}
@@ -1215,8 +1194,8 @@ function TeamMemberRoleTable({
               <div className="flex flex-col gap-1">
                 <span
                   className={`inline-flex rounded-full border px-2 py-0.5 text-xs ${b.is_active === false
-                      ? "border-red-200 bg-red-50 text-red-700"
-                      : "border-green-200 bg-green-50 text-green-700"
+                    ? "border-red-200 bg-red-50 text-red-700"
+                    : "border-green-200 bg-green-50 text-green-700"
                     }`}
                 >
                   {b.is_active === false ? "Inactive" : "Active"}
@@ -1243,16 +1222,6 @@ function TeamMemberRoleTable({
                   <Edit className="h-3 w-3" /> Edit
                 </button>
                 <button
-                  onClick={() => {
-                    setSelectedTeamMember(b);
-                    setIsPermissionsModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-purple-700 hover:bg-purple-50"
-                  title="Manage Permissions"
-                >
-                  <Settings className="h-3 w-3" /> Permissions
-                </button>
-                <button
                   onClick={() => toggleAdmin(b.id, b.is_admin)}
                   className="rounded px-2 py-1 text-xs text-amber-700 hover:bg-amber-50"
                 >
@@ -1261,8 +1230,8 @@ function TeamMemberRoleTable({
                 <button
                   onClick={() => handleDeactivate(b)}
                   className={`rounded px-2 py-1 text-xs ${b.is_active === false
-                      ? "text-green-700 hover:bg-green-50"
-                      : "text-red-700 hover:bg-red-50"
+                    ? "text-green-700 hover:bg-green-50"
+                    : "text-red-700 hover:bg-red-50"
                     }`}
                 >
                   {b.is_active === false ? "Reactivate" : "Deactivate"}

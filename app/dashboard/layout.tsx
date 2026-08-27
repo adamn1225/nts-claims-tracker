@@ -26,7 +26,6 @@
 
 import DashboardNav from "@/components/DashboardNav";
 import TopNav from "@/components/TopNav";
-import TourGuide from "@/components/TourGuide";
 import InactivityTimer from "@/components/InactivityTimer";
 import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
@@ -40,7 +39,6 @@ import { TeamMemberViewProvider } from "@/contexts/TeamMemberViewContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { ClickToCallProvider } from "@/contexts/ClickToCallContext";
 import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
-import { dashboardTour } from "@/lib/tour-config";
 import { startNotificationPolling } from "@/lib/notifications/notification-checker";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -207,15 +205,6 @@ export default function DashboardLayout({
               </main>
 
               {/* Tour Guide */}
-              <TourGuide
-                steps={dashboardTour}
-                isOpen={showTour}
-                onComplete={handleTourComplete}
-                onSkip={handleTourSkip}
-                router={router}
-              />
-
-              {/* Inactivity Timer - Auto-logout after 1 hour */}
               <InactivityTimer />
 
               {/* Browser Notification Permission Prompt */}

@@ -1,7 +1,7 @@
 {
   "name": "NTS Claims Tracker",
   "short_name": "NTS Tracker",
-  "description": "Freight broker CRM for customer tracking and follow-up management",
+  "description": "Cargo and transportation claims management for Nationwide Transport Services",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#1A1A1A",
@@ -24,9 +24,9 @@
   "categories": ["business", "productivity"],
   "shortcuts": [
     {
-      "name": "Customers",
-      "short_name": "Customers",
-      "description": "View customer kanban board",
+      "name": "Claims Board",
+      "short_name": "Board",
+      "description": "View the claims pipeline",
       "url": "/dashboard/customers/kanban",
       "icons": [
         {
@@ -36,10 +36,10 @@
       ]
     },
     {
-      "name": "Tasks",
-      "short_name": "Tasks",
-      "description": "View tasks and reminders",
-      "url": "/dashboard/tasks",
+      "name": "Claims List",
+      "short_name": "List",
+      "description": "View claims as a table",
+      "url": "/dashboard/claims/list",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -48,10 +48,10 @@
       ]
     },
     {
-      "name": "Calendar",
-      "short_name": "Calendar",
-      "description": "View calendar",
-      "url": "/dashboard/customers/calendar",
+      "name": "Claim Intake",
+      "short_name": "Intake",
+      "description": "Review new claim submissions",
+      "url": "/dashboard/claims/intake",
       "icons": [
         {
           "src": "/icon-192.png",

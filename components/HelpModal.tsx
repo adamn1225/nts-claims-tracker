@@ -5,12 +5,10 @@ import {
   Book,
   Users,
   CheckSquare,
-  Calendar,
-  Search,
-  ExternalLink,
+  FileText,
+  FolderInput,
+  Building2,
 } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -18,125 +16,150 @@ interface HelpModalProps {
   currentPath?: string;
 }
 
-export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" }: HelpModalProps) {
-  const router = useRouter();
+type HelpTopic = {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  tips: string[];
+};
 
+/**
+ * HelpModal — context-aware quick help for claims workflows.
+ * Content adapts to the current route (kanban, list, intake, companies).
+ */
+export default function HelpModal({
+  isOpen,
+  onClose,
+  currentPath = "/dashboard",
+}: HelpModalProps) {
   if (!isOpen) return null;
 
-  // Function to get page-specific help topics based on current route
-  const getHelpTopics = (path: string) => {
-    console.log("🎯 HelpModal currentPath:", path);
-
-    // Kanban Board Help
+  const getHelpTopics = (path: string): HelpTopic[] => {
     if (path.includes("/kanban")) {
       return [
         {
-          icon: <Users className="h-5 w-5 text-orange-500" />,
+          icon: <Users className="h-5 w-5 text-primary" />,
           title: "Managing Claims",
           description: "Track claims through every stage",
           tips: [
-            "Drag cards between columns to update status",
-            "Pin high-priority claims to keep them at the top",
-            "Click a card to view full details and claim history",
+            "Drag cards between columns to update claim status",
+            "Pin high-exposure claims to keep them visible",
+            "Click a card to open the full claim detail",
           ],
         },
         {
-          icon: <CheckSquare className="h-5 w-5 text-orange-500" />,
+          icon: <CheckSquare className="h-5 w-5 text-primary" />,
           title: "Filtering & Search",
           description: "Find claims quickly",
           tips: [
-            "Filter by status badges (top of page)",
-            "Filter by import source to group similar leads",
-            "Use search bar to find by name, company, or contact info",
+            "Filter by claim stage using the column headers",
+            "Filter by intake source (FreightClaims.com, email, phone)",
+            "Use search to find by claim number, BOL, or party name",
           ],
         },
       ];
     }
 
-    // Tasks Help
-    if (path.includes("/tasks")) {
+    if (path.includes("/claims/intake")) {
       return [
         {
-          icon: <CheckSquare className="h-5 w-5 text-orange-500" />,
-          title: "Task Management",
-          description: "Never miss a follow-up",
+          icon: <FolderInput className="h-5 w-5 text-primary" />,
+          title: "Reviewing Intake",
+          description: "Triage new claim submissions",
           tips: [
-            "Set priority: Urgent, High, Normal, Low",
-            "Add due dates to get email and in-app notifications",
-            "Use quick templates to create common tasks faster",
-            "Overdue tasks send DAILY reminders until completed",
-          ],
-        },
-        {
-          icon: <Calendar className="h-5 w-5 text-orange-500" />,
-          title: "Task View Modes",
-          description: "Multiple ways to view your workload",
-          tips: [
-            "Active: Current tasks in progress",
-            "Today: Due today or overdue",
-            "Upcoming: Scheduled for future dates",
-            "Completed: Finished tasks (last 30 days)",
+            "Review each submission and its attachments",
+            "Promote valid claims to the board, or reject duplicates",
+            "Promotion creates the claim, parties, and documents",
           ],
         },
       ];
     }
 
-    // Calendar Help
-    if (path.includes("/calendar")) {
+    if (path.includes("/claims/") && path.includes("/list")) {
       return [
         {
-          icon: <Calendar className="h-5 w-5 text-orange-500" />,
-          title: "Calendar View",
-          description: "Visualize your follow-up schedule",
+          icon: <FileText className="h-5 w-5 text-primary" />,
+          title: "Claims List",
+          description: "FreightClaims-style table of all claims",
           tips: [
-            "See all tasks and follow-ups in month/week/day views",
-            "Click any date to add a new task",
-            "Click a task to view details or mark complete",
+            "Sort and filter by owner, stage, value bucket, and dates",
+            "Use bulk assign to hand claims to the right person",
+            "Open any row for the full claim detail",
           ],
         },
       ];
     }
 
-    // Dashboard Help (default)
+    if (path.includes("/companies")) {
+      return [
+        {
+          icon: <Building2 className="h-5 w-5 text-primary" />,
+          title: "Companies",
+          description: "Shippers, carriers, factoring, and insurers",
+          tips: [
+            "View carrier holds (Do Not Pay, payment/dispatch holds)",
+            "Link a company to claims as a party",
+            "Add notes to keep the team aligned",
+          ],
+        },
+      ];
+    }
+
+    if (path.includes("/claims/")) {
+      return [
+        {
+          icon: <FileText className="h-5 w-5 text-primary" />,
+          title: "Claim Detail",
+          description: "Everything about one claim",
+          tips: [
+            "Assign an owner from the header to route the claim",
+            "Use the Tasks section to create and assign follow-ups",
+            "Log transactions, upload documents, and post activity",
+          ],
+        },
+      ];
+    }
+
+    // Default — dashboard / general
     return [
       {
-        icon: <Users className="h-5 w-5 text-orange-500" />,
-        title: "Managing Customers",
-        description: "Add customers, track status, and organize your book of business",
+        icon: <Users className="h-5 w-5 text-primary" />,
+        title: "Claims Board",
+        description: "Your pipeline at a glance",
         tips: [
-          "Click '+ New Customer' to add prospects and clients",
-          "Drag and drop cards between columns to update status",
-          "Pin important customers to keep them visible at the top",
+          "Columns mirror the SOP: Intake → Documenting → Investigating → Carrier Review → Settlement → Closed",
+          "Legal and Denied are side states tracked separately",
+          "Pinned claims surface high-exposure work at the top",
         ],
       },
       {
-        icon: <CheckSquare className="h-5 w-5 text-orange-500" />,
-        title: "Task Management",
-        description: "Never miss a follow-up with task reminders and templates",
+        icon: <CheckSquare className="h-5 w-5 text-primary" />,
+        title: "Tasks",
+        description: "Per-claim follow-ups and checklists",
         tips: [
-          "Set task priority (Urgent, High, Normal, Low)",
-          "Add due dates to get email and in-app notifications",
-          "Use quick templates to create common tasks faster",
+          "Open a claim and use its Tasks section to add follow-ups",
+          "Assign each task to a team member",
+          "Overdue tasks highlight in red so nothing slips",
         ],
       },
       {
-        icon: <Search className="h-5 w-5 text-orange-500" />,
-        title: "Global Search",
-        description: "Quickly find any customer across your entire book",
+        icon: <FolderInput className="h-5 w-5 text-primary" />,
+        title: "Documents",
+        description: "BOLs, PODs, photos, estimates, and more",
         tips: [
-          "Search by customer name, contact, email, or phone",
-          "Use the filter dropdown to narrow your search",
-          "Click any result to jump directly to that customer",
+          "Click any image or PDF to preview it in-place",
+          "Use Extract to pull structured fields from images with AI",
+          "Required evidence is tracked per claim",
         ],
       },
       {
-        icon: <Calendar className="h-5 w-5 text-orange-500" />,
-        title: "Calendar & Reminders",
-        description: "Stay on top of follow-ups with calendar views and notifications",
+        icon: <Building2 className="h-5 w-5 text-primary" />,
+        title: "Carrier Holds",
+        description: "Do Not Pay and dispatch holds",
         tips: [
-          "View all tasks and follow-ups in calendar format",
-          "Overdue tasks create DAILY reminders until completed",
-          "Check the notification bell for upcoming and overdue tasks",
+          "Placing an active hold requires manager approval",
+          "Every hold writes an audit entry",
+          "Holds surface on the carrier's company profile",
         ],
       },
     ];
@@ -144,24 +167,16 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
 
   const quickHelpTopics = getHelpTopics(currentPath);
 
-  // Get page name for context badge
   const getPageName = (path: string): string => {
-    if (path.includes("/kanban")) return "Kanban Board";
-    if (path.includes("/tasks")) return "Tasks";
-    if (path.includes("/calendar")) return "Calendar";
+    if (path.includes("/kanban")) return "Claims Board";
+    if (path.includes("/claims/intake")) return "Claim Intake";
+    if (path.includes("/claims/list")) return "Claims List";
+    if (path.includes("/companies")) return "Companies";
+    if (path.includes("/claims/")) return "Claim Detail";
     return "Dashboard";
   };
 
   const pageName = getPageName(currentPath);
-
-  const handleViewFullHelp = () => {
-    router.push("/dashboard/help");
-    onClose();
-  };
-
-  const handleClose = () => {
-    onClose();
-  };
 
   return (
     <>
@@ -169,7 +184,7 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
       <div
         className="fixed inset-0 h-screen bg-black/30"
         style={{ zIndex: 100 }}
-        onClick={handleClose}
+        onClick={onClose}
       />
 
       {/* Modal Panel */}
@@ -181,8 +196,8 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
         <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-6 py-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-                <Book className="h-5 w-5 text-orange-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Book className="h-5 w-5 text-primary-text" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
@@ -194,7 +209,7 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
               </div>
             </div>
             <button
-              onClick={handleClose}
+              onClick={onClose}
               className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
               aria-label="Close help"
             >
@@ -204,98 +219,76 @@ export default function HelpModal({ isOpen, onClose, currentPath = "/dashboard" 
         </div>
 
         {/* Content */}
-        <>
-          {/* Help Topics Content */}
-          <div className="px-6 py-4">
-            {/* Page Context Badge */}
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
-              <span className="h-2 w-2 rounded-full bg-orange-500"></span>
-              Help for: {pageName}
-            </div>
-
-            {/* Introduction */}
-            <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
-              <p className="text-sm text-slate-700">
-                <strong className="text-orange-900">
-                  Welcome to NTS Claims Tracker!
-                </strong>
-                <br />
-                This CRM helps freight team members manage customer relationships,
-                track tasks, and never miss a follow-up. Here are some quick tips
-                to get started.
-              </p>
-            </div>
-
-            {/* Quick Help Topics */}
-            <div className="space-y-6">
-              {quickHelpTopics.map((topic, index) => (
-                <div
-                  key={index}
-                  className="rounded-lg border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md"
-                >
-                  <div className="mb-3 flex items-start gap-3">
-                    <div className="mt-0.5">{topic.icon}</div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">
-                        {topic.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {topic.description}
-                      </p>
-                    </div>
-                  </div>
-                  <ul className="ml-8 space-y-1.5">
-                    {topic.tips.map((tip, tipIndex) => (
-                      <li
-                        key={tipIndex}
-                        className="text-sm text-slate-700 before:mr-2 before:content-['•']"
-                      >
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            {/* Keyboard Shortcuts Hint */}
-            <div className="mt-6 rounded-lg bg-slate-50 p-4">
-              <h3 className="mb-2 flex items-center gap-2 font-semibold text-slate-900">
-                💡 Pro Tips
-              </h3>
-              <ul className="space-y-1.5 text-sm text-slate-700">
-                <li className="before:mr-2 before:content-['•']">
-                  Use the global search (top bar) to find customers quickly
-                </li>
-                <li className="before:mr-2 before:content-['•']">
-                  Pin your most important customers to keep them at the top
-                </li>
-                <li className="before:mr-2 before:content-['•']">
-                  Set task priorities to focus on what matters most
-                </li>
-                <li className="before:mr-2 before:content-['•']">
-                  Restart the interactive tour from the full Help page
-                </li>
-              </ul>
-            </div>
+        <div className="px-6 py-4">
+          {/* Page Context Badge */}
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary-text">
+            <span className="h-2 w-2 rounded-full bg-primary"></span>
+            Help for: {pageName}
           </div>
 
-          {/* Footer */}
-          <div className="sticky bottom-0 border-t border-slate-200 bg-white px-6 py-4">
-            <button
-              onClick={handleViewFullHelp}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-3 font-medium text-white transition-colors hover:bg-orange-600"
-            >
-              <Book className="h-4 w-4" />
-              <span>View Full Help Documentation</span>
-              <ExternalLink className="h-4 w-4" />
-            </button>
-            <p className="mt-3 text-center text-xs text-slate-500">
-              Need more help? Visit the full help page for detailed guides, video
-              tutorials, and best practices.
+          {/* Introduction */}
+          <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm text-slate-700">
+              <strong className="text-slate-900">
+                Welcome to NTS Claims Tracker!
+              </strong>
+              <br />
+              Track cargo and transportation claims through their full lifecycle
+              — intake, documentation, investigation, carrier review, settlement,
+              and closure.
             </p>
           </div>
-        </>
+
+          {/* Quick Help Topics */}
+          <div className="space-y-6">
+            {quickHelpTopics.map((topic, index) => (
+              <div
+                key={index}
+                className="rounded-lg border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md"
+              >
+                <div className="mb-3 flex items-start gap-3">
+                  <div className="mt-0.5">{topic.icon}</div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-slate-900">
+                      {topic.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {topic.description}
+                    </p>
+                  </div>
+                </div>
+                <ul className="ml-8 space-y-1.5">
+                  {topic.tips.map((tip, tipIndex) => (
+                    <li
+                      key={tipIndex}
+                      className="text-sm text-slate-700 before:mr-2 before:content-['•']"
+                    >
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Keyboard Shortcuts Hint */}
+          <div className="mt-6 rounded-lg bg-slate-50 p-4">
+            <h3 className="mb-2 flex items-center gap-2 font-semibold text-slate-900">
+              Pro Tips
+            </h3>
+            <ul className="space-y-1.5 text-sm text-slate-700">
+              <li className="before:mr-2 before:content-['•']">
+                Open a claim to see its tasks, documents, and correspondence
+              </li>
+              <li className="before:mr-2 before:content-['•']">
+                Assign claims to a team member from the claim header
+              </li>
+              <li className="before:mr-2 before:content-['•']">
+                Preview images and PDFs in-place by clicking them
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </>
   );
