@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -1072,6 +1072,8 @@ export type Database = {
         Row: {
           acknowledged_at: string | null
           bol_number: string | null
+          carrier_deductible: number | null
+          carrier_pay: number | null
           central_dispatch_order_number: string | null
           claim_number: string
           claim_type: Database["public"]["Enums"]["claim_type"] | null
@@ -1115,6 +1117,8 @@ export type Database = {
         Insert: {
           acknowledged_at?: string | null
           bol_number?: string | null
+          carrier_deductible?: number | null
+          carrier_pay?: number | null
           central_dispatch_order_number?: string | null
           claim_number: string
           claim_type?: Database["public"]["Enums"]["claim_type"] | null
@@ -1158,6 +1162,8 @@ export type Database = {
         Update: {
           acknowledged_at?: string | null
           bol_number?: string | null
+          carrier_deductible?: number | null
+          carrier_pay?: number | null
           central_dispatch_order_number?: string | null
           claim_number?: string
           claim_type?: Database["public"]["Enums"]["claim_type"] | null

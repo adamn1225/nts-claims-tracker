@@ -7,6 +7,7 @@ import ClaimIntegrationsPanel from "@/components/claims/ClaimIntegrationsPanel";
 import ClaimDocumentsPanel from "@/components/claims/ClaimDocumentsPanel";
 import ClaimTasksPanel from "@/components/claims/ClaimTasksPanel";
 import ClaimHeaderActions from "@/components/claims/ClaimHeaderActions";
+import ClaimFinancialsPanel from "@/components/claims/ClaimFinancialsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -326,25 +327,20 @@ export default async function ClaimDetailPage({
             </Dl>
           </Card>
 
-          <Card title="Financials">
-            <Dl>
-              <Row
-                label="Estimated claim amount"
-                value={fmtMoney(claim.damage_claim_amount, claim.currency)}
-              />
-              <Row
-                label="Total shipment value"
-                value={fmtMoney(claim.shipment_value, claim.currency)}
-              />
-              <Row label="Value bucket" value={valueBucketLabel} />
-              {claim.resolution && (
-                <Row label="Resolution" value={claim.resolution} />
-              )}
-              {claim.resolution_notes && (
-                <Row label="Resolution notes" value={claim.resolution_notes} />
-              )}
-            </Dl>
-          </Card>
+          <ClaimFinancialsPanel
+            claimId={claim.id}
+            currency={claim.currency}
+            initialValues={{
+              damage_claim_amount: claim.damage_claim_amount,
+              shipment_value: claim.shipment_value,
+              carrier_pay: claim.carrier_pay,
+              carrier_deductible: claim.carrier_deductible,
+            }}
+            valueBucketLabel={valueBucketLabel}
+            resolution={claim.resolution}
+            resolutionNotes={claim.resolution_notes}
+            canEdit={canEdit}
+          />
 
           {claim.internal_description && (
             <Card title="Internal description">
@@ -526,7 +522,7 @@ function Row({
   return (
     <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-[12rem_1fr]">
       <dt className="text-slate-500">{label}</dt>
-      <dd className="whitespace-pre-wrap break-words text-slate-900">
+      <dd className="whitespace-pre-wrap wrap-break-word text-slate-900">
         {display}
       </dd>
     </div>

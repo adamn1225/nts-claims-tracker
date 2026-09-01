@@ -19,7 +19,8 @@ type ActivityKind =
   | "status_change"
   | "document"
   | "task"
-  | "transaction";
+  | "transaction"
+  | "financial_update";
 
 type ActivityItem = {
   id: string;
@@ -65,6 +66,11 @@ const KIND_META: Record<
     tone: "bg-success/10 text-success",
     label: "Transaction",
   },
+  financial_update: {
+    icon: DollarSign,
+    tone: "bg-accent/10 text-accent",
+    label: "Financial edit",
+  },
 };
 
 const KIND_OPTIONS: { value: ActivityKind | "all"; label: string }[] = [
@@ -75,6 +81,7 @@ const KIND_OPTIONS: { value: ActivityKind | "all"; label: string }[] = [
   { value: "document", label: "Documents" },
   { value: "task", label: "Tasks" },
   { value: "transaction", label: "Transactions" },
+  { value: "financial_update", label: "Financial edits" },
 ];
 
 function fmt(iso: string): string {
@@ -132,6 +139,16 @@ export default function ClaimActivityTimeline({
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const refreshForClaim = (event: Event) => {
+      const detail = (event as CustomEvent<{ claimId?: string }>).detail;
+      if (detail?.claimId === claimId) void load();
+    };
+    window.addEventListener("claim-activity-updated", refreshForClaim);
+    return () =>
+      window.removeEventListener("claim-activity-updated", refreshForClaim);
+  }, [claimId, load]);
 
   const filtered = useMemo(
     () => (filter === "all" ? items : items.filter((i) => i.kind === filter)),

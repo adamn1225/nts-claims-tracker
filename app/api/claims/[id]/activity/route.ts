@@ -25,12 +25,13 @@ export const dynamic = "force-dynamic";
 type ActivityItem = {
   id: string;
   kind:
-    | "note"
-    | "correspondence"
-    | "status_change"
-    | "document"
-    | "task"
-    | "transaction";
+  | "note"
+  | "correspondence"
+  | "status_change"
+  | "document"
+  | "task"
+  | "transaction"
+  | "financial_update";
   occurred_at: string;
   actor_name: string | null;
   title: string;
@@ -273,6 +274,48 @@ export async function GET(
     },
   );
 
+  // Financial field edits (written by a database trigger).
+  const { data: financialEdits } = await supabase
+    .from("audit_logs")
+    .select(
+      `id, before, after, occurred_at,
+       actor:profiles!audit_logs_actor_id_fkey (${profileFields})`,
+    )
+    .eq("entity_type", "claims")
+    .eq("entity_id", claimId)
+    .eq("metadata->>category", "financials");
+
+  const financialLabels: Record<string, string> = {
+    damage_claim_amount: "Estimated claim amount",
+    shipment_value: "Total shipment value",
+    carrier_pay: "Carrier pay",
+    carrier_deductible: "Carrier deductible",
+  };
+
+  (financialEdits ?? []).forEach((edit) => {
+    const before = (edit.before ?? {}) as Record<string, unknown>;
+    const after = (edit.after ?? {}) as Record<string, unknown>;
+    const changed = Object.keys(financialLabels).filter(
+      (field) => before[field] !== after[field],
+    );
+    activity.push({
+      id: `financial-${edit.id}`,
+      kind: "financial_update",
+      occurred_at: edit.occurred_at,
+      actor_name: actorName(
+        edit.actor as unknown as {
+          first_name: string | null;
+          last_name: string | null;
+          email: string | null;
+        },
+      ),
+      title: "Financials updated",
+      body: changed
+        .map((field) => `${financialLabels[field]}: ${formatAuditAmount(before[field])} → ${formatAuditAmount(after[field])}`)
+        .join("\n"),
+    });
+  });
+
   // Sort newest → oldest
   activity.sort(
     (a, b) =>
@@ -280,4 +323,15 @@ export async function GET(
   );
 
   return NextResponse.json({ activity });
+}
+
+function formatAuditAmount(value: unknown): string {
+  if (value === null || value === undefined) return "Not set";
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return String(value);
+  return amount.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  });
 }

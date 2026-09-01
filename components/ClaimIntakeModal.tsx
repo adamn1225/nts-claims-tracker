@@ -53,7 +53,7 @@ export default function ClaimIntakeModal({ isOpen, onClose }: ClaimIntakeModalPr
     }, [isOpen]);
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="New Claim">
+        <Modal isOpen={isOpen} onClose={onClose} title="New Claim" size="xl">
             {isLoading ? (
                 <div className="flex min-h-[240px] items-center justify-center px-6 py-10 ">
                     <div className="flex items-center gap-3 text-slate-600">
