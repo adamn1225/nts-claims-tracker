@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { joinName } from "@/lib/parse-name";
 import type { Json } from "@/lib/database.types";
 
@@ -224,9 +225,7 @@ export async function POST(request: Request) {
   // Short, human-friendly reference shown on the success page.
   const reference = `INT-${submissionId.slice(0, 8).toUpperCase()}`;
 
-  // Fire-and-forget notifications. We don't await these against the user's
-  // POST because the form has already succeeded — email failures should
-  // never surface to the submitter.
+  // Notifications never affect whether the valid intake itself succeeds.
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     request.headers.get("origin") ||
@@ -245,13 +244,33 @@ export async function POST(request: Request) {
     appUrl,
   };
 
-  // Dynamically import to keep the module tree lean on cold starts.
-  import("@/lib/intake-notifications")
-    .then(({ notifyClaimsStaffOfNewIntake, sendIntakeAcknowledgment }) => {
-      void notifyClaimsStaffOfNewIntake(notificationSummary);
-      void sendIntakeAcknowledgment(notificationSummary);
-    })
-    .catch((err) => console.error("[intake] notify import failed", err));
+  // An authenticated dashboard user should not receive a notification for
+  // the intake they just submitted. Public submissions have no user to omit.
+  let initiatingUserId: string | null = null;
+  try {
+    const userClient = await createClient();
+    const {
+      data: { user },
+    } = await userClient.auth.getUser();
+    initiatingUserId = user?.id ?? null;
+  } catch (err) {
+    console.error("[intake] unable to resolve initiating user", err);
+  }
+
+  // Persist the in-app indicator before responding so it is reliable in
+  // serverless runtimes. Email remains best-effort and does not block intake.
+  try {
+    const {
+      createInAppIntakeNotifications,
+      notifyClaimsStaffOfNewIntake,
+      sendIntakeAcknowledgment,
+    } = await import("@/lib/intake-notifications");
+    await createInAppIntakeNotifications(notificationSummary, initiatingUserId);
+    void notifyClaimsStaffOfNewIntake(notificationSummary);
+    void sendIntakeAcknowledgment(notificationSummary);
+  } catch (err) {
+    console.error("[intake] notification setup failed", err);
+  }
 
   return NextResponse.json({
     ok: true,

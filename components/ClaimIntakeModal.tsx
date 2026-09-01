@@ -55,7 +55,7 @@ export default function ClaimIntakeModal({ isOpen, onClose }: ClaimIntakeModalPr
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="New Claim" size="xl">
             {isLoading ? (
-                <div className="flex min-h-[240px] items-center justify-center px-6 py-10 ">
+                <div className="flex min-h-60 items-center justify-center px-6 py-10 ">
                     <div className="flex items-center gap-3 text-slate-600">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                         <span>Loading claim intake form…</span>

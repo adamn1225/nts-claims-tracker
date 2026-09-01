@@ -40,21 +40,13 @@ export async function checkAndShowDueNotifications(teamMemberId: string) {
   const supabase = createClient();
 
   try {
-    // Fetch notifications that are:
-    // 1. Not read
-    // 2. Not archived
-    // 3. Either not scheduled OR scheduled for now/past
-    const now = new Date().toISOString();
-
     const { data: notifications, error } = await supabase
       .from("notifications")
       .select("*")
-      .eq("team_member_id", teamMemberId)
-      .eq("is_read", false)
-      .eq("is_archived", false)
-      .or(`scheduled_for.is.null,scheduled_for.lte.${now}`)
+      .eq("user_id", teamMemberId)
+      .is("read_at", null)
       .order("created_at", { ascending: false })
-      .limit(10); // Only check recent notifications
+      .limit(10);
 
     if (error) {
       console.error("Error fetching notifications:", error);
@@ -79,33 +71,27 @@ export async function checkAndShowDueNotifications(teamMemberId: string) {
       return;
     }
 
-    // Only show ONE notification at a time (the most urgent one)
-    // Priority: task_reminder > follow_up > other
-    const priorityOrder = ["task_reminder", "follow_up", "overdue", "general"];
-    const sortedNotifications = [...newNotifications].sort((a, b) => {
-      const aPriority = priorityOrder.indexOf(a.type) !== -1 
-        ? priorityOrder.indexOf(a.type) 
-        : 999;
-      const bPriority = priorityOrder.indexOf(b.type) !== -1 
-        ? priorityOrder.indexOf(b.type) 
-        : 999;
-      return aPriority - bPriority;
-    });
-
-    const notification = sortedNotifications[0];
+    const notification = newNotifications[0];
 
     // Show browser notification for the most important one
-    await showBrowserNotification(notification.title, {
-      body: notification.message,
+    const browserNotification = await showBrowserNotification(notification.title, {
+      body: notification.body ?? undefined,
       tag: `notification-${notification.id}`,
-      requireInteraction: notification.type === "task_reminder", // Task reminders stay visible
+      requireInteraction: notification.type === "task_reminder",
       data: {
         notificationId: notification.id,
-        taskId: notification.task_id,
-        customerId: notification.customer_id,
-        totalUnreadCount: newNotifications.length, // Let user know there are more
+        link: notification.link,
+        totalUnreadCount: newNotifications.length,
       },
     });
+
+    if (browserNotification && notification.link?.startsWith("/")) {
+      browserNotification.onclick = () => {
+        window.focus();
+        window.location.assign(notification.link!);
+        browserNotification.close();
+      };
+    }
 
     // Mark as shown and update last notification time
     shownNotifications.add(notification.id);
@@ -126,7 +112,7 @@ export async function checkAndShowDueNotifications(teamMemberId: string) {
  */
 export function startNotificationPolling(teamMemberId: string): () => void {
   if (!teamMemberId) {
-    return () => {};
+    return () => { };
   }
 
   // Check immediately

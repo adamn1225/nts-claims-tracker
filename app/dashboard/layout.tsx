@@ -34,7 +34,6 @@ import MaintenanceGate from "@/components/MaintenanceGate";
 import MaintenanceWarningBanner from "@/components/MaintenanceWarningBanner";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { TeamMemberViewProvider } from "@/contexts/TeamMemberViewContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { ClickToCallProvider } from "@/contexts/ClickToCallContext";
@@ -54,8 +53,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
   const [teamMemberId, setTeamMemberId] = useState<string>("");
@@ -65,7 +63,6 @@ export default function DashboardLayout({
   useEffect(() => {
     const handleCountUpdate = (e: CustomEvent<{ count: number }>) => {
       setUnreadCount(e.detail.count);
-      console.log("🔄 Updated badge count from NotificationsPanel:", e.detail.count);
     };
     window.addEventListener('notifications-count-update', handleCountUpdate as EventListener);
     return () => {
@@ -73,7 +70,7 @@ export default function DashboardLayout({
     };
   }, []);
 
-  // Fetch user ID and unread notification count
+  // Resolve the current user and initialize user-scoped dashboard state.
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -83,7 +80,6 @@ export default function DashboardLayout({
         if (!user) return;
 
         setTeamMemberId(user.id);
-        console.log("🔍 Authenticated user team_member_id:", user.id);
 
         // Check tour status - show on first 3 logins
         const tourSkipped = localStorage.getItem("tour-skipped");
@@ -102,32 +98,37 @@ export default function DashboardLayout({
           setTimeout(() => setShowTour(true), 1500);
         }
 
-        const { count, error, data } = await supabase
-          .from("notifications")
-          .select("*", { count: "exact" })
-          .eq("user_id", user.id)
-          .is("read_at", null);
-
-        console.log("📊 Unread notifications query result:", {
-          count,
-          error,
-          data,
-        });
-
-        if (!error && count !== null) {
-          setUnreadCount(count);
-          console.log("✅ Setting unreadCount to:", count);
-        }
       } catch (err) {
         console.error("Error fetching user data:", err);
       }
     };
 
-    fetchUserData();
+    void fetchUserData();
+  }, [supabase]);
 
-    // Subscribe to real-time changes for this teamMember only
+  // Keep the bell badge synchronized with this user's notification rows.
+  useEffect(() => {
+    if (!teamMemberId) return;
+
+    const fetchUnreadCount = async () => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", teamMemberId)
+        .is("read_at", null);
+
+      if (error) {
+        console.error("Error fetching unread notifications:", error);
+        return;
+      }
+      setUnreadCount(count ?? 0);
+    };
+
+    void fetchUnreadCount();
+    const fallbackPoll = window.setInterval(fetchUnreadCount, 60_000);
+
     const channel = supabase
-      .channel("notifications-changes")
+      .channel(`notifications-changes:${teamMemberId}`)
       .on(
         "postgres_changes",
         {
@@ -137,28 +138,24 @@ export default function DashboardLayout({
           filter: `user_id=eq.${teamMemberId}`,
         },
         () => {
-          console.log("🔔 Real-time notification change detected, refetching...");
-          fetchUserData();
+          void fetchUnreadCount();
         },
       )
       .subscribe();
 
     return () => {
+      window.clearInterval(fallbackPoll);
       supabase.removeChannel(channel);
     };
-  }, [supabase]);
+  }, [supabase, teamMemberId]);
 
   // Start browser notification polling
   useEffect(() => {
     if (!teamMemberId) return;
 
-    console.log("🔔 Starting notification polling for team member:", teamMemberId);
     const stopPolling = startNotificationPolling(teamMemberId);
 
-    return () => {
-      console.log("🔕 Stopping notification polling");
-      stopPolling();
-    };
+    return stopPolling;
   }, [teamMemberId]);
 
   const handleTourComplete = () => {

@@ -23,6 +23,51 @@ type IntakeSummary = {
 };
 
 /**
+ * Add an actionable in-app notification for each active claims user. The
+ * optional exclusion prevents staff from being notified about an intake they
+ * submitted themselves from inside the dashboard.
+ */
+export async function createInAppIntakeNotifications(
+  summary: IntakeSummary,
+  excludedUserId?: string | null,
+): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { data: staff, error: staffError } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("is_active", true)
+      .in("role", ["claims_staff", "manager", "admin"]);
+
+    if (staffError) throw staffError;
+
+    const recipients = (staff ?? []).filter(
+      ({ id }) => id !== excludedUserId,
+    );
+    if (recipients.length === 0) return;
+
+    const amount = summary.claimAmount ? ` · ${summary.claimAmount}` : "";
+    const { error: insertError } = await admin.from("notifications").insert(
+      recipients.map(({ id }) => ({
+        user_id: id,
+        type: "claim_intake_received",
+        title: `New claim intake · ${summary.reference}`,
+        body: `${summary.submitterCompany}${amount} · ready for triage`,
+        link: `/dashboard/claims/intake/${summary.submissionId}`,
+        related_entity_type: "claim_intake_submissions",
+        related_entity_id: summary.submissionId,
+        channel: "in_app",
+      })),
+    );
+
+    if (insertError) throw insertError;
+  } catch (err) {
+    // Notification delivery must never roll back a valid intake submission.
+    console.error("[intake in-app notification] error:", err);
+  }
+}
+
+/**
  * Notify claims staff that a new pending_review submission just landed.
  * Recipients = all active `claims_staff` / `manager` / `admin` profiles.
  */

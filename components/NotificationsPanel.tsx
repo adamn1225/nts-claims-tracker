@@ -176,8 +176,8 @@ export default function NotificationsPanel({
                     <button
                         onClick={() => setActiveTab("unread")}
                         className={`relative flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "unread"
-                                ? "border-b-2 border-primary bg-white text-primary-text"
-                                : "text-slate-600 hover:text-slate-900"
+                            ? "border-b-2 border-primary bg-white text-primary-text"
+                            : "text-slate-600 hover:text-slate-900"
                             }`}
                     >
                         Unread
@@ -190,8 +190,8 @@ export default function NotificationsPanel({
                     <button
                         onClick={() => setActiveTab("all")}
                         className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "all"
-                                ? "border-b-2 border-primary bg-white text-primary-text"
-                                : "text-slate-600 hover:text-slate-900"
+                            ? "border-b-2 border-primary bg-white text-primary-text"
+                            : "text-slate-600 hover:text-slate-900"
                             }`}
                     >
                         All
