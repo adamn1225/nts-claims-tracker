@@ -13,10 +13,10 @@ Hey Noah,
 
 A couple of requests.
 
-- Is it possible to have an auto email section to send out our starter emails.
-- Under the Financial section  add - carrier pay and deductible
+- ~~Under the Financial section  add - carrier pay and deductible~~
+- ~~Indicator on the dashboard that we have a claim in the intake tab  ~~
 - Remove the Inbox - not needed
-- Indicator on the dashboard that we have a claim in the intake tab  
+- Is it possible to have an auto email section to send out our starter emails.
 - We need to be able to indicate if the claim is for a current customer or a credit/high value customer.
 
 Let me know if you have any questions...
