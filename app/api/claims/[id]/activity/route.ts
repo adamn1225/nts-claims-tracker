@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { claimTypeLabel } from "@/lib/constants/claim-types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +32,8 @@ type ActivityItem = {
   | "document"
   | "task"
   | "transaction"
-  | "financial_update";
+  | "financial_update"
+  | "claim_update";
   occurred_at: string;
   actor_name: string | null;
   title: string;
@@ -274,8 +276,8 @@ export async function GET(
     },
   );
 
-  // Financial field edits (written by a database trigger).
-  const { data: financialEdits } = await supabase
+  // Claim detail edits (written by database triggers).
+  const { data: claimEdits } = await supabase
     .from("audit_logs")
     .select(
       `id, before, after, occurred_at,
@@ -283,24 +285,71 @@ export async function GET(
     )
     .eq("entity_type", "claims")
     .eq("entity_id", claimId)
-    .eq("metadata->>category", "financials");
+    .in("metadata->>category", ["financials", "claim_details"]);
 
-  const financialLabels: Record<string, string> = {
+  const fieldLabels: Record<string, string> = {
+    summary: "Summary",
+    owner_id: "Owner",
+    filing_status: "Filing status",
+    filed_at: "Filed at",
+    claim_type: "Claim type",
+    value_bucket: "Value bucket",
+    value_bucket_manual: "Value bucket mode",
+    tms_order_number: "NTS order / load #",
+    bol_number: "BOL #",
+    freight_type_id: "Freight type",
+    trailer_type_id: "Trailer type",
+    origin_city: "Origin city",
+    origin_state: "Origin state",
+    origin_postal_code: "Origin ZIP",
+    destination_city: "Destination city",
+    destination_state: "Destination state",
+    destination_postal_code: "Destination ZIP",
+    pickup_date: "Pickup date",
+    delivery_date: "Delivery date",
+    incident_date: "Incident date",
     damage_claim_amount: "Estimated claim amount",
     shipment_value: "Total shipment value",
     carrier_pay: "Carrier pay",
     carrier_deductible: "Carrier deductible",
+    currency: "Currency",
+    internal_description: "Internal description",
+    resolution: "Resolution",
+    resolution_notes: "Resolution notes",
   };
 
-  (financialEdits ?? []).forEach((edit) => {
+  const [
+    { data: freightTypes },
+    { data: trailerTypes },
+    { data: profiles },
+  ] = await Promise.all([
+    supabase.from("freight_types").select("id, name"),
+    supabase.from("trailer_types").select("id, name"),
+    supabase.from("profiles").select("id, first_name, last_name, email"),
+  ]);
+  const freightNames = new Map((freightTypes ?? []).map((row) => [row.id, row.name]));
+  const trailerNames = new Map((trailerTypes ?? []).map((row) => [row.id, row.name]));
+  const profileNames = new Map(
+    (profiles ?? []).map((profile) => [
+      profile.id,
+      [profile.first_name, profile.last_name].filter(Boolean).join(" ") ||
+      profile.email ||
+      "Unknown user",
+    ]),
+  );
+
+  (claimEdits ?? []).forEach((edit) => {
     const before = (edit.before ?? {}) as Record<string, unknown>;
     const after = (edit.after ?? {}) as Record<string, unknown>;
-    const changed = Object.keys(financialLabels).filter(
+    const changed = Object.keys(fieldLabels).filter(
       (field) => before[field] !== after[field],
     );
+    const isLegacyFinancialEdit = changed.every((field) =>
+      ["damage_claim_amount", "shipment_value", "carrier_pay", "carrier_deductible"].includes(field),
+    );
     activity.push({
-      id: `financial-${edit.id}`,
-      kind: "financial_update",
+      id: `claim-edit-${edit.id}`,
+      kind: isLegacyFinancialEdit ? "financial_update" : "claim_update",
       occurred_at: edit.occurred_at,
       actor_name: actorName(
         edit.actor as unknown as {
@@ -309,9 +358,12 @@ export async function GET(
           email: string | null;
         },
       ),
-      title: "Financials updated",
+      title: isLegacyFinancialEdit ? "Financials updated" : "Claim details updated",
       body: changed
-        .map((field) => `${financialLabels[field]}: ${formatAuditAmount(before[field])} → ${formatAuditAmount(after[field])}`)
+        .map(
+          (field) =>
+            `${fieldLabels[field]}: ${formatAuditValue(field, before[field], freightNames, trailerNames, profileNames)} → ${formatAuditValue(field, after[field], freightNames, trailerNames, profileNames)}`,
+        )
         .join("\n"),
     });
   });
@@ -325,13 +377,31 @@ export async function GET(
   return NextResponse.json({ activity });
 }
 
-function formatAuditAmount(value: unknown): string {
+function formatAuditValue(
+  field: string,
+  value: unknown,
+  freightNames: Map<string, string>,
+  trailerNames: Map<string, string>,
+  profileNames: Map<string, string>,
+): string {
   if (value === null || value === undefined) return "Not set";
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return String(value);
-  return amount.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  });
+  if (["damage_claim_amount", "shipment_value", "carrier_pay", "carrier_deductible"].includes(field)) {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) return String(value);
+    return amount.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    });
+  }
+  if (field === "claim_type") return claimTypeLabel(String(value));
+  if (field === "freight_type_id") return freightNames.get(String(value)) ?? "Unknown";
+  if (field === "trailer_type_id") return trailerNames.get(String(value)) ?? "Unknown";
+  if (field === "owner_id") return profileNames.get(String(value)) ?? "Unknown user";
+  if (field === "value_bucket_manual") return value ? "Manual" : "Automatic";
+  if (["pickup_date", "delivery_date", "incident_date"].includes(field)) {
+    return new Date(`${String(value)}T00:00:00`).toLocaleDateString();
+  }
+  if (field === "filed_at") return new Date(String(value)).toLocaleString();
+  return String(value).replace(/_/g, " ");
 }

@@ -9,6 +9,7 @@ import {
   Mail,
   MessageSquarePlus,
   Move,
+  Pencil,
   StickyNote,
   ListTodo,
 } from "lucide-react";
@@ -20,7 +21,8 @@ type ActivityKind =
   | "document"
   | "task"
   | "transaction"
-  | "financial_update";
+  | "financial_update"
+  | "claim_update";
 
 type ActivityItem = {
   id: string;
@@ -71,6 +73,11 @@ const KIND_META: Record<
     tone: "bg-accent/10 text-accent",
     label: "Financial edit",
   },
+  claim_update: {
+    icon: Pencil,
+    tone: "bg-primary/10 text-primary-text",
+    label: "Claim edit",
+  },
 };
 
 const KIND_OPTIONS: { value: ActivityKind | "all"; label: string }[] = [
@@ -82,6 +89,7 @@ const KIND_OPTIONS: { value: ActivityKind | "all"; label: string }[] = [
   { value: "task", label: "Tasks" },
   { value: "transaction", label: "Transactions" },
   { value: "financial_update", label: "Financial edits" },
+  { value: "claim_update", label: "Claim edits" },
 ];
 
 function fmt(iso: string): string {

@@ -8,6 +8,7 @@ import ClaimDocumentsPanel from "@/components/claims/ClaimDocumentsPanel";
 import ClaimTasksPanel from "@/components/claims/ClaimTasksPanel";
 import ClaimHeaderActions from "@/components/claims/ClaimHeaderActions";
 import ClaimFinancialsPanel from "@/components/claims/ClaimFinancialsPanel";
+import ClaimEditDialog from "@/components/claims/ClaimEditDialog";
 
 export const dynamic = "force-dynamic";
 
@@ -202,6 +203,21 @@ export default async function ClaimDetailPage({
     .in("role", ["admin", "manager", "claims_staff"])
     .order("first_name");
 
+  const [
+    { data: statusOptions },
+    { data: freightTypeOptions },
+    { data: trailerTypeOptions },
+  ] =
+    await Promise.all([
+      supabase
+        .from("claim_statuses")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("position"),
+      supabase.from("freight_types").select("id, name").order("position"),
+      supabase.from("trailer_types").select("id, name").order("position"),
+    ]);
+
   const carrierIntegrationParties = parties
     .filter((p) => p.role === "carrier" && p.company)
     .map((p) => ({
@@ -250,6 +266,44 @@ export default async function ClaimDetailPage({
             >
               View intake submission
             </Link>
+          )}
+          {canEdit && (
+            <ClaimEditDialog
+              key={claim.updated_at}
+              claimId={claim.id}
+              claimNumber={claim.claim_number}
+              initialValues={{
+                summary: claim.summary,
+                status_id: claim.status_id,
+                claim_type: claim.claim_type,
+                value_bucket: claim.value_bucket,
+                value_bucket_manual: claim.value_bucket_manual,
+                tms_order_number: claim.tms_order_number,
+                bol_number: claim.bol_number,
+                freight_type_id: claim.freight_type_id,
+                trailer_type_id: claim.trailer_type_id,
+                origin_city: claim.origin_city,
+                origin_state: claim.origin_state,
+                origin_postal_code: claim.origin_postal_code,
+                destination_city: claim.destination_city,
+                destination_state: claim.destination_state,
+                destination_postal_code: claim.destination_postal_code,
+                pickup_date: claim.pickup_date,
+                delivery_date: claim.delivery_date,
+                incident_date: claim.incident_date,
+                damage_claim_amount: claim.damage_claim_amount,
+                shipment_value: claim.shipment_value,
+                carrier_pay: claim.carrier_pay,
+                carrier_deductible: claim.carrier_deductible,
+                currency: claim.currency,
+                internal_description: claim.internal_description,
+                resolution: claim.resolution,
+                resolution_notes: claim.resolution_notes,
+              }}
+              statuses={statusOptions ?? []}
+              freightTypes={freightTypeOptions ?? []}
+              trailerTypes={trailerTypeOptions ?? []}
+            />
           )}
         </div>
         {claim.summary && (
