@@ -49,6 +49,7 @@ export function buildSummaryGroups(
   data: IntakeSnapshot,
   freightTypes: LookupRow[],
   trailerTypes: LookupRow[],
+  brokers: LookupRow[] = [],
 ): SummaryGroup[] {
   const get = (k: string) => (data[k] ?? "").trim();
   const lookup = (rows: LookupRow[], id: string) =>
@@ -81,6 +82,10 @@ export function buildSummaryGroups(
         },
         { label: "Email", value: get("submitter_email") },
         { label: "Phone", value: get("submitter_phone") },
+        {
+          label: "Logistics representative",
+          value: lookup(brokers, get("broker_id")) || get("broker_name"),
+        },
       ],
     },
     {

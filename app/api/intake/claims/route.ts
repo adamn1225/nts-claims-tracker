@@ -88,6 +88,13 @@ export async function POST(request: Request) {
       is_personal: isPersonal,
       email: submitterEmail,
       phone: submitterPhone || null,
+      // Logistics rep the shipper says they've been working with. broker_id
+      // resolves against team_members during promotion; broker_name is the
+      // free-text fallback when their rep isn't in the public directory.
+      broker_id: isUuid(strField(formData, "broker_id"))
+        ? strField(formData, "broker_id")
+        : null,
+      broker_name: strField(formData, "broker_name") || null,
     },
     shipment: {
       tms_order_number: strField(formData, "tms_order_number") || null,
@@ -300,6 +307,12 @@ function numField(fd: FormData, name: string): number | null {
 
 function isEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
 }
 
 function sanitizeFilename(name: string): string {

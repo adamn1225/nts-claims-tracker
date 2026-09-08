@@ -13,6 +13,7 @@ export type ClaimEditValues = Pick<
     ClaimRow,
     | "summary"
     | "status_id"
+    | "team_member_id"
     | "claim_type"
     | "value_bucket"
     | "value_bucket_manual"
@@ -89,6 +90,7 @@ export default function ClaimEditDialog({
     claimNumber,
     initialValues,
     statuses,
+    brokers,
     freightTypes,
     trailerTypes,
 }: {
@@ -96,6 +98,7 @@ export default function ClaimEditDialog({
     claimNumber: string;
     initialValues: ClaimEditValues;
     statuses: LookupOption[];
+    brokers: LookupOption[];
     freightTypes: LookupOption[];
     trailerTypes: LookupOption[];
 }) {
@@ -217,6 +220,16 @@ export default function ClaimEditDialog({
                         >
                             {statuses.map((status) => (
                                 <option key={status.id} value={status.id}>{status.name}</option>
+                            ))}
+                        </SelectField>
+                        <SelectField
+                            label="Broker / logistics agent"
+                            value={form.team_member_id ?? ""}
+                            onChange={(value) => setField("team_member_id", value || null)}
+                        >
+                            <option value="">Unassigned</option>
+                            {brokers.map((broker) => (
+                                <option key={broker.id} value={broker.id}>{broker.name}</option>
                             ))}
                         </SelectField>
                         <SelectField

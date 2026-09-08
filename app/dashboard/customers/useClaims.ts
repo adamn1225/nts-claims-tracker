@@ -24,6 +24,14 @@ export function useClaims() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [assignableUsers, setAssignableUsers] = useState<
+    Array<{
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      email: string | null;
+    }>
+  >([]);
 
   const fetchClaims = useCallback(async () => {
     const supabase = createClient();
@@ -60,6 +68,23 @@ export function useClaims() {
     setError(null);
   }, []);
 
+  // Internal roles a claim can be handed off to. Brokers don't own claims.
+  const fetchAssignableUsers = useCallback(async () => {
+    const supabase = createClient();
+    const { data, error: fetchErr } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email")
+      .eq("is_active", true)
+      .in("role", ["admin", "manager", "claims_staff"])
+      .order("first_name");
+
+    if (fetchErr) {
+      console.error("[useClaims] fetch assignable users error:", fetchErr);
+      return;
+    }
+    setAssignableUsers(data ?? []);
+  }, []);
+
   // Initial load + auth identity.
   useEffect(() => {
     let cancelled = false;
@@ -70,14 +95,14 @@ export function useClaims() {
       } = await supabase.auth.getUser();
       if (cancelled) return;
       setCurrentUserId(user?.id ?? "");
-      await fetchClaims();
+      await Promise.all([fetchClaims(), fetchAssignableUsers()]);
       if (!cancelled) setIsLoading(false);
     };
     init();
     return () => {
       cancelled = true;
     };
-  }, [fetchClaims]);
+  }, [fetchClaims, fetchAssignableUsers]);
 
   // Realtime: refetch on any claim insert/update/delete. Cheap and correct;
   // the alternative of patching the joined shape from payload.new is fragile.
@@ -119,11 +144,11 @@ export function useClaims() {
         prev.map((c) =>
           c.id === claimId
             ? {
-                ...c,
-                status_id: newStatusId,
-                last_activity_at: nowIso,
-                status: destStatus ?? c.status,
-              }
+              ...c,
+              status_id: newStatusId,
+              last_activity_at: nowIso,
+              status: destStatus ?? c.status,
+            }
             : c,
         ),
       );
@@ -148,12 +173,59 @@ export function useClaims() {
     [claims, fetchClaims],
   );
 
+  /**
+   * Reassign a claim's owner from the kanban board. Optimistically patches
+   * local state, then persists via the existing assign endpoint (which
+   * validates the target profile is active before writing).
+   */
+  const reassignClaim = useCallback(
+    async (claimId: string, ownerId: string | null) => {
+      const previous = claims;
+      const target = previous.find((c) => c.id === claimId);
+      if (!target || target.owner_id === ownerId) return;
+
+      const newOwner = ownerId
+        ? (assignableUsers.find((u) => u.id === ownerId) ?? null)
+        : null;
+
+      setClaims((prev) =>
+        prev.map((c) =>
+          c.id === claimId
+            ? { ...c, owner_id: ownerId, owner: newOwner }
+            : c,
+        ),
+      );
+
+      try {
+        const res = await fetch(`/api/claims/${claimId}/assign`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner_id: ownerId }),
+        });
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json.error ?? "Failed to reassign claim");
+        }
+      } catch (err) {
+        console.error("[useClaims] reassignClaim error:", err);
+        setClaims(previous);
+        setError(err instanceof Error ? err.message : String(err));
+        return;
+      }
+
+      fetchClaims();
+    },
+    [claims, assignableUsers, fetchClaims],
+  );
+
   return {
     claims,
     isLoading,
     error,
     currentUserId,
+    assignableUsers,
     refetch: fetchClaims,
     moveClaimToStatus,
+    reassignClaim,
   };
 }

@@ -357,6 +357,7 @@ export default function DashboardPage() {
     totalCount: 0,
     recent: [],
   });
+  const [pendingIntakeCount, setPendingIntakeCount] = useState(0);
   const [weeklyTasks, setWeeklyTasks] = useState<Record<string, number>>({
     Monday: 0,
     Tuesday: 0,
@@ -377,6 +378,7 @@ export default function DashboardPage() {
         fetchRecentActivity(),
         fetchWeeklyTasks(viewingTeamMember.id),
         fetchClaimStats(),
+        fetchPendingIntakeCount(),
       ]);
 
       setIsLoading(false);
@@ -571,6 +573,20 @@ export default function DashboardPage() {
     });
   };
 
+  /**
+   * Count of claim intake submissions still awaiting triage. RLS restricts
+   * this to claims_staff/manager/admin, so brokers simply see 0 rather than
+   * an error.
+   */
+  const fetchPendingIntakeCount = async () => {
+    const supabase = createClient();
+    const { count } = await supabase
+      .from("claim_intake_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending_review");
+    setPendingIntakeCount(count ?? 0);
+  };
+
   const fetchWeeklyTasks = async (userId: string) => {
     const supabase = createClient();
 
@@ -673,7 +689,16 @@ export default function DashboardPage() {
           </div>
 
           {/* Accent-striped KPI tiles */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <KpiTile
+              accent={pendingIntakeCount > 0 ? "warning" : "neutral"}
+              label="New Claims"
+              value={pendingIntakeCount}
+              sub={pendingIntakeCount > 0 ? "Awaiting triage" : "Queue is clear"}
+              icon={AlertCircle}
+              href="/dashboard/claims/intake"
+              badge={pendingIntakeCount > 0 ? "NEW" : undefined}
+            />
             <KpiTile
               accent="info"
               label="Open Claims"

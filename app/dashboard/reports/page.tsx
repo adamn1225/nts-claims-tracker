@@ -33,6 +33,7 @@ type ClaimRow = {
   value_bucket: "current" | "credit_high_value" | "legal";
   currency: string;
   owner_id: string | null;
+  team_member_id: string | null;
   freight_type_id: string | null;
   trailer_type_id: string | null;
   filing_status: string | null;
@@ -50,6 +51,13 @@ type OwnerRow = {
   id: string;
   first_name: string | null;
   last_name: string | null;
+  office_location: string | null;
+};
+
+type BrokerRow = {
+  id: string;
+  first_name: string;
+  last_name: string;
   office_location: string | null;
 };
 
@@ -146,12 +154,14 @@ export default function ClaimsReportsPage() {
   const [rangeDays, setRangeDays] = useState<30 | 90 | 365 | 0>(365);
   const [officeFilter, setOfficeFilter] = useState<string>("");
   const [ownerFilter, setOwnerFilter] = useState<string>("");
+  const [brokerFilter, setBrokerFilter] = useState<string>("");
   const [valueBucketFilter, setValueBucketFilter] = useState<string>("");
 
   // Data
   const [claims, setClaims] = useState<ClaimRow[]>([]);
   const [statuses, setStatuses] = useState<StatusRow[]>([]);
   const [owners, setOwners] = useState<OwnerRow[]>([]);
+  const [brokers, setBrokers] = useState<BrokerRow[]>([]);
   const [freightTypes, setFreightTypes] = useState<LookupRow[]>([]);
   const [txns, setTxns] = useState<TransactionRow[]>([]);
   const [parties, setParties] = useState<PartyRow[]>([]);
@@ -194,8 +204,8 @@ export default function ClaimsReportsPage() {
       .select(
         `id, claim_number, opened_at, closed_at, status_id,
          damage_claim_amount, shipment_value, value_bucket, currency,
-         owner_id, freight_type_id, trailer_type_id, filing_status,
-         claim_type`,
+         owner_id, team_member_id, freight_type_id, trailer_type_id,
+         filing_status, claim_type`,
       );
     if (sinceIso) claimsQuery = claimsQuery.gte("opened_at", sinceIso);
     if (valueBucketFilter)
@@ -204,13 +214,19 @@ export default function ClaimsReportsPage() {
         valueBucketFilter as ClaimRow["value_bucket"],
       );
     if (ownerFilter) claimsQuery = claimsQuery.eq("owner_id", ownerFilter);
+    if (brokerFilter)
+      claimsQuery = claimsQuery.eq("team_member_id", brokerFilter);
 
-    const [claimsRes, statusRes, ownersRes, ftRes, txnRes, partyRes] =
+    const [claimsRes, statusRes, ownersRes, brokersRes, ftRes, txnRes, partyRes] =
       await Promise.all([
         claimsQuery,
         supabase.from("claim_statuses").select("id, name, is_closed, is_denied"),
         supabase
           .from("profiles")
+          .select("id, first_name, last_name, office_location")
+          .eq("is_active", true),
+        supabase
+          .from("team_members")
           .select("id, first_name, last_name, office_location")
           .eq("is_active", true),
         supabase.from("freight_types").select("id, name"),
@@ -245,6 +261,7 @@ export default function ClaimsReportsPage() {
     setClaims(scoped);
     setStatuses((statusRes.data ?? []) as StatusRow[]);
     setOwners((ownersRes.data ?? []) as OwnerRow[]);
+    setBrokers((brokersRes.data ?? []) as BrokerRow[]);
     setFreightTypes((ftRes.data ?? []) as LookupRow[]);
     setTxns((txnRes.data ?? []) as TransactionRow[]);
     setParties(
@@ -254,7 +271,7 @@ export default function ClaimsReportsPage() {
         company: (p.company as unknown as PartyRow["company"]) ?? null,
       })),
     );
-  }, [role, rangeDays, valueBucketFilter, officeFilter, ownerFilter, supabase]);
+  }, [role, rangeDays, valueBucketFilter, officeFilter, ownerFilter, brokerFilter, supabase]);
 
   useEffect(() => {
     load();
@@ -346,7 +363,7 @@ export default function ClaimsReportsPage() {
       const owner = c.owner_id ? owners.find((o) => o.id === c.owner_id) : null;
       const name = owner
         ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() ||
-          "Unnamed"
+        "Unnamed"
         : "— Unassigned";
       const key = c.owner_id ?? "unassigned";
       const bucket =
@@ -362,6 +379,33 @@ export default function ClaimsReportsPage() {
     }
     return Array.from(rows.values()).sort((a, b) => b.total - a.total);
   }, [claims, owners]);
+
+  const byBroker = useMemo(() => {
+    const rows = new Map<
+      string,
+      { name: string; office: string | null; count: number; total: number }
+    >();
+    for (const c of claims) {
+      const broker = c.team_member_id
+        ? brokers.find((b) => b.id === c.team_member_id)
+        : null;
+      const name = broker
+        ? `${broker.first_name} ${broker.last_name}`.trim() || "Unnamed"
+        : "— Unassigned";
+      const key = c.team_member_id ?? "unassigned";
+      const bucket =
+        rows.get(key) ?? {
+          name,
+          office: broker?.office_location ?? null,
+          count: 0,
+          total: 0,
+        };
+      bucket.count += 1;
+      bucket.total += Number(c.damage_claim_amount ?? 0);
+      rows.set(key, bucket);
+    }
+    return Array.from(rows.values()).sort((a, b) => b.total - a.total);
+  }, [claims, brokers]);
 
   const byFreightType = useMemo(() => {
     type Row = {
@@ -450,6 +494,9 @@ export default function ClaimsReportsPage() {
   const handleExport = () => {
     const rows = claims.map((c) => {
       const owner = c.owner_id ? owners.find((o) => o.id === c.owner_id) : null;
+      const broker = c.team_member_id
+        ? brokers.find((b) => b.id === c.team_member_id)
+        : null;
       const status = c.status_id ? claimStatusMap.get(c.status_id) : null;
       const ft = c.freight_type_id
         ? freightTypes.find((f) => f.id === c.freight_type_id)
@@ -466,6 +513,8 @@ export default function ClaimsReportsPage() {
           ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()
           : "",
         office: owner?.office_location ?? "",
+        broker: broker ? `${broker.first_name} ${broker.last_name}`.trim() : "",
+        broker_office: broker?.office_location ?? "",
         freight_type: ft?.name ?? "",
         filing_status: c.filing_status ?? "",
       };
@@ -507,8 +556,9 @@ export default function ClaimsReportsPage() {
             Claims reports
           </h1>
           <p className="text-sm text-slate-500">
-            Portfolio metrics, breakdowns by office / owner / carrier / freight
-            type, and payment source rollups.
+            Portfolio metrics, breakdowns by broker / carrier / claim type /
+            freight type, and payment source rollups. Office and owner
+            breakdowns are available under Internal breakdowns below.
           </p>
         </div>
         <button
@@ -520,7 +570,7 @@ export default function ClaimsReportsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-3">
         <label className="text-xs">
           <span className="mb-1 block font-medium text-slate-600">Time range</span>
           <select
@@ -537,32 +587,17 @@ export default function ClaimsReportsPage() {
           </select>
         </label>
         <label className="text-xs">
-          <span className="mb-1 block font-medium text-slate-600">Office</span>
+          <span className="mb-1 block font-medium text-slate-600">Broker</span>
           <select
-            value={officeFilter}
-            onChange={(e) => setOfficeFilter(e.target.value)}
+            value={brokerFilter}
+            onChange={(e) => setBrokerFilter(e.target.value)}
             className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
           >
-            <option value="">All offices</option>
-            {uniqueOffices.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-xs">
-          <span className="mb-1 block font-medium text-slate-600">Owner</span>
-          <select
-            value={ownerFilter}
-            onChange={(e) => setOwnerFilter(e.target.value)}
-            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
-          >
-            <option value="">All owners</option>
-            {owners.map((o) => (
-              <option key={o.id} value={o.id}>
-                {`${o.first_name ?? ""} ${o.last_name ?? ""}`.trim() ||
-                  "Unnamed"}
+            <option value="">All brokers</option>
+            {brokers.map((b) => (
+              <option key={b.id} value={b.id}>
+                {`${b.first_name} ${b.last_name}`.trim()}
+                {b.office_location ? ` — ${b.office_location}` : ""}
               </option>
             ))}
           </select>
@@ -583,6 +618,45 @@ export default function ClaimsReportsPage() {
           </select>
         </label>
       </div>
+
+      <details className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <summary className="cursor-pointer select-none text-xs font-medium text-slate-500 hover:text-slate-700">
+          More filters (office, owner) — optional
+        </summary>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="text-xs">
+            <span className="mb-1 block font-medium text-slate-600">Office</span>
+            <select
+              value={officeFilter}
+              onChange={(e) => setOfficeFilter(e.target.value)}
+              className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            >
+              <option value="">All offices</option>
+              {uniqueOffices.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs">
+            <span className="mb-1 block font-medium text-slate-600">Owner</span>
+            <select
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+              className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            >
+              <option value="">All owners</option>
+              {owners.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {`${o.first_name ?? ""} ${o.last_name ?? ""}`.trim() ||
+                    "Unnamed"}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </details>
 
       {error && (
         <div className="rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">
@@ -671,22 +745,20 @@ export default function ClaimsReportsPage() {
         </div>
       </Section>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Section icon={Building2} title="By office">
-          <BreakdownTable rows={byOffice} keyLabel="Office" primaryKey="office" />
-        </Section>
-        <Section icon={Users} title="By owner">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Section
+          icon={Users}
+          title="By broker"
+          subtitle="Logistics agent assigned to the CRM order that became each claim."
+        >
           <BreakdownTable
-            rows={byOwner.map((r) => ({ ...r, office: r.office ?? "" }))}
-            keyLabel="Owner"
+            rows={byBroker}
+            keyLabel="Broker"
             primaryKey="name"
             secondaryLabel="Office"
             secondaryKey="office"
           />
         </Section>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Section icon={Truck} title="Top carriers (by exposure)">
           <BreakdownTable rows={byCarrier} keyLabel="Carrier" primaryKey="name" />
         </Section>
@@ -712,6 +784,26 @@ export default function ClaimsReportsPage() {
           <FreightTypeTable rows={byFreightType} />
         </Section>
       </div>
+
+      <details className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+        <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-slate-500 hover:text-slate-700">
+          Internal breakdowns (office / owner) — optional
+        </summary>
+        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Section icon={Building2} title="By office">
+            <BreakdownTable rows={byOffice} keyLabel="Office" primaryKey="office" />
+          </Section>
+          <Section icon={Users} title="By owner">
+            <BreakdownTable
+              rows={byOwner.map((r) => ({ ...r, office: r.office ?? "" }))}
+              keyLabel="Owner"
+              primaryKey="name"
+              secondaryLabel="Office"
+              secondaryKey="office"
+            />
+          </Section>
+        </div>
+      </details>
     </main>
   );
 }

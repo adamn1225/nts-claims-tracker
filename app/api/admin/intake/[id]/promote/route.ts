@@ -38,6 +38,9 @@ type SubmissionPayload = {
     is_personal?: boolean | null;
     email?: string | null;
     phone?: string | null;
+    // Logistics rep the shipper selected/typed on the intake form.
+    broker_id?: string | null;
+    broker_name?: string | null;
   };
   shipment?: {
     tms_order_number?: string | null;
@@ -165,7 +168,13 @@ export async function POST(
 
   // ---- Insert the claim ----
   const summary = buildSummary(payload);
-  const internalDescription = payload.damage?.description ?? null;
+  const brokerResolution = await resolveBrokerTeamMemberId(admin, payload);
+  const internalDescription = [
+    payload.damage?.description ?? null,
+    brokerResolution.unmatchedNote,
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join("\n\n") || null;
 
   const { data: claim, error: claimErr } = await admin
     .from("claims")
@@ -202,6 +211,7 @@ export async function POST(
       internal_description: internalDescription,
       owner_id: user.id,
       created_by: user.id,
+      team_member_id: brokerResolution.teamMemberId,
     })
     .select("id, claim_number")
     .single();
@@ -314,6 +324,48 @@ export async function POST(
 
 function jsonError(error: string, status: number) {
   return NextResponse.json({ ok: false, error }, { status });
+}
+
+/**
+ * Resolve the shipper's stated logistics rep to a team_members row.
+ * Prefers the selected `broker_id`; falls back to a case-insensitive name
+ * match; otherwise returns a note so the free-text name isn't lost.
+ */
+async function resolveBrokerTeamMemberId(
+  admin: ReturnType<typeof createAdminClient>,
+  payload: SubmissionPayload,
+): Promise<{ teamMemberId: string | null; unmatchedNote: string | null }> {
+  const brokerId = payload.submitter?.broker_id;
+  if (brokerId) {
+    const { data } = await admin
+      .from("team_members")
+      .select("id")
+      .eq("id", brokerId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (data) return { teamMemberId: data.id, unmatchedNote: null };
+  }
+
+  const brokerName = payload.submitter?.broker_name?.trim();
+  if (brokerName) {
+    const { data } = await admin
+      .from("team_members")
+      .select("id, first_name, last_name")
+      .eq("is_active", true);
+    const normalize = (value: string) =>
+      value.trim().toLowerCase().replace(/\s+/g, " ");
+    const target = normalize(brokerName);
+    const match = (data ?? []).find(
+      (tm) => normalize(`${tm.first_name} ${tm.last_name}`) === target,
+    );
+    if (match) return { teamMemberId: match.id, unmatchedNote: null };
+    return {
+      teamMemberId: null,
+      unmatchedNote: `Shipper-specified logistics rep (unmatched): ${brokerName}`,
+    };
+  }
+
+  return { teamMemberId: null, unmatchedNote: null };
 }
 
 function buildSummary(p: SubmissionPayload): string | null {

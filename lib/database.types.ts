@@ -1209,6 +1209,13 @@ export type Database = {
             foreignKeyName: "claims_broker_id_fkey"
             columns: ["team_member_id"]
             isOneToOne: false
+            referencedRelation: "broker_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_broker_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
             referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
@@ -1858,6 +1865,13 @@ export type Database = {
             foreignKeyName: "intake_tokens_assigned_broker_id_fkey"
             columns: ["assigned_team_member_id"]
             isOneToOne: false
+            referencedRelation: "broker_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_tokens_assigned_broker_id_fkey"
+            columns: ["assigned_team_member_id"]
+            isOneToOne: false
             referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
@@ -2030,6 +2044,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_broker_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "broker_directory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_broker_id_fkey"
             columns: ["team_member_id"]
@@ -2275,6 +2296,24 @@ export type Database = {
       }
     }
     Views: {
+      broker_directory: {
+        Row: {
+          id: string | null
+          name: string | null
+          office_location: string | null
+        }
+        Insert: {
+          id?: string | null
+          name?: never
+          office_location?: string | null
+        }
+        Update: {
+          id?: string | null
+          name?: never
+          office_location?: string | null
+        }
+        Relationships: []
+      }
       claim_financial_summary: {
         Row: {
           claim_id: string | null
@@ -2513,12 +2552,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2542,11 +2581,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2567,11 +2606,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2592,11 +2631,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2609,11 +2648,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

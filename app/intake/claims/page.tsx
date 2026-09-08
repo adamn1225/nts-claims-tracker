@@ -24,7 +24,7 @@ export default async function IntakeClaimsPage({
   // read-only reference data and have permissive RLS.
   const supabase = await createClient();
 
-  const [freightRes, trailerRes] = await Promise.all([
+  const [freightRes, trailerRes, brokerRes] = await Promise.all([
     supabase
       .from("freight_types")
       .select("id, name")
@@ -33,10 +33,23 @@ export default async function IntakeClaimsPage({
       .from("trailer_types")
       .select("id, name")
       .order("position", { ascending: true }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new view
+    (supabase as any)
+      .from("broker_directory")
+      .select("id, name, office_location")
+      .order("name", { ascending: true }),
   ]);
 
   const freightTypes: LookupRow[] = (freightRes.data ?? []) as LookupRow[];
   const trailerTypes: LookupRow[] = (trailerRes.data ?? []) as LookupRow[];
+  const brokers: LookupRow[] = ((brokerRes.data ?? []) as Array<{
+    id: string;
+    name: string;
+    office_location: string | null;
+  }>).map((b) => ({
+    id: b.id,
+    name: b.office_location ? `${b.name} — ${b.office_location}` : b.name,
+  }));
 
   return (
     <main
@@ -87,6 +100,7 @@ export default async function IntakeClaimsPage({
       <IntakeForm
         freightTypes={freightTypes}
         trailerTypes={trailerTypes}
+        brokers={brokers}
         embed={isEmbed}
       />
 

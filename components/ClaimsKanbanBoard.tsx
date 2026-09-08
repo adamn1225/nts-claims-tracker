@@ -129,6 +129,13 @@ const partyName = (
   );
 };
 
+type AssignableUser = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+};
+
 // ---------------------------------------------------------------------------
 // Claim card
 // ---------------------------------------------------------------------------
@@ -136,9 +143,16 @@ const partyName = (
 interface ClaimCardProps {
   claim: ClaimWithDetails;
   isDragOverlay?: boolean;
+  assignableUsers?: AssignableUser[];
+  onReassign?: (claimId: string, ownerId: string | null) => Promise<void> | void;
 }
 
-function ClaimCard({ claim, isDragOverlay = false }: ClaimCardProps) {
+function ClaimCard({
+  claim,
+  isDragOverlay = false,
+  assignableUsers,
+  onReassign,
+}: ClaimCardProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: claim.id,
     data: { type: "claim", claim },
@@ -159,11 +173,10 @@ function ClaimCard({ claim, isDragOverlay = false }: ClaimCardProps) {
       ref={isDragOverlay ? undefined : setNodeRef}
       {...(isDragOverlay ? {} : listeners)}
       {...(isDragOverlay ? {} : attributes)}
-      className={`group rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition ${
-        isDragging && !isDragOverlay
+      className={`group rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition ${isDragging && !isDragOverlay
           ? "opacity-40"
           : "hover:border-slate-300 hover:shadow-md"
-      } ${isDragOverlay ? "rotate-1 cursor-grabbing shadow-lg" : "cursor-grab"}`}
+        } ${isDragOverlay ? "rotate-1 cursor-grabbing shadow-lg" : "cursor-grab"}`}
     >
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -223,9 +236,31 @@ function ClaimCard({ claim, isDragOverlay = false }: ClaimCardProps) {
           <CalendarClock className="h-3 w-3" />
           {age != null ? `${age}d open` : "—"}
         </div>
-        <div className="truncate text-right">
-          {owner ? owner : <span className="italic text-slate-400">Unassigned</span>}
-        </div>
+        {onReassign && assignableUsers ? (
+          <div
+            className="min-w-0"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <select
+              value={claim.owner_id ?? ""}
+              onChange={(e) => onReassign(claim.id, e.target.value || null)}
+              title="Reassign claim owner"
+              className="max-w-32 truncate rounded border-none bg-transparent text-right text-[11px] text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/40"
+            >
+              <option value="">Unassigned</option>
+              {assignableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {ownerName(u) ?? "Unnamed"}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="truncate text-right">
+            {owner ? owner : <span className="italic text-slate-400">Unassigned</span>}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -238,9 +273,11 @@ function ClaimCard({ claim, isDragOverlay = false }: ClaimCardProps) {
 interface ColumnProps {
   status: ClaimStatus;
   claims: ClaimWithDetails[];
+  assignableUsers?: AssignableUser[];
+  onReassignClaim?: (claimId: string, ownerId: string | null) => Promise<void> | void;
 }
 
-function Column({ status, claims }: ColumnProps) {
+function Column({ status, claims, assignableUsers, onReassignClaim }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `status:${status.id}`,
     data: { type: "status", statusId: status.id },
@@ -269,16 +306,22 @@ function Column({ status, claims }: ColumnProps) {
 
       <div
         ref={setNodeRef}
-        className={`flex min-h-50 flex-1 flex-col gap-2 rounded-b-lg border border-t-0 border-slate-200 bg-slate-50/70 p-2 transition ${
-          isOver ? "ring-2 ring-primary/40 ring-offset-1" : ""
-        }`}
+        className={`flex min-h-50 flex-1 flex-col gap-2 rounded-b-lg border border-t-0 border-slate-200 bg-slate-50/70 p-2 transition ${isOver ? "ring-2 ring-primary/40 ring-offset-1" : ""
+          }`}
       >
         {claims.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-8 text-xs italic text-slate-400">
             No claims
           </div>
         ) : (
-          claims.map((claim) => <ClaimCard key={claim.id} claim={claim} />)
+          claims.map((claim) => (
+            <ClaimCard
+              key={claim.id}
+              claim={claim}
+              assignableUsers={assignableUsers}
+              onReassign={onReassignClaim}
+            />
+          ))
         )}
       </div>
     </div>
@@ -296,6 +339,8 @@ export interface ClaimsKanbanBoardProps {
   onRefresh?: () => void;
   onAddClaim?: () => void;
   onMoveClaim: (claimId: string, newStatusId: string) => Promise<void> | void;
+  assignableUsers?: AssignableUser[];
+  onReassignClaim?: (claimId: string, ownerId: string | null) => Promise<void> | void;
 }
 
 export default function ClaimsKanbanBoard({
@@ -305,12 +350,15 @@ export default function ClaimsKanbanBoard({
   onRefresh,
   onAddClaim,
   onMoveClaim,
+  assignableUsers,
+  onReassignClaim,
 }: ClaimsKanbanBoardProps) {
   const [statuses, setStatuses] = useState<ClaimStatus[]>([]);
   const [statusesError, setStatusesError] = useState<string | null>(null);
   const [activeClaim, setActiveClaim] = useState<ClaimWithDetails | null>(
     null,
   );
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("");
 
   // Horizontal scroll plumbing: the board can be wider than the viewport, so
   // we expose arrow buttons + numbered "jump to column" shortcuts instead of
@@ -376,11 +424,17 @@ export default function ClaimsKanbanBoard({
   }, []);
 
   const claimsByStatus = useMemo(() => {
+    const scoped = !assigneeFilter
+      ? claims
+      : assigneeFilter === "__unassigned__"
+        ? claims.filter((c) => !c.owner_id)
+        : claims.filter((c) => c.owner_id === assigneeFilter);
+
     const grouped: Record<string, ClaimWithDetails[]> = {};
     for (const status of statuses) {
       grouped[status.id] = [];
     }
-    for (const claim of claims) {
+    for (const claim of scoped) {
       if (!grouped[claim.status_id]) {
         // Claim is in a status that's no longer active — bucket it so it
         // doesn't disappear. We render an "Other" pseudo-column for these.
@@ -391,7 +445,7 @@ export default function ClaimsKanbanBoard({
       grouped[claim.status_id].push(claim);
     }
     return grouped;
-  }, [claims, statuses]);
+  }, [claims, statuses, assigneeFilter]);
 
   // Keyboard column jumping: press 1–9 to scroll that column into view, and
   // [ / ] (or ← / →) to page left/right. Ignored while typing in a field so
@@ -462,7 +516,10 @@ export default function ClaimsKanbanBoard({
   };
 
   // ---- header -------------------------------------------------------------
-  const totalClaims = claims.length;
+  const totalClaims = Object.values(claimsByStatus).reduce(
+    (sum, group) => sum + group.length,
+    0,
+  );
 
   return (
     <div className="flex h-full flex-col">
@@ -478,6 +535,22 @@ export default function ClaimsKanbanBoard({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {assignableUsers && assignableUsers.length > 0 && (
+            <select
+              value={assigneeFilter}
+              onChange={(e) => setAssigneeFilter(e.target.value)}
+              title="Filter by assigned claims staff"
+              className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm text-slate-700"
+            >
+              <option value="">All assignees</option>
+              <option value="__unassigned__">Unassigned</option>
+              {assignableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {ownerName(u) ?? "Unnamed"}
+                </option>
+              ))}
+            </select>
+          )}
           {onRefresh && (
             <button
               type="button"
@@ -583,6 +656,8 @@ export default function ClaimsKanbanBoard({
                 <Column
                   status={status}
                   claims={claimsByStatus[status.id] ?? []}
+                  assignableUsers={assignableUsers}
+                  onReassignClaim={onReassignClaim}
                 />
               </div>
             ))}
@@ -606,6 +681,8 @@ export default function ClaimsKanbanBoard({
                   } as unknown as ClaimStatus
                 }
                 claims={claimsByStatus["__orphan__"]}
+                assignableUsers={assignableUsers}
+                onReassignClaim={onReassignClaim}
               />
             ) : null}
           </div>

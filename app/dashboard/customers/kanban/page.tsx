@@ -7,7 +7,15 @@ import { useClaims } from "../useClaims";
 
 function KanbanViewContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { claims, isLoading, error, refetch, moveClaimToStatus } = useClaims();
+  const {
+    claims,
+    isLoading,
+    error,
+    refetch,
+    moveClaimToStatus,
+    assignableUsers,
+    reassignClaim,
+  } = useClaims();
 
   // Show the new claim intake modal directly from the board.
   const handleAddClaim = () => {
@@ -23,6 +31,8 @@ function KanbanViewContent() {
         onRefresh={refetch}
         onAddClaim={handleAddClaim}
         onMoveClaim={moveClaimToStatus}
+        assignableUsers={assignableUsers}
+        onReassignClaim={reassignClaim}
       />
       <ClaimIntakeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>

@@ -18,6 +18,7 @@ type LookupRow = { id: string; name: string };
 type IntakeFormProps = {
   freightTypes: LookupRow[];
   trailerTypes: LookupRow[];
+  brokers: LookupRow[];
   embed: boolean;
 };
 
@@ -62,6 +63,7 @@ type StepId = (typeof STEPS)[number]["id"];
 export default function IntakeForm({
   freightTypes,
   trailerTypes,
+  brokers,
   embed,
 }: IntakeFormProps) {
   const router = useRouter();
@@ -96,8 +98,8 @@ export default function IntakeForm({
       if (typeof value === "string") snap[key] = value;
     }
     setReviewSnapshot(snap);
-    setReviewGroups(buildSummaryGroups(snap, freightTypes, trailerTypes));
-  }, [isLastStep, freightTypes, trailerTypes, files]);
+    setReviewGroups(buildSummaryGroups(snap, freightTypes, trailerTypes, brokers));
+  }, [isLastStep, freightTypes, trailerTypes, brokers, files]);
 
   const reviewFiles: SummaryFile[] = files.map((f) => ({
     name: f.file.name,
@@ -289,6 +291,7 @@ export default function IntakeForm({
               })),
               freightTypes,
               trailerTypes,
+              brokers,
             }),
           );
         }
@@ -378,6 +381,32 @@ export default function IntakeForm({
                   placeholder="(555) 123-4567"
                 />
               </Grid2>
+              <Grid2>
+                <Select
+                  label="Logistics representative"
+                  name="broker_id"
+                  hint="The NTS broker or logistics agent you've been working with on this shipment, if any."
+                >
+                  <option value="">— Not sure / not applicable —</option>
+                  {brokers.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </Select>
+                <Field
+                  label="If not listed, who are you working with?"
+                  name="broker_name"
+                  list="broker-name-suggestions"
+                  placeholder="e.g. Jane Doe"
+                  hint="Only needed if your rep isn't in the list above. Start typing to match an existing name and avoid creating a duplicate."
+                />
+              </Grid2>
+              <datalist id="broker-name-suggestions">
+                {brokers.map((b) => (
+                  <option key={b.id} value={b.name.split(" — ")[0]} />
+                ))}
+              </datalist>
             </Section>
           </StepContent>
 

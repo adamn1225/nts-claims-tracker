@@ -15,6 +15,7 @@ type ClaimIntakeModalProps = {
 export default function ClaimIntakeModal({ isOpen, onClose }: ClaimIntakeModalProps) {
     const [freightTypes, setFreightTypes] = useState<LookupRow[]>([]);
     const [trailerTypes, setTrailerTypes] = useState<LookupRow[]>([]);
+    const [brokers, setBrokers] = useState<LookupRow[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -33,13 +34,29 @@ export default function ClaimIntakeModal({ isOpen, onClose }: ClaimIntakeModalPr
                 .from("trailer_types")
                 .select("id, name")
                 .order("position", { ascending: true }),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new view
+            (client as any)
+                .from("broker_directory")
+                .select("id, name, office_location")
+                .order("name", { ascending: true }),
         ])
-            .then(([freightRes, trailerRes]) => {
+            .then(([freightRes, trailerRes, brokerRes]) => {
                 if (freightRes.error) throw freightRes.error;
                 if (trailerRes.error) throw trailerRes.error;
+                if (brokerRes.error) throw brokerRes.error;
 
                 setFreightTypes((freightRes.data ?? []) as LookupRow[]);
                 setTrailerTypes((trailerRes.data ?? []) as LookupRow[]);
+                setBrokers(
+                    ((brokerRes.data ?? []) as Array<{
+                        id: string;
+                        name: string;
+                        office_location: string | null;
+                    }>).map((b) => ({
+                        id: b.id,
+                        name: b.office_location ? `${b.name} — ${b.office_location}` : b.name,
+                    })),
+                );
             })
             .catch((err) => {
                 console.error("Failed to load claim intake lookups", err);
@@ -77,6 +94,7 @@ export default function ClaimIntakeModal({ isOpen, onClose }: ClaimIntakeModalPr
                     <IntakeForm
                         freightTypes={freightTypes}
                         trailerTypes={trailerTypes}
+                        brokers={brokers}
                         embed={false}
                     />
                 </div>

@@ -120,6 +120,9 @@ export default async function ClaimDetailPage({
         owner:profiles!claims_owner_id_fkey (
           id, first_name, last_name, email
         ),
+        broker:team_members!claims_broker_id_fkey (
+          id, first_name, last_name, office_location
+        ),
         freight_type:freight_types!claims_freight_type_id_fkey (
           id, name
         ),
@@ -175,6 +178,19 @@ export default async function ClaimDetailPage({
   const trailerTypeName =
     (claim.trailer_type as { name: string } | null)?.name ?? null;
 
+  const broker = (claim.broker ?? null) as
+    | {
+      id: string;
+      first_name: string;
+      last_name: string;
+      office_location: string | null;
+    }
+    | null;
+  const brokerName = broker
+    ? `${broker.first_name} ${broker.last_name}`.trim() +
+    (broker.office_location ? ` — ${broker.office_location}` : "")
+    : "Unassigned";
+
   const valueBucketLabel =
     VALUE_BUCKET_LABELS[claim.value_bucket] ?? claim.value_bucket;
   const intakeSourceLabel =
@@ -207,6 +223,7 @@ export default async function ClaimDetailPage({
     { data: statusOptions },
     { data: freightTypeOptions },
     { data: trailerTypeOptions },
+    { data: brokerOptions },
   ] =
     await Promise.all([
       supabase
@@ -216,7 +233,18 @@ export default async function ClaimDetailPage({
         .order("position"),
       supabase.from("freight_types").select("id, name").order("position"),
       supabase.from("trailer_types").select("id, name").order("position"),
+      supabase
+        .from("team_members")
+        .select("id, first_name, last_name, office_location")
+        .eq("is_active", true)
+        .order("first_name"),
     ]);
+
+  const brokerSelectOptions = (brokerOptions ?? []).map((b) => ({
+    id: b.id,
+    name: `${b.first_name} ${b.last_name}`.trim() +
+      (b.office_location ? ` — ${b.office_location}` : ""),
+  }));
 
   const carrierIntegrationParties = parties
     .filter((p) => p.role === "carrier" && p.company)
@@ -275,6 +303,7 @@ export default async function ClaimDetailPage({
               initialValues={{
                 summary: claim.summary,
                 status_id: claim.status_id,
+                team_member_id: claim.team_member_id,
                 claim_type: claim.claim_type,
                 value_bucket: claim.value_bucket,
                 value_bucket_manual: claim.value_bucket_manual,
@@ -301,6 +330,7 @@ export default async function ClaimDetailPage({
                 resolution_notes: claim.resolution_notes,
               }}
               statuses={statusOptions ?? []}
+              brokers={brokerSelectOptions}
               freightTypes={freightTypeOptions ?? []}
               trailerTypes={trailerTypeOptions ?? []}
             />
@@ -342,6 +372,7 @@ export default async function ClaimDetailPage({
         <Stat label="Opened" value={fmtDate(claim.opened_at)} />
         <Stat label="Days open" value={String(daysOpen)} />
         <Stat label="Owner" value={ownerName} />
+        <Stat label="Broker / logistics agent" value={brokerName} />
         <Stat label="Intake source" value={intakeSourceLabel} />
       </div>
 

@@ -17,6 +17,7 @@ type StoredReceipt = {
   files: SummaryFile[];
   freightTypes: LookupRow[];
   trailerTypes: LookupRow[];
+  brokers?: LookupRow[];
 };
 
 // Renders the customer's submitted-claim receipt: summary + print + email.
@@ -45,6 +46,7 @@ export default function IntakeReceipt({ reference }: { reference: string }) {
     data.snapshot,
     data.freightTypes,
     data.trailerTypes,
+    data.brokers ?? [],
   );
 
   return (

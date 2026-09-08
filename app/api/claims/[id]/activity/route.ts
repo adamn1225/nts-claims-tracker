@@ -290,6 +290,7 @@ export async function GET(
   const fieldLabels: Record<string, string> = {
     summary: "Summary",
     owner_id: "Owner",
+    team_member_id: "Broker / logistics agent",
     filing_status: "Filing status",
     filed_at: "Filed at",
     claim_type: "Claim type",
@@ -322,10 +323,12 @@ export async function GET(
     { data: freightTypes },
     { data: trailerTypes },
     { data: profiles },
+    { data: teamMembers },
   ] = await Promise.all([
     supabase.from("freight_types").select("id, name"),
     supabase.from("trailer_types").select("id, name"),
     supabase.from("profiles").select("id, first_name, last_name, email"),
+    supabase.from("team_members").select("id, first_name, last_name"),
   ]);
   const freightNames = new Map((freightTypes ?? []).map((row) => [row.id, row.name]));
   const trailerNames = new Map((trailerTypes ?? []).map((row) => [row.id, row.name]));
@@ -335,6 +338,12 @@ export async function GET(
       [profile.first_name, profile.last_name].filter(Boolean).join(" ") ||
       profile.email ||
       "Unknown user",
+    ]),
+  );
+  const teamMemberNames = new Map(
+    (teamMembers ?? []).map((tm) => [
+      tm.id,
+      `${tm.first_name} ${tm.last_name}`.trim() || "Unknown broker",
     ]),
   );
 
@@ -362,7 +371,7 @@ export async function GET(
       body: changed
         .map(
           (field) =>
-            `${fieldLabels[field]}: ${formatAuditValue(field, before[field], freightNames, trailerNames, profileNames)} → ${formatAuditValue(field, after[field], freightNames, trailerNames, profileNames)}`,
+            `${fieldLabels[field]}: ${formatAuditValue(field, before[field], freightNames, trailerNames, profileNames, teamMemberNames)} → ${formatAuditValue(field, after[field], freightNames, trailerNames, profileNames, teamMemberNames)}`,
         )
         .join("\n"),
     });
@@ -383,6 +392,7 @@ function formatAuditValue(
   freightNames: Map<string, string>,
   trailerNames: Map<string, string>,
   profileNames: Map<string, string>,
+  teamMemberNames: Map<string, string>,
 ): string {
   if (value === null || value === undefined) return "Not set";
   if (["damage_claim_amount", "shipment_value", "carrier_pay", "carrier_deductible"].includes(field)) {
@@ -398,6 +408,7 @@ function formatAuditValue(
   if (field === "freight_type_id") return freightNames.get(String(value)) ?? "Unknown";
   if (field === "trailer_type_id") return trailerNames.get(String(value)) ?? "Unknown";
   if (field === "owner_id") return profileNames.get(String(value)) ?? "Unknown user";
+  if (field === "team_member_id") return teamMemberNames.get(String(value)) ?? "Unknown broker";
   if (field === "value_bucket_manual") return value ? "Manual" : "Automatic";
   if (["pickup_date", "delivery_date", "incident_date"].includes(field)) {
     return new Date(`${String(value)}T00:00:00`).toLocaleDateString();

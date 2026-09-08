@@ -140,8 +140,22 @@ export async function PATCH(
             throw new ValidationError("Claim status must be active");
         }
 
+        const teamMemberId = nullableUuid(body, "team_member_id");
+        if (teamMemberId) {
+            const { data: broker } = await supabase
+                .from("team_members")
+                .select("id")
+                .eq("id", teamMemberId)
+                .eq("is_active", true)
+                .maybeSingle();
+            if (!broker) {
+                throw new ValidationError("Broker must reference an active team member");
+            }
+        }
+
         const update: ClaimUpdate = {
             status_id: statusId,
+            team_member_id: teamMemberId,
             summary: nullableText(body, "summary", 500),
             claim_type: claimType as ClaimUpdate["claim_type"],
             value_bucket: valueBucket as ClaimUpdate["value_bucket"],
