@@ -123,24 +123,40 @@ Damage: ${truncate(summary.damageDescription, 400)}
 Triage: ${triageUrl}`;
 
     await Promise.all(
-      staff
-        .filter(
-          (s): s is typeof s & { email: string } => Boolean(s.email),
-        )
-        .map((s) =>
-          sendEmail({
-            to: s.email,
-            subject,
-            html,
-            text,
-          }).catch((err) => {
-            console.error("[intake notify staff] send failed", s.email, err);
-          }),
-        ),
+      dedupeByEmail(staff).map((s) =>
+        sendEmail({
+          to: s.email,
+          subject,
+          html,
+          text,
+        }).catch((err) => {
+          console.error("[intake notify staff] send failed", s.email, err);
+        }),
+      ),
     );
   } catch (err) {
     console.error("[intake notify staff] error:", err);
   }
+}
+
+/**
+ * One email per address. Guards against a person holding more than one active
+ * profile row; note it cannot detect two different addresses that alias to the
+ * same mailbox.
+ */
+function dedupeByEmail<T extends { email: string | null }>(
+  rows: T[],
+): Array<T & { email: string }> {
+  const seen = new Set<string>();
+  const unique: Array<T & { email: string }> = [];
+  for (const row of rows) {
+    if (!row.email) continue;
+    const key = row.email.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(row as T & { email: string });
+  }
+  return unique;
 }
 
 /**

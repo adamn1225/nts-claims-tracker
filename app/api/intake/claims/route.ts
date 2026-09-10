@@ -24,7 +24,10 @@ export const dynamic = "force-dynamic";
 
 const STORAGE_BUCKET = "claim-documents";
 const MAX_FILES = 12;
-const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
+// Mirrors the client guard. Requests larger than this are normally rejected by
+// the serverless platform before reaching us; this is the backstop.
+const MAX_TOTAL_BYTES = 4.5 * 1024 * 1024;
+const MAX_FILE_BYTES = MAX_TOTAL_BYTES;
 
 type AttachmentMeta = {
   storage_path: string;
@@ -38,8 +41,13 @@ export async function POST(request: Request) {
   let formData: FormData;
   try {
     formData = await request.formData();
-  } catch {
-    return jsonError("Invalid form submission.", 400);
+  } catch (err) {
+    // Most commonly an oversized multipart body truncated by the platform.
+    console.error("[intake] could not parse form body", err);
+    return jsonError(
+      "We couldn't read your submission — this usually means the attachments were too large. Please keep attachments under 4.5 MB in total and try again.",
+      413,
+    );
   }
 
   const submitterFirstName = strField(formData, "submitter_first_name");
@@ -149,7 +157,7 @@ export async function POST(request: Request) {
 
     if (file.size > MAX_FILE_BYTES) {
       return jsonError(
-        `"${file.name}" exceeds the 25 MB per-file limit.`,
+        `"${file.name}" is too large. Attachments must total under 4.5 MB per submission.`,
         413,
       );
     }

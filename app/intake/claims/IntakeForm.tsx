@@ -37,7 +37,12 @@ const DOCUMENT_TYPES = [
 type DocumentTypeValue = (typeof DOCUMENT_TYPES)[number]["value"];
 
 const MAX_FILES = 12;
-const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — matches bucket limit
+// The whole submission is posted as one request through a serverless function
+// whose payload cap is ~6 MB base64-encoded (~4.5 MB of real bytes). Anything
+// larger is rejected at the edge before our route runs, so we enforce it here
+// where we can still explain it to the customer.
+const MAX_TOTAL_BYTES = 4.5 * 1024 * 1024;
+const MAX_FILE_BYTES = MAX_TOTAL_BYTES;
 
 type StagedFile = {
   file: File;
@@ -184,19 +189,21 @@ export default function IntakeForm({
 
     const incoming = Array.from(fileList);
     const next: StagedFile[] = [...files];
+    let total = next.reduce((sum, entry) => sum + entry.file.size, 0);
 
     for (const file of incoming) {
       if (next.length >= MAX_FILES) {
         setError(`You can attach up to ${MAX_FILES} files per submission.`);
         break;
       }
-      if (file.size > MAX_FILE_BYTES) {
+      if (total + file.size > MAX_TOTAL_BYTES) {
         setError(
-          `"${file.name}" exceeds the 25 MB per-file limit. Please compress or split it.`,
+          `Attachments must total under ${formatBytes(MAX_TOTAL_BYTES)}. "${file.name}" (${formatBytes(file.size)}) would exceed that. Add your largest photos to this claim, then reply to your confirmation email with the rest — or resize the photos and try again.`,
         );
         continue;
       }
       next.push({ file, documentType: guessDocumentType(file.name) });
+      total += file.size;
     }
     setFiles(next);
   }
@@ -260,12 +267,21 @@ export default function IntakeForm({
         body: formData,
       });
 
-      const result = (await res.json()) as ApiSuccess | ApiError;
+      // An oversized request is rejected by the platform with an HTML error
+      // page, so parsing must not be assumed to succeed.
+      let result: ApiSuccess | ApiError | null = null;
+      try {
+        result = (await res.json()) as ApiSuccess | ApiError;
+      } catch {
+        result = null;
+      }
 
-      if (!res.ok || !("ok" in result) || !result.ok) {
+      if (!res.ok || !result || !result.ok) {
         const message =
-          (result as ApiError | undefined)?.error ??
-          "Something went wrong while submitting your claim. Please try again.";
+          (result as ApiError | null)?.error ??
+          (res.status === 413
+            ? `Your attachments are too large to submit together. Keep them under ${formatBytes(MAX_TOTAL_BYTES)} in total and try again.`
+            : "Something went wrong while submitting your claim. Please try again, or email claims@ntslogistics.com if this keeps happening.");
         setError(message);
         setSubmitting(false);
         return;
@@ -647,7 +663,7 @@ export default function IntakeForm({
           <StepContent stepId="submit" current={currentStep.id}>
             <Section
               title="Supporting documents"
-              description="Upload BOL, POD, damage photos, repair estimates, or anything else relevant. PDF / image / Word files up to 25 MB each, 12 files max."
+              description="Upload BOL, POD, damage photos, repair estimates, or anything else relevant. PDF / image / Word files, 12 files max, 4.5 MB total. If your photos are larger, send your most important ones now and reply to your confirmation email with the rest."
             >
               <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center">
                 <input
@@ -664,6 +680,14 @@ export default function IntakeForm({
                   you a secure upload link if anything is missing.
                 </p>
               </div>
+
+              {files.length > 0 && (
+                <p className="text-xs text-slate-500">
+                  {files.length} of {MAX_FILES} files ·{" "}
+                  {formatBytes(files.reduce((sum, f) => sum + f.file.size, 0))}{" "}
+                  of {formatBytes(MAX_TOTAL_BYTES)} used
+                </p>
+              )}
 
               {files.length > 0 && (
                 <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200">
