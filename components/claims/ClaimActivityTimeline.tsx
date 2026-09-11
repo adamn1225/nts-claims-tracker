@@ -7,15 +7,12 @@ import {
   FileText,
   Loader2,
   Mail,
-  MessageSquarePlus,
   Move,
   Pencil,
-  StickyNote,
   ListTodo,
 } from "lucide-react";
 
 type ActivityKind =
-  | "note"
   | "correspondence"
   | "status_change"
   | "document"
@@ -38,11 +35,6 @@ const KIND_META: Record<
   ActivityKind,
   { icon: React.ComponentType<{ className?: string }>; tone: string; label: string }
 > = {
-  note: {
-    icon: StickyNote,
-    tone: "bg-warning/10 text-warning-text",
-    label: "Note",
-  },
   correspondence: {
     icon: Mail,
     tone: "bg-accent/10 text-accent",
@@ -82,7 +74,6 @@ const KIND_META: Record<
 
 const KIND_OPTIONS: { value: ActivityKind | "all"; label: string }[] = [
   { value: "all", label: "All activity" },
-  { value: "note", label: "Notes" },
   { value: "correspondence", label: "Correspondence" },
   { value: "status_change", label: "Status" },
   { value: "document", label: "Documents" },
@@ -107,25 +98,20 @@ function fmt(iso: string): string {
 
 export interface ClaimActivityTimelineProps {
   claimId: string;
-  canEdit: boolean;
 }
 
 /**
- * Unified activity timeline for a claim. Directly addresses L1/L2 in the
- * discovery doc: staff want one feed showing notes, calls, emails, status
- * changes, uploads, tasks, and transactions in chronological order — with
- * an inline quick-note input at the top.
+ * Action log for a claim — status changes, claim edits, document uploads,
+ * tasks, transactions, and correspondence, in chronological order. Notes
+ * live separately in `ClaimNotesPanel` so context isn't buried in system events.
  */
 export default function ClaimActivityTimeline({
   claimId,
-  canEdit,
 }: ClaimActivityTimelineProps) {
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ActivityKind | "all">("all");
-  const [noteBody, setNoteBody] = useState("");
-  const [posting, setPosting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -163,37 +149,16 @@ export default function ClaimActivityTimeline({
     [items, filter],
   );
 
-  const handleAddNote = async () => {
-    if (!noteBody.trim()) return;
-    setPosting(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/claims/${claimId}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: noteBody }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to add note");
-      setNoteBody("");
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setPosting(false);
-    }
-  };
-
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">
-            Activity timeline
+            Action log
           </h2>
           <p className="text-xs text-slate-500">
-            Notes, correspondence, status changes, docs, tasks &amp;
-            transactions — all in one feed.
+            Status changes, claim edits, documents, tasks, transactions &amp;
+            correspondence — all in one feed.
           </p>
         </div>
         <select
@@ -208,33 +173,6 @@ export default function ClaimActivityTimeline({
           ))}
         </select>
       </div>
-
-      {canEdit && (
-        <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 p-2">
-          <label className="mb-1 flex items-center gap-1 text-xs font-medium text-slate-600">
-            <MessageSquarePlus className="h-3.5 w-3.5" />
-            Quick note
-          </label>
-          <textarea
-            value={noteBody}
-            onChange={(e) => setNoteBody(e.target.value)}
-            rows={2}
-            placeholder="Log an internal note — visible only to claims staff & managers."
-            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
-          />
-          <div className="mt-1.5 flex justify-end">
-            <button
-              type="button"
-              onClick={handleAddNote}
-              disabled={posting || !noteBody.trim()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary-text disabled:opacity-50"
-            >
-              {posting && <Loader2 className="h-3 w-3 animate-spin" />}
-              Post note
-            </button>
-          </div>
-        </div>
-      )}
 
       {error && (
         <div className="mb-3 rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger">

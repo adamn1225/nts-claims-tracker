@@ -754,16 +754,19 @@ export type Database = {
         Row: {
           claim_id: string
           pinned_at: string
+          position: number
           user_id: string
         }
         Insert: {
           claim_id: string
           pinned_at?: string
+          position?: number
           user_id: string
         }
         Update: {
           claim_id?: string
           pinned_at?: string
+          position?: number
           user_id?: string
         }
         Relationships: [

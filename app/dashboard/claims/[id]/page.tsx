@@ -9,6 +9,8 @@ import ClaimTasksPanel from "@/components/claims/ClaimTasksPanel";
 import ClaimHeaderActions from "@/components/claims/ClaimHeaderActions";
 import ClaimFinancialsPanel from "@/components/claims/ClaimFinancialsPanel";
 import ClaimEditDialog from "@/components/claims/ClaimEditDialog";
+import ClaimNotesPanel from "@/components/claims/ClaimNotesPanel";
+import ClaimResolutionActions from "@/components/claims/ClaimResolutionActions";
 
 export const dynamic = "force-dynamic";
 
@@ -335,6 +337,13 @@ export default async function ClaimDetailPage({
               trailerTypes={trailerTypeOptions ?? []}
             />
           )}
+          {canEdit && (
+            <ClaimResolutionActions
+              claimId={claim.id}
+              canEdit={canEdit}
+              isAlreadyResolved={Boolean(status?.is_closed || status?.is_denied)}
+            />
+          )}
         </div>
         {claim.summary && (
           <p className="mt-2 text-sm text-slate-600">{claim.summary}</p>
@@ -556,7 +565,9 @@ export default async function ClaimDetailPage({
         canEdit={canEdit}
       />
 
-      <ClaimActivityTimeline claimId={claim.id} canEdit={canEdit} />
+      <ClaimNotesPanel claimId={claim.id} canEdit={canEdit} />
+
+      <ClaimActivityTimeline claimId={claim.id} />
     </main>
   );
 }

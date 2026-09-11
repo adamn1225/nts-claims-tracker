@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { CLAIM_TYPES } from "@/lib/constants/claim-types";
+import ComboboxField from "./ComboboxField";
 import {
   buildSummaryGroups,
   PrintEmailActions,
@@ -339,7 +340,7 @@ export default function IntakeForm({
         />
 
         {/* ---- Step content ---- */}
-        <div id="intake-step-content" className="space-y-8">
+        <div id="intake-step-content" className="min-w-0 space-y-8">
           {/* Step header */}
           <div className="border-b border-slate-200 pb-3">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -397,32 +398,14 @@ export default function IntakeForm({
                   placeholder="(555) 123-4567"
                 />
               </Grid2>
-              <Grid2>
-                <Select
-                  label="Logistics representative"
-                  name="broker_id"
-                  hint="The NTS broker or logistics agent you've been working with on this shipment, if any."
-                >
-                  <option value="">— Not sure / not applicable —</option>
-                  {brokers.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </Select>
-                <Field
-                  label="If not listed, who are you working with?"
-                  name="broker_name"
-                  list="broker-name-suggestions"
-                  placeholder="e.g. Jane Doe"
-                  hint="Only needed if your rep isn't in the list above. Start typing to match an existing name and avoid creating a duplicate."
-                />
-              </Grid2>
-              <datalist id="broker-name-suggestions">
-                {brokers.map((b) => (
-                  <option key={b.id} value={b.name.split(" — ")[0]} />
-                ))}
-              </datalist>
+              <ComboboxField
+                label="Logistics representative"
+                name="broker_id"
+                fallbackName="broker_name"
+                options={brokers}
+                placeholder="Start typing a name…"
+                hint="The NTS broker or logistics agent you've been working with on this shipment, if any. Type to search — if they aren't listed, just type their name and we'll pass it along."
+              />
             </Section>
           </StepContent>
 
@@ -849,7 +832,10 @@ function Stepper({
   onSelect: (idx: number) => void;
 }) {
   return (
-    <nav aria-label="Form steps" className="lg:sticky lg:top-6 lg:self-start">
+    <nav
+      aria-label="Form steps"
+      className="min-w-0 lg:sticky lg:top-6 lg:self-start"
+    >
       {/* Mobile / embed: horizontal pills. Scrolls within its own box; we
           keep it inside the main padding so the page doesn't gain a
           horizontal scrollbar on phones. */}

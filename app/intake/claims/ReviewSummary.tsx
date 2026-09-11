@@ -170,7 +170,7 @@ export function ReviewSummary({
                 className="grid grid-cols-1 gap-x-4 text-sm sm:grid-cols-[10rem_1fr]"
               >
                 <dt className="text-slate-500">{r.label}</dt>
-                <dd className="whitespace-pre-wrap break-words text-slate-900">
+                <dd className="whitespace-pre-wrap wrap-break-word text-slate-900">
                   {r.value}
                 </dd>
               </div>

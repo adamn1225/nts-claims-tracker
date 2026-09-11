@@ -8,16 +8,14 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/claims/:id/activity
  *
- * Returns a unified, chronologically-sorted feed of activity for one claim:
- *   - `note`            → claim_notes
+ * Returns a unified, chronologically-sorted action log for one claim —
+ * everything EXCEPT notes (see /api/claims/:id/notes for those):
  *   - `correspondence`  → correspondence_log (phone/email/sms)
  *   - `status_change`   → claim_status_history
  *   - `document`        → claim_documents (upload event)
  *   - `task`            → tasks (create/complete)
  *   - `transaction`     → claim_transactions
- *
- * This is the "one timeline" the claims team asked for (L1/L2) so they stop
- * duplicating notes across CRM / spreadsheet / FreightClaims.
+ *   - `claim_update` / `financial_update` → audit_logs
  *
  * We fetch each source separately (RLS handles scoping) and merge in memory.
  * Not efficient for very hot claims — swap for a DB view or FTS index if this
@@ -26,7 +24,6 @@ export const dynamic = "force-dynamic";
 type ActivityItem = {
   id: string;
   kind:
-  | "note"
   | "correspondence"
   | "status_change"
   | "document"
@@ -68,33 +65,6 @@ export async function GET(
 
   const profileFields =
     "id, first_name, last_name, email";
-
-  // Notes
-  const { data: notes } = await supabase
-    .from("claim_notes")
-    .select(
-      `id, body, is_pinned, is_ai_generated, created_at,
-       author:profiles!claim_notes_author_id_fkey (${profileFields})`,
-    )
-    .eq("claim_id", claimId);
-
-  (notes ?? []).forEach((n) => {
-    activity.push({
-      id: `note-${n.id}`,
-      kind: "note",
-      occurred_at: n.created_at,
-      actor_name: actorName(
-        n.author as unknown as {
-          first_name: string | null;
-          last_name: string | null;
-          email: string | null;
-        },
-      ),
-      title: n.is_ai_generated ? "AI-generated note" : "Internal note",
-      body: n.body,
-      extra: { is_pinned: n.is_pinned },
-    });
-  });
 
   // Correspondence
   const { data: corr } = await supabase

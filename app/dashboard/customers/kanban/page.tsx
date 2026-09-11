@@ -1,12 +1,10 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import ClaimsKanbanBoard from "@/components/ClaimsKanbanBoard";
-import ClaimIntakeModal from "@/components/ClaimIntakeModal";
 import { useClaims } from "../useClaims";
 
 function KanbanViewContent() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const {
     claims,
     isLoading,
@@ -15,12 +13,9 @@ function KanbanViewContent() {
     moveClaimToStatus,
     assignableUsers,
     reassignClaim,
+    togglePin,
+    reorderPins,
   } = useClaims();
-
-  // Show the new claim intake modal directly from the board.
-  const handleAddClaim = () => {
-    setIsModalOpen(true);
-  };
 
   return (
     <div className="h-[calc(100vh-3.5rem)] px-4 py-3 sm:px-6">
@@ -29,12 +24,12 @@ function KanbanViewContent() {
         isLoading={isLoading}
         error={error}
         onRefresh={refetch}
-        onAddClaim={handleAddClaim}
         onMoveClaim={moveClaimToStatus}
         assignableUsers={assignableUsers}
         onReassignClaim={reassignClaim}
+        onTogglePin={togglePin}
+        onReorderPins={reorderPins}
       />
-      <ClaimIntakeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }
