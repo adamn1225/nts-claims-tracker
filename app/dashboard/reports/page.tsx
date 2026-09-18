@@ -345,7 +345,7 @@ export default function ClaimsReportsPage() {
     >();
     for (const c of claims) {
       const owner = c.owner_id ? owners.find((o) => o.id === c.owner_id) : null;
-      const office = owner?.office_location || "— Unassigned";
+      const office = owner?.office_location || "Unassigned";
       const bucket = rows.get(office) ?? { office, count: 0, total: 0 };
       bucket.count += 1;
       bucket.total += Number(c.damage_claim_amount ?? 0);
@@ -364,7 +364,7 @@ export default function ClaimsReportsPage() {
       const name = owner
         ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim() ||
         "Unnamed"
-        : "— Unassigned";
+        : "Unassigned";
       const key = c.owner_id ?? "unassigned";
       const bucket =
         rows.get(key) ?? {
@@ -391,7 +391,7 @@ export default function ClaimsReportsPage() {
         : null;
       const name = broker
         ? `${broker.first_name} ${broker.last_name}`.trim() || "Unnamed"
-        : "— Unassigned";
+        : "Unassigned";
       const key = c.team_member_id ?? "unassigned";
       const bucket =
         rows.get(key) ?? {
@@ -488,8 +488,11 @@ export default function ClaimsReportsPage() {
     owners.forEach((o) => {
       if (o.office_location) s.add(o.office_location);
     });
+    brokers.forEach((b) => {
+      if (b.office_location) s.add(b.office_location);
+    });
     return Array.from(s).sort();
-  }, [owners]);
+  }, [owners, brokers]);
 
   const handleExport = () => {
     const rows = claims.map((c) => {
@@ -556,9 +559,9 @@ export default function ClaimsReportsPage() {
             Claims reports
           </h1>
           <p className="text-sm text-slate-500">
-            Portfolio metrics, breakdowns by broker / carrier / claim type /
-            freight type, and payment source rollups. Office and owner
-            breakdowns are available under Internal breakdowns below.
+            Portfolio metrics with breakdowns by office, broker, carrier,
+            claim type, and freight type, plus payment source rollups. Owner
+            breakdown is available under Internal breakdowns below.
           </p>
         </div>
         <button
@@ -570,7 +573,7 @@ export default function ClaimsReportsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="text-xs">
           <span className="mb-1 block font-medium text-slate-600">Time range</span>
           <select
@@ -584,6 +587,21 @@ export default function ClaimsReportsPage() {
             <option value={90}>Last 90 days</option>
             <option value={365}>Last 12 months</option>
             <option value={0}>All time</option>
+          </select>
+        </label>
+        <label className="text-xs">
+          <span className="mb-1 block font-medium text-slate-600">Office</span>
+          <select
+            value={officeFilter}
+            onChange={(e) => setOfficeFilter(e.target.value)}
+            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+          >
+            <option value="">All offices</option>
+            {uniqueOffices.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
           </select>
         </label>
         <label className="text-xs">
@@ -621,24 +639,9 @@ export default function ClaimsReportsPage() {
 
       <details className="rounded-lg border border-slate-200 bg-slate-50 p-3">
         <summary className="cursor-pointer select-none text-xs font-medium text-slate-500 hover:text-slate-700">
-          More filters (office, owner) — optional
+          More filters (owner) — optional
         </summary>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="text-xs">
-            <span className="mb-1 block font-medium text-slate-600">Office</span>
-            <select
-              value={officeFilter}
-              onChange={(e) => setOfficeFilter(e.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
-            >
-              <option value="">All offices</option>
-              {uniqueOffices.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className="text-xs">
             <span className="mb-1 block font-medium text-slate-600">Owner</span>
             <select
@@ -745,6 +748,14 @@ export default function ClaimsReportsPage() {
         </div>
       </Section>
 
+      <Section
+        icon={Building2}
+        title="By office"
+        subtitle="Grouped by the claim owner's assigned office. Remote staff without an assigned office show as Unassigned."
+      >
+        <BreakdownTable rows={byOffice} keyLabel="Office" primaryKey="office" />
+      </Section>
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Section
           icon={Users}
@@ -787,12 +798,9 @@ export default function ClaimsReportsPage() {
 
       <details className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
         <summary className="cursor-pointer select-none text-xs font-medium uppercase tracking-wide text-slate-500 hover:text-slate-700">
-          Internal breakdowns (office / owner) — optional
+          Internal breakdowns (owner) — optional
         </summary>
-        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Section icon={Building2} title="By office">
-            <BreakdownTable rows={byOffice} keyLabel="Office" primaryKey="office" />
-          </Section>
+        <div className="mt-3">
           <Section icon={Users} title="By owner">
             <BreakdownTable
               rows={byOwner.map((r) => ({ ...r, office: r.office ?? "" }))}

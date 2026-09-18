@@ -6,6 +6,7 @@ import { CheckCircle2, ShieldX } from "lucide-react";
 import Modal from "@/components/Modal";
 import ClaimResolutionForm, {
     MIN_RESOLUTION_NOTE_LENGTH,
+    type ResolutionPayer,
 } from "@/components/claims/ClaimResolutionForm";
 
 /**
@@ -17,10 +18,14 @@ export default function ClaimResolutionActions({
     claimId,
     canEdit,
     isAlreadyResolved,
+    damageClaimAmount,
+    currency,
 }: {
     claimId: string;
     canEdit: boolean;
     isAlreadyResolved: boolean;
+    damageClaimAmount?: number | null;
+    currency?: string | null;
 }) {
     const router = useRouter();
     const [mode, setMode] = useState<"close" | "deny" | null>(null);
@@ -35,7 +40,11 @@ export default function ClaimResolutionActions({
         setError(null);
     };
 
-    const submit = async (resolution: string, notes: string) => {
+    const submit = async (
+        resolution: string,
+        notes: string,
+        payers: ResolutionPayer[],
+    ) => {
         if (notes.trim().length < MIN_RESOLUTION_NOTE_LENGTH) {
             setError(`Please add a brief explanation (at least ${MIN_RESOLUTION_NOTE_LENGTH} characters).`);
             return;
@@ -54,6 +63,30 @@ export default function ClaimResolutionActions({
             });
             const json = await res.json();
             if (!res.ok) throw new Error(json.error ?? "Unable to update claim");
+
+            // Log each payer as an inbound_payment transaction so the ledger
+            // and financial rollup reflect the split. Failures here are
+            // non-fatal: the claim is already closed, staff can add manually.
+            if (payers.length > 0) {
+                await Promise.all(
+                    payers.map((p) =>
+                        fetch(`/api/claims/${claimId}/transactions`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                transaction_type: "inbound_payment",
+                                payment_source: p.source,
+                                amount: p.amount,
+                                currency: currency || "USD",
+                                notes: "Logged at claim close",
+                            }),
+                        }).catch((err) => {
+                            console.error("[claim close] payer txn failed", err);
+                        }),
+                    ),
+                );
+            }
+
             window.dispatchEvent(
                 new CustomEvent("claim-activity-updated", { detail: { claimId } }),
             );
@@ -99,6 +132,8 @@ export default function ClaimResolutionActions({
                         onSubmit={submit}
                         saving={saving}
                         error={error}
+                        damageClaimAmount={damageClaimAmount}
+                        currency={currency}
                     />
                 )}
             </Modal>

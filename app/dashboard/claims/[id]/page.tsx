@@ -342,6 +342,8 @@ export default async function ClaimDetailPage({
               claimId={claim.id}
               canEdit={canEdit}
               isAlreadyResolved={Boolean(status?.is_closed || status?.is_denied)}
+              damageClaimAmount={claim.damage_claim_amount}
+              currency={claim.currency}
             />
           )}
         </div>

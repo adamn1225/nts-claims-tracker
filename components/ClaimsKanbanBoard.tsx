@@ -34,6 +34,7 @@ import { createClient } from "@/lib/supabase/client";
 import Modal from "@/components/Modal";
 import ClaimResolutionForm, {
   MIN_RESOLUTION_NOTE_LENGTH,
+  type ResolutionPayer,
 } from "@/components/claims/ClaimResolutionForm";
 import {
   ClaimStatus,
@@ -920,7 +921,11 @@ function ClaimResolveModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submit = async (resolution: string, notes: string) => {
+  const submit = async (
+    resolution: string,
+    notes: string,
+    payers: ResolutionPayer[],
+  ) => {
     if (notes.trim().length < MIN_RESOLUTION_NOTE_LENGTH) {
       setError(`Please add a brief explanation (at least ${MIN_RESOLUTION_NOTE_LENGTH} characters).`);
       return;
@@ -935,6 +940,30 @@ function ClaimResolveModal({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? "Unable to update claim");
+
+      // Log each payer as an inbound_payment transaction so the ledger and
+      // financial rollup reflect the split. Non-fatal if any single POST
+      // fails — the close already succeeded and staff can add manually.
+      if (payers.length > 0) {
+        await Promise.all(
+          payers.map((p) =>
+            fetch(`/api/claims/${claim.id}/transactions`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                transaction_type: "inbound_payment",
+                payment_source: p.source,
+                amount: p.amount,
+                currency: claim.currency || "USD",
+                notes: "Logged at claim close",
+              }),
+            }).catch((err) => {
+              console.error("[claim close] payer txn failed", err);
+            }),
+          ),
+        );
+      }
+
       window.dispatchEvent(
         new CustomEvent("claim-activity-updated", { detail: { claimId: claim.id } }),
       );
@@ -958,6 +987,8 @@ function ClaimResolveModal({
         onSubmit={submit}
         saving={saving}
         error={error}
+        damageClaimAmount={claim.damage_claim_amount}
+        currency={claim.currency}
       />
     </Modal>
   );
