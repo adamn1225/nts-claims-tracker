@@ -203,9 +203,8 @@ function AppUpdatesWidget() {
   const [updates, setUpdates] = useState<Array<{
     id: string;
     title: string;
-    slug: string;
-    excerpt: string | null;
-    category: string;
+    body: string | null;
+    category: string | null;
     published_at: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +215,7 @@ function AppUpdatesWidget() {
 
       const { data } = await supabase
         .from("app_updates")
-        .select("id, title, slug, excerpt, category, published_at")
+        .select("id, title, body, category, published_at")
         .eq("is_published", true)
         .order("published_at", { ascending: false })
         .limit(2);
@@ -231,14 +230,28 @@ function AppUpdatesWidget() {
     fetchUpdates();
   }, []);
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryColor = (category: string | null) => {
     const colors: Record<string, string> = {
       feature: "bg-blue-600",
       announcement: "bg-purple-600",
       "bug-fix": "bg-green-600",
       general: "bg-slate-600",
     };
-    return colors[category] || colors.general;
+    return colors[category ?? "general"] || colors.general;
+  };
+
+  // Short plain-text preview from the markdown body for the widget list.
+  const bodyPreview = (body: string | null, maxLen = 140) => {
+    if (!body) return "";
+    const stripped = body
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/[#>*_`~\-]/g, " ")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim();
+    return stripped.length > maxLen
+      ? stripped.slice(0, maxLen).trimEnd() + "…"
+      : stripped;
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -283,30 +296,33 @@ function AppUpdatesWidget() {
       </div>
       <div className="space-y-2">
         {updates.length > 0 ? (
-          updates.map((update) => (
-            <Link
-              key={update.id}
-              href={`/dashboard/updates/${update.slug}`}
-              className="block rounded-lg border border-slate-200 p-3 transition-all hover:border-primary/60 hover:bg-primary/5"
-            >
-              <div className="mb-1.5 flex items-center gap-2">
-                <span
-                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${getCategoryColor(update.category)}`}
-                />
-                <span className="text-xs text-slate-500">
-                  {formatTimeAgo(update.published_at)}
-                </span>
-              </div>
-              <p className="text-sm font-medium text-slate-900 line-clamp-2">
-                {update.title}
-              </p>
-              {update.excerpt && (
-                <p className="mt-1 text-xs text-slate-600 line-clamp-2">
-                  {update.excerpt}
+          updates.map((update) => {
+            const preview = bodyPreview(update.body);
+            return (
+              <Link
+                key={update.id}
+                href={`/dashboard/updates/${update.id}`}
+                className="block rounded-lg border border-slate-200 p-3 transition-all hover:border-primary/60 hover:bg-primary/5"
+              >
+                <div className="mb-1.5 flex items-center gap-2">
+                  <span
+                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${getCategoryColor(update.category)}`}
+                  />
+                  <span className="text-xs text-slate-500">
+                    {formatTimeAgo(update.published_at)}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-slate-900 line-clamp-2">
+                  {update.title}
                 </p>
-              )}
-            </Link>
-          ))
+                {preview && (
+                  <p className="mt-1 text-xs text-slate-600 line-clamp-2">
+                    {preview}
+                  </p>
+                )}
+              </Link>
+            );
+          })
         ) : (
           <p className="py-4 text-center text-sm text-slate-500">
             No updates available

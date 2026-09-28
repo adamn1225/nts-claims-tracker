@@ -8,8 +8,7 @@ import { ArrowLeft, AlertCircle } from "lucide-react";
 
 type UpdateForm = {
     title: string;
-    excerpt: string;
-    content: string;
+    body: string;
     category: "feature" | "announcement" | "bug-fix" | "general";
 };
 
@@ -21,17 +20,9 @@ export default function CreateUpdatePage() {
     const [error, setError] = useState<string | null>(null);
     const [form, setForm] = useState<UpdateForm>({
         title: "",
-        excerpt: "",
-        content: "",
+        body: "",
         category: "feature",
     });
-
-    const generateSlug = (title: string) => {
-        return title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "");
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,26 +37,26 @@ export default function CreateUpdatePage() {
                 return;
             }
 
-            const slug = generateSlug(form.title);
+            const { data, error: insertError } = await supabase
+                .from("app_updates")
+                .insert({
+                    title: form.title,
+                    body: form.body,
+                    category: form.category,
+                    created_by: userData.user.id,
+                    is_published: true,
+                    published_at: new Date().toISOString(),
+                })
+                .select("id")
+                .single();
 
-            const { error: insertError } = await supabase.from("app_updates").insert({
-                title: form.title,
-                slug,
-                excerpt: form.excerpt,
-                content: form.content,
-                category: form.category,
-                author_id: userData.user.id,
-                is_published: true,
-                published_at: new Date().toISOString(),
-            });
-
-            if (insertError) {
-                setError(insertError.message);
+            if (insertError || !data) {
+                setError(insertError?.message ?? "Failed to create update");
                 setLoading(false);
                 return;
             }
 
-            router.push(`/dashboard/updates/${slug}`);
+            router.push(`/dashboard/updates/${data.id}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to create update");
             setLoading(false);
@@ -74,7 +65,6 @@ export default function CreateUpdatePage() {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            {/* Header */}
             <div className="border-b border-slate-200 bg-white px-4 py-6 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-3xl">
                     <Link
@@ -93,7 +83,6 @@ export default function CreateUpdatePage() {
                 </div>
             </div>
 
-            {/* Form */}
             <div className="px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-3xl">
                     {error && (
@@ -107,7 +96,6 @@ export default function CreateUpdatePage() {
                         onSubmit={handleSubmit}
                         className="space-y-6 rounded-lg border border-slate-200 bg-white p-8 shadow-sm"
                     >
-                        {/* Title */}
                         <div>
                             <label htmlFor="title" className="block text-sm font-medium text-slate-900">
                                 Title
@@ -123,7 +111,6 @@ export default function CreateUpdatePage() {
                             />
                         </div>
 
-                        {/* Category */}
                         <div>
                             <label htmlFor="category" className="block text-sm font-medium text-slate-900">
                                 Category
@@ -146,41 +133,24 @@ export default function CreateUpdatePage() {
                             </select>
                         </div>
 
-                        {/* Excerpt */}
                         <div>
-                            <label htmlFor="excerpt" className="block text-sm font-medium text-slate-900">
-                                Excerpt (Short Summary)
-                            </label>
-                            <textarea
-                                id="excerpt"
-                                rows={2}
-                                value={form.excerpt}
-                                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-                                placeholder="Brief description that appears in the updates list"
-                                className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                            />
-                        </div>
-
-                        {/* Content */}
-                        <div>
-                            <label htmlFor="content" className="block text-sm font-medium text-slate-900">
+                            <label htmlFor="body" className="block text-sm font-medium text-slate-900">
                                 Content (Markdown)
                             </label>
                             <textarea
-                                id="content"
-                                rows={12}
+                                id="body"
+                                rows={14}
                                 required
-                                value={form.content}
-                                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                                value={form.body}
+                                onChange={(e) => setForm({ ...form, body: e.target.value })}
                                 placeholder="Write your update here. Supports Markdown formatting."
                                 className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-2 font-mono text-sm text-slate-900 placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                             />
                             <p className="mt-2 text-xs text-slate-500">
-                                Supports Markdown: **bold**, *italic*, # headings, - lists, etc.
+                                Supports Markdown: **bold**, *italic*, # headings, - lists, etc. The first line becomes the preview shown on the dashboard.
                             </p>
                         </div>
 
-                        {/* Actions */}
                         <div className="flex gap-3 justify-end">
                             <Link
                                 href="/dashboard/updates"
