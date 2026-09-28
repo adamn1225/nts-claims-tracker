@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendUpcomingTaskReminders } from "@/lib/notifications-server";
+import { notifyTasksDueSoon } from "@/lib/tasks/notifications";
 
 /**
  * GET/POST /api/cron/send-task-reminders
@@ -27,7 +27,7 @@ async function handleRequest(request: Request) {
 
     console.log("📬 Cron job started: Sending task reminders");
 
-    const emailsSent = await sendUpcomingTaskReminders();
+    const emailsSent = await notifyTasksDueSoon();
 
     return NextResponse.json({
       success: true,

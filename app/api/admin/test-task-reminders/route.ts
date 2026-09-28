@@ -1,181 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendUpcomingTaskReminders } from "@/lib/notifications-server";
-import { createClient } from "@supabase/supabase-js";
-
-// Initialize Supabase server client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+import { notifyTasksDueSoon } from "@/lib/tasks/notifications";
 
 /**
- * GET /api/admin/test-task-reminders?teamMemberId=xxx
- * 
- * SAFE TEST ENDPOINT - Only sends reminders to specific teamMember ID
- * Use this for testing without spamming all production users
- * 
- * Example: /api/admin/test-task-reminders?teamMemberId=1e8357cd-5268-4ac3-98f8-2dc42b9b69ee
+ * GET /api/admin/test-task-reminders?userId=xxx
+ *
+ * Safe test endpoint that runs the due-soon notifier scoped to a single
+ * user, so we can verify the email + in-app flow without touching everyone
+ * else's inbox. Under the current claim-native schema there is no per-task
+ * `reminder_days` config, so the "diagnostic" branch the legacy endpoint
+ * exposed no longer has an equivalent and is removed here.
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const testTeamMemberId = searchParams.get("teamMemberId");
-    const diagnose = searchParams.get("diagnose") === "true";
+    const userId =
+      request.nextUrl.searchParams.get("userId") ??
+      request.nextUrl.searchParams.get("teamMemberId");
 
-    if (!testTeamMemberId) {
+    if (!userId) {
       return NextResponse.json(
         {
-          error: "Missing teamMemberId parameter",
-          usage: "/api/admin/test-task-reminders?teamMemberId=YOUR_BROKER_ID",
-          tip: "Add &diagnose=true to see diagnostic info without sending emails",
+          error: "Missing userId parameter",
+          usage: "/api/admin/test-task-reminders?userId=YOUR_USER_ID",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    console.log("🧪 TEST MODE: Checking reminders for team member:", testTeamMemberId);
-
-    // DIAGNOSTIC MODE - Show what would happen without sending emails
-    if (diagnose) {
-      const now = new Date();
-      
-      // Get team member info
-      const { data: teamMembers } = await supabase
-        .from("team_members")
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          user_preferences (
-            email_notifications_enabled,
-            digest_time
-          )
-        `)
-        .eq("id", testTeamMemberId);
-
-      const teamMember = teamMembers?.[0];
-      if (!teamMember) {
-        return NextResponse.json(
-          { error: "Team member not found" },
-          { status: 404 }
-        );
-      }
-
-      const prefs = Array.isArray(teamMember.user_preferences)
-        ? teamMember.user_preferences[0]
-        : teamMember.user_preferences;
-
-      // Get tasks with reminders
-      const { data: tasks } = await supabase
-        .from("tasks")
-        .select(`
-          id,
-          title,
-          due_date,
-          due_time,
-          reminder_days,
-          last_reminder_sent_date,
-          status,
-          customer:customers (
-            business_name,
-            contact_name
-          )
-        `)
-        .eq("team_member_id", testTeamMemberId)
-        .eq("status", "pending")
-        .not("due_time", "is", null)
-        .not("reminder_days", "is", null);
-
-      // Check which tasks have reminders within the ±10 minute window
-      const tasksInWindow = (tasks || []).flatMap((task) => {
-        if (!task.due_time || !task.reminder_days || task.reminder_days.length === 0) {
-          return [];
-        }
-
-        // Parse due date and time
-        const [year, month, day] = task.due_date.split("-").map(Number);
-        const dueDate = new Date(year, month - 1, day);
-        const [dueHours, dueMinutes] = task.due_time.split(":").map(Number);
-        dueDate.setHours(dueHours, dueMinutes, 0, 0);
-
-        // Check each reminder in the array
-        return task.reminder_days.map((reminderMinutes: number) => {
-          if (reminderMinutes === 0) return null; // Skip "No Reminder"
-
-          // Calculate when this reminder should be sent
-          const reminderTime = new Date(dueDate);
-          reminderTime.setMinutes(reminderTime.getMinutes() - reminderMinutes);
-
-          const timeDiff = Math.abs(now.getTime() - reminderTime.getTime());
-          const minutesDiff = timeDiff / (1000 * 60);
-          const inWindow = minutesDiff <= 10;
-
-          // Check if recently sent
-          let recentlySent = false;
-          if (task.last_reminder_sent_date) {
-            const lastSent = new Date(task.last_reminder_sent_date);
-            const minsSinceLastSent = (now.getTime() - lastSent.getTime()) / (1000 * 60);
-            recentlySent = minsSinceLastSent < 10;
-          }
-
-          return {
-            id: task.id,
-            title: task.title,
-            due_date_time: `${task.due_date} ${task.due_time}`,
-            reminder_minutes: reminderMinutes,
-            reminderTimeFormatted: reminderTime.toLocaleString(),
-            minutesUntilReminder: Math.round((reminderTime.getTime() - now.getTime()) / (1000 * 60)),
-            minutesDiffFromNow: minutesDiff.toFixed(1),
-            inWindow,
-            recentlySent,
-            last_reminder_sent: task.last_reminder_sent_date,
-            wouldSendEmail: inWindow && !recentlySent && prefs?.email_notifications_enabled,
-          };
-        }).filter(Boolean);
-      });
-
-      return NextResponse.json({
-        mode: "DIAGNOSTIC (no emails sent)",
-        currentTime: now.toISOString(),
-        currentTimeFormatted: now.toLocaleString(),
-        teamMember: {
-          id: teamMember.id,
-          email: teamMember.email,
-          name: `${teamMember.first_name} ${teamMember.last_name}`,
-          emailNotificationsEnabled: prefs?.email_notifications_enabled ?? true,
-          digestTime: prefs?.digest_time || "08:00",
-        },
-        window: "±10 minutes from current time",
-        totalTasksWithReminders: tasks?.length || 0,
-        tasksInWindow: tasksInWindow.filter((t) => t && t.inWindow).length,
-        tasks: tasksInWindow,
-      });
-    }
-
-    // ACTUAL TEST MODE - Send emails only to this teamMember
-    const emailsSent = await sendUpcomingTaskReminders(testTeamMemberId);
+    const emailsSent = await notifyTasksDueSoon(userId);
 
     return NextResponse.json({
       success: true,
-      mode: "TEST MODE (only sent to specified team member)",
-      testTeamMemberId,
+      mode: "TEST MODE (scoped to the provided userId)",
+      userId,
       emailsSent,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error("Error in test-task-reminders:", error);
     return NextResponse.json(
       {
         error: "Failed to test task reminders",
-        message: error.message,
+        message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

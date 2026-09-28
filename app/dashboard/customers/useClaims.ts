@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 export type ClaimWithPin = ClaimWithDetails & {
   is_pinned: boolean;
   pin_position: number | null;
+  open_task_count?: number;
+  overdue_task_count?: number;
 };
 
 /**
@@ -27,6 +29,9 @@ export type ClaimWithPin = ClaimWithDetails & {
 export function useClaims() {
   const [rawClaims, setRawClaims] = useState<ClaimWithDetails[]>([]);
   const [pinsMap, setPinsMap] = useState<Map<string, number>>(new Map());
+  const [taskCounts, setTaskCounts] = useState<
+    Map<string, { open: number; overdue: number }>
+  >(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -41,12 +46,17 @@ export function useClaims() {
 
   const claims: ClaimWithPin[] = useMemo(
     () =>
-      rawClaims.map((c) => ({
-        ...c,
-        is_pinned: pinsMap.has(c.id),
-        pin_position: pinsMap.get(c.id) ?? null,
-      })),
-    [rawClaims, pinsMap],
+      rawClaims.map((c) => {
+        const counts = taskCounts.get(c.id);
+        return {
+          ...c,
+          is_pinned: pinsMap.has(c.id),
+          pin_position: pinsMap.get(c.id) ?? null,
+          open_task_count: counts?.open ?? 0,
+          overdue_task_count: counts?.overdue ?? 0,
+        };
+      }),
+    [rawClaims, pinsMap, taskCounts],
   );
 
   const fetchClaims = useCallback(async () => {
@@ -100,6 +110,34 @@ export function useClaims() {
     setPinsMap(new Map((data ?? []).map((p) => [p.claim_id, p.position])));
   }, []);
 
+  // Open + overdue task counts per claim so the board can badge cards.
+  // RLS on `tasks` gates which rows come back; managers/admins see all,
+  // claims_staff see their own + assigned, brokers see nothing here.
+  const fetchTaskCounts = useCallback(async () => {
+    const supabase = createClient();
+    const { data, error: fetchErr } = await supabase
+      .from("tasks")
+      .select("claim_id, status, due_at")
+      .in("status", ["open", "in_progress", "blocked"]);
+
+    if (fetchErr) {
+      console.error("[useClaims] fetch task counts error:", fetchErr);
+      setTaskCounts(new Map());
+      return;
+    }
+    const now = Date.now();
+    const map = new Map<string, { open: number; overdue: number }>();
+    for (const t of data ?? []) {
+      const entry = map.get(t.claim_id) ?? { open: 0, overdue: 0 };
+      entry.open += 1;
+      if (t.due_at && new Date(t.due_at).getTime() < now) {
+        entry.overdue += 1;
+      }
+      map.set(t.claim_id, entry);
+    }
+    setTaskCounts(map);
+  }, []);
+
   // Internal roles a claim can be handed off to. Brokers don't own claims.
   const fetchAssignableUsers = useCallback(async () => {
     const supabase = createClient();
@@ -127,14 +165,19 @@ export function useClaims() {
       } = await supabase.auth.getUser();
       if (cancelled) return;
       setCurrentUserId(user?.id ?? "");
-      await Promise.all([fetchClaims(), fetchAssignableUsers(), fetchPins()]);
+      await Promise.all([
+        fetchClaims(),
+        fetchAssignableUsers(),
+        fetchPins(),
+        fetchTaskCounts(),
+      ]);
       if (!cancelled) setIsLoading(false);
     };
     init();
     return () => {
       cancelled = true;
     };
-  }, [fetchClaims, fetchAssignableUsers, fetchPins]);
+  }, [fetchClaims, fetchAssignableUsers, fetchPins, fetchTaskCounts]);
 
   // Realtime: refetch on any claim insert/update/delete. Cheap and correct;
   // the alternative of patching the joined shape from payload.new is fragile.
@@ -338,7 +381,9 @@ export function useClaims() {
     error,
     currentUserId,
     assignableUsers,
-    refetch: fetchClaims,
+    refetch: async () => {
+      await Promise.all([fetchClaims(), fetchTaskCounts()]);
+    },
     moveClaimToStatus,
     reassignClaim,
     togglePin,

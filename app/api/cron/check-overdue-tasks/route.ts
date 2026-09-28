@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendOverdueTaskReminders } from "@/lib/notifications-server";
+import { notifyOverdueTasks } from "@/lib/tasks/notifications";
 
 /**
  * GET /api/cron/check-overdue-tasks
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
     console.log("🕐 Cron job started: Sending overdue task reminders");
 
-    const emailsSent = await sendOverdueTaskReminders();
+    const emailsSent = await notifyOverdueTasks();
 
     return NextResponse.json({
       success: true,

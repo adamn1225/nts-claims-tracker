@@ -390,51 +390,45 @@ export default function DashboardPage() {
   const fetchMetrics = async (userId: string) => {
     const supabase = createClient();
 
-    // Get all tasks
+    // Current tasks schema: assigned_to (uuid), due_at (timestamptz), status enum.
     const { data: allTasks } = await supabase
       .from("tasks")
-      .select("id, due_date, due_time, status")
-      .eq("team_member_id", userId);
+      .select("id, due_at, status")
+      .eq("assigned_to", userId);
 
-    const today = new Date().toISOString().split("T")[0];
     const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfToday.getDate() + 1);
+
+    const isActive = (status: string) =>
+      status !== "completed" && status !== "cancelled";
 
     const tasksToday =
-      allTasks?.filter(
-        (t) =>
-          t.due_date === today &&
-          t.status !== "completed" &&
-          t.status !== "cancelled",
-      ).length || 0;
+      allTasks?.filter((t) => {
+        if (!isActive(t.status) || !t.due_at) return false;
+        const d = new Date(t.due_at);
+        return d >= startOfToday && d < startOfTomorrow;
+      }).length || 0;
 
     const overdueTasks =
       allTasks?.filter((t) => {
-        if (t.status === "completed" || t.status === "cancelled") return false;
-        const dueDate = new Date(t.due_date);
-        if (t.due_time) {
-          const [hours, minutes] = t.due_time.split(":");
-          dueDate.setHours(parseInt(hours), parseInt(minutes));
-        }
-        return dueDate < now;
+        if (!isActive(t.status) || !t.due_at) return false;
+        return new Date(t.due_at).getTime() < now.getTime();
       }).length || 0;
 
-    // Follow-ups this week
-    const startOfWeek = new Date();
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-
+    // Follow-ups this week (Sun-based week to match the weekly grid).
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 7);
 
     const followUpsThisWeek =
       allTasks?.filter((t) => {
-        const taskDate = new Date(t.due_date);
-        return (
-          taskDate >= startOfWeek &&
-          taskDate < endOfWeek &&
-          t.status !== "completed" &&
-          t.status !== "cancelled"
-        );
+        if (!isActive(t.status) || !t.due_at) return false;
+        const d = new Date(t.due_at);
+        return d >= startOfWeek && d < endOfWeek;
       }).length || 0;
 
     setMetrics({
@@ -721,7 +715,11 @@ export default function DashboardPage() {
                   : "On track"
               }
               icon={ListTodo}
-              href="/dashboard/customers/kanban"
+              href={
+                metrics.overdueTasks > 0
+                  ? "/dashboard/tasks?tab=overdue"
+                  : "/dashboard/tasks?tab=today"
+              }
               badge={metrics.overdueTasks > 0 ? "!" : undefined}
             />
             <KpiTile
@@ -730,7 +728,7 @@ export default function DashboardPage() {
               value={metrics.followUpsThisWeek}
               sub="Upcoming follow-ups"
               icon={Calendar}
-              href="/dashboard/customers/kanban"
+              href="/dashboard/tasks?tab=upcoming"
             />
             <KpiTile
               accent="primary"
@@ -761,7 +759,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/dashboard/customers/kanban"
+                  href="/dashboard/tasks?tab=overdue"
                   className="shrink-0 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-danger/90"
                 >
                   View Now

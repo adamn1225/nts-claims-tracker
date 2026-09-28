@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateTaskNotifications } from "@/lib/notifications-server";
+import { generateTaskNotifications } from "@/lib/tasks/notifications";
 
 /**
  * POST /api/tasks/generate-notifications

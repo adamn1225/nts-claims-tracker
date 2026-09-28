@@ -47,6 +47,8 @@ import {
 export type PinnableClaim = ClaimWithDetails & {
   is_pinned?: boolean;
   pin_position?: number | null;
+  open_task_count?: number;
+  overdue_task_count?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -332,9 +334,28 @@ function ClaimCard({
       </div>
 
       <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px] text-slate-500">
-        <div className="flex items-center gap-1">
-          <CalendarClock className="h-3 w-3" />
-          {age != null ? `${age}d open` : "—"}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <CalendarClock className="h-3 w-3" />
+            {age != null ? `${age}d open` : "—"}
+          </div>
+          {(claim.open_task_count ?? 0) > 0 && (
+            <Link
+              href={`/dashboard/claims/${claim.id}#tasks`}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              title={`${claim.open_task_count} open task${claim.open_task_count === 1 ? "" : "s"}${(claim.overdue_task_count ?? 0) > 0 ? `, ${claim.overdue_task_count} overdue` : ""}`}
+              className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-200"
+            >
+              {claim.open_task_count}
+              {(claim.overdue_task_count ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-0.5 rounded bg-danger/10 px-1 text-danger">
+                  <AlertTriangle className="h-2.5 w-2.5" />
+                  {claim.overdue_task_count}
+                </span>
+              )}
+            </Link>
+          )}
         </div>
         {onReassign && assignableUsers ? (
           <div

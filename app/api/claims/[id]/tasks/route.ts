@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { notifyTaskAssignedIfExternal } from "@/lib/tasks/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -119,6 +120,14 @@ export async function POST(
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    if (data?.id && body.assigned_to && body.assigned_to !== user.id) {
+        // Fire-and-forget; a notification failure shouldn't block task creation.
+        notifyTaskAssignedIfExternal(data.id).catch((err) => {
+            console.error("[POST /tasks] notify error:", err);
+        });
+    }
+
     return NextResponse.json({ task: data }, { status: 201 });
 }
 
@@ -204,6 +213,17 @@ export async function PATCH(
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    if (
+        patch.assigned_to &&
+        typeof patch.assigned_to === "string" &&
+        patch.assigned_to !== user.id
+    ) {
+        notifyTaskAssignedIfExternal(body.id).catch((err) => {
+            console.error("[PATCH /tasks] notify error:", err);
+        });
+    }
+
     return NextResponse.json({ task: data });
 }
 

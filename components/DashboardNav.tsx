@@ -101,6 +101,13 @@ const navigation: NavigationItem[] = [
     description: "Review new claim submissions",
     requiresRole: ["claims_staff", "manager", "admin"] as const,
   },
+  {
+    name: "Tasks",
+    href: "/dashboard/tasks",
+    icon: ListTodo,
+    description: "Follow-ups across every claim you can see",
+    requiresRole: ["claims_staff", "manager", "admin"] as const,
+  },
   // {
   //   name: "My Profile",
   //   href: "/dashboard/team-members/me",
